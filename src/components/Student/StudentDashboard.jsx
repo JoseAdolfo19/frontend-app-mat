@@ -21,28 +21,50 @@ const StudentDashboard = () => {
     fetchDashboardData();
   }, []);
 
-  const fetchDashboardData = async () => {
-    try {
-      setLoading(true);
-      const [statsRes, progressRes, evaluationsRes] = await Promise.all([
-        usersApi.getMyStats(),
-        lessonsApi.getLessons({ status: 'in_progress' }),
-        evaluationsApi.getEvaluations({ limit: 5 })
-      ]);
+  // Normaliza cualquier forma de respuesta (array plano, paginado, o vacío) a un array seguro
+  const toArray = (value) => {
+    if (Array.isArray(value)) return value;
+    if (value && Array.isArray(value.data)) return value.data; // respuesta paginada anidada
+    return [];
+  };
 
-      setStats(statsRes.data);
-      setInProgressLessons(progressRes.data.data || []);
-      setRecentEvaluations(evaluationsRes.data.data || []);
-      
-      // Obtener insignias
-      const badgesRes = await usersApi.getBadges();
-      setBadges(badgesRes.data.badges || []);
-      
-    } catch (error) {
-      console.error('Error fetching dashboard:', error);
-    } finally {
-      setLoading(false);
+  const fetchDashboardData = async () => {
+    setLoading(true);
+
+    // Usamos allSettled en vez de Promise.all: si UNA petición falla
+    // (ej. error de red), las demás igual se procesan y no truena la pantalla.
+    const [statsResult, progressResult, evaluationsResult, badgesResult] = await Promise.allSettled([
+      usersApi.getMyStats(),
+      lessonsApi.getLessons({ status: 'in_progress' }),
+      evaluationsApi.getEvaluations({ limit: 5 }),
+      usersApi.getBadges()
+    ]);
+
+    if (statsResult.status === 'fulfilled') {
+      setStats(statsResult.value.data);
+    } else {
+      console.error('Error fetching stats:', statsResult.reason);
     }
+
+    if (progressResult.status === 'fulfilled') {
+      setInProgressLessons(toArray(progressResult.value.data?.data));
+    } else {
+      console.error('Error fetching lessons:', progressResult.reason);
+    }
+
+    if (evaluationsResult.status === 'fulfilled') {
+      setRecentEvaluations(toArray(evaluationsResult.value.data?.data));
+    } else {
+      console.error('Error fetching evaluations:', evaluationsResult.reason);
+    }
+
+    if (badgesResult.status === 'fulfilled') {
+      setBadges(toArray(badgesResult.value.data?.badges));
+    } else {
+      console.error('Error fetching badges:', badgesResult.reason);
+    }
+
+    setLoading(false);
   };
 
   if (loading) return <Loading />;
@@ -67,7 +89,10 @@ const StudentDashboard = () => {
               Continuar: Álgebra Lineal
               <span className="text-lg">→</span>
             </Link>
-            <button className="bg-white/10 border border-white/20 text-white font-bold px-6 py-3 rounded-xl hover:bg-white/20 transition-all">
+            <button
+              onClick={() => document.getElementById('logros-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+              className="bg-white/10 border border-white/20 text-white font-bold px-6 py-3 rounded-xl hover:bg-white/20 transition-all"
+            >
               Ver mis logros
             </button>
           </div>
@@ -143,7 +168,7 @@ const StudentDashboard = () => {
           </Link>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {inProgressLessons.slice(0, 4).map((lesson) => (
+          {(Array.isArray(inProgressLessons) ? inProgressLessons : []).slice(0, 4).map((lesson) => (
             <Link
               key={lesson.id}
               to={`/lessons/${lesson.id}`}
@@ -190,7 +215,7 @@ const StudentDashboard = () => {
             Evaluaciones Recientes
           </h3>
           <div className="space-y-3">
-            {recentEvaluations.slice(0, 5).map((eval_) => (
+            {(Array.isArray(recentEvaluations) ? recentEvaluations : []).slice(0, 5).map((eval_) => (
               <div key={eval_.id} className="flex items-center justify-between p-4 bg-[var(--surface-container-low)] rounded-xl hover:bg-[var(--surface-container)] transition-colors">
                 <div>
                   <p className="font-medium text-[var(--on-surface)]">{eval_.title}</p>
@@ -226,15 +251,15 @@ const StudentDashboard = () => {
         </div>
 
         {/* Badges */}
-        <div className="bg-[var(--surface)] p-6 rounded-2xl shadow-sm border border-[var(--surface-container)]">
+        <div id="logros-section" className="bg-[var(--surface)] p-6 rounded-2xl shadow-sm border border-[var(--surface-container)]">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-xl font-bold text-[var(--on-surface)]">Mis Logros</h3>
             <span className="text-sm text-[var(--primary)] font-bold">
-              {badges.filter(b => b.unlocked).length}/{badges.length}
+              {(Array.isArray(badges) ? badges : []).filter(b => b.unlocked).length}/{(Array.isArray(badges) ? badges : []).length}
             </span>
           </div>
           <div className="grid grid-cols-3 gap-4">
-            {badges.slice(0, 6).map((badge) => (
+            {(Array.isArray(badges) ? badges : []).slice(0, 6).map((badge) => (
               <div 
                 key={badge.id}
                 className={`flex flex-col items-center text-center p-3 rounded-xl transition-all ${

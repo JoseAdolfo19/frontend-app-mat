@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { 
   FaHome, FaBook, FaClipboardList, FaChartBar, 
@@ -8,6 +8,7 @@ import {
 
 const Sidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, isAdmin, isTeacher } = useAuth();
 
   const isActive = (path) => location.pathname === path;
@@ -62,10 +63,13 @@ const Sidebar = () => {
         ))}
       </nav>
 
-      {/* Botón Nueva Lección */}
-      {(isTeacher() || isAdmin()) && (
+      {/* Botón Nueva Lección — solo docentes, no admin */}
+      {isTeacher() && !isAdmin() && (
         <div className="px-4 pb-4">
-          <button className="w-full py-3 bg-[var(--primary)] text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-all active:scale-95 shadow-lg shadow-[var(--primary)]/20">
+          <button
+            onClick={() => navigate('/teacher/lessons/create')}
+            className="w-full py-3 bg-[var(--primary)] text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-all active:scale-95 shadow-lg shadow-[var(--primary)]/20"
+          >
             <FaPlus />
             <span>Nueva Lección</span>
           </button>

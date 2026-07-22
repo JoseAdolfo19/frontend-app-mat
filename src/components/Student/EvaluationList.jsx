@@ -18,13 +18,21 @@ const EvaluationList = () => {
     fetchEvaluations();
   }, [filters]);
 
+  // Normaliza cualquier forma de respuesta (array plano, paginado, null, o error) a un array seguro
+  const toArray = (value) => {
+    if (Array.isArray(value)) return value;
+    if (value && Array.isArray(value.data)) return value.data;
+    return [];
+  };
+
   const fetchEvaluations = async () => {
     try {
       setLoading(true);
       const response = await evaluationsApi.getEvaluations(filters);
-      setEvaluations(response.data.data || []);
+      setEvaluations(toArray(response.data?.data));
     } catch (error) {
       console.error('Error fetching evaluations:', error);
+      setEvaluations([]);
     } finally {
       setLoading(false);
     }

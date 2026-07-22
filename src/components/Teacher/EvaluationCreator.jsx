@@ -72,12 +72,20 @@ const EvaluationCreator = () => {
     }
   }, [id]);
 
+  // Normaliza cualquier forma de respuesta (array plano, paginado, null, o error) a un array seguro
+  const toArray = (value) => {
+    if (Array.isArray(value)) return value;
+    if (value && Array.isArray(value.data)) return value.data;
+    return [];
+  };
+
   const fetchLessons = async () => {
     try {
       const response = await lessonsApi.getLessons({ limit: 100 });
-      setLessons(response.data.data || []);
+      setLessons(toArray(response.data?.data));
     } catch (error) {
       console.error('Error fetching lessons:', error);
+      setLessons([]);
     }
   };
 
@@ -85,8 +93,14 @@ const EvaluationCreator = () => {
     try {
       setLoading(true);
       const response = await evaluationsApi.getEvaluation(id);
-      const evaluation = response.data.data;
-      
+      const evaluation = response.data?.data;
+
+      if (!evaluation) {
+        toast.error('No se encontró la evaluación');
+        navigate('/evaluations');
+        return;
+      }
+
       setValue('title', evaluation.title);
       setValue('description', evaluation.description || '');
       setValue('lesson_id', evaluation.lesson_id || '');
@@ -95,7 +109,7 @@ const EvaluationCreator = () => {
       setValue('time_limit', evaluation.time_limit || 30);
       setValue('due_date', evaluation.due_date || '');
       setValue('max_attempts', evaluation.max_attempts || 1);
-      setValue('questions', evaluation.questions || []);
+      setValue('questions', toArray(evaluation.questions));
     } catch (error) {
       console.error('Error fetching evaluation:', error);
       toast.error('Error al cargar la evaluación');

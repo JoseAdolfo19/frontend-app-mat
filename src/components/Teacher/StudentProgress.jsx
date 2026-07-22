@@ -21,37 +21,53 @@ const StudentProgress = () => {
     fetchStudentData();
   }, [id]);
 
+  // Normaliza cualquier forma de respuesta (array plano, paginado, null, o error) a un array seguro
+  const toArray = (value) => {
+    if (Array.isArray(value)) return value;
+    if (value && Array.isArray(value.data)) return value.data;
+    return [];
+  };
+
   const fetchStudentData = async () => {
     try {
       setLoading(true);
-      
+
       // Obtener datos del estudiante
       const studentRes = await adminApi.getUser(id);
-      setStudent(studentRes.data);
-      
+      const studentData = studentRes.data?.data || studentRes.data || null;
+      setStudent(studentData);
+
+      if (!studentData) {
+        setLoading(false);
+        return;
+      }
+
       // Obtener progreso del estudiante
       const progressRes = await lessonsApi.getProgress(id);
-      setProgress(progressRes.data || []);
-      
+      const progressData = toArray(progressRes.data);
+      setProgress(progressData);
+
       // Obtener evaluaciones del estudiante
       const evalRes = await evaluationsApi.getResults(id);
-      setEvaluations(evalRes.data.data || []);
-      
-      // Calcular estadísticas
-      const totalLessons = progress.length;
-      const completedLessons = progress.filter(p => p.status === 'completed').length;
-      const averageScore = evaluations.length > 0 
-        ? evaluations.reduce((sum, e) => sum + e.score, 0) / evaluations.length 
+      const evaluationsData = toArray(evalRes.data?.data);
+      setEvaluations(evaluationsData);
+
+      // Calcular estadísticas usando los datos recién obtenidos
+      // (no el estado, que todavía no se actualizó en este mismo ciclo)
+      const totalLessons = progressData.length;
+      const completedLessons = progressData.filter(p => p.status === 'completed').length;
+      const averageScore = evaluationsData.length > 0
+        ? evaluationsData.reduce((sum, e) => sum + (e.score || 0), 0) / evaluationsData.length
         : 0;
-      
+
       setStats({
         totalLessons,
         completedLessons,
         completionRate: totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0,
         averageScore,
-        totalEvaluations: evaluations.length
+        totalEvaluations: evaluationsData.length
       });
-      
+
     } catch (error) {
       console.error('Error fetching student data:', error);
     } finally {
@@ -154,7 +170,7 @@ const StudentProgress = () => {
         <h3 className="text-lg font-bold text-[var(--on-surface)] mb-4">Progreso en lecciones</h3>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={progress.slice(0, 10)}>
+            <BarChart data={(Array.isArray(progress) ? progress : []).slice(0, 10)}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--surface-container)" />
               <XAxis dataKey="lesson.title" stroke="var(--on-surface-variant)" fontSize={12} />
               <YAxis stroke="var(--on-surface-variant)" fontSize={12} />
@@ -177,7 +193,7 @@ const StudentProgress = () => {
           Evaluaciones Recientes
         </h3>
         <div className="space-y-3">
-          {evaluations.slice(0, 5).map((eval_) => (
+          {(Array.isArray(evaluations) ? evaluations : []).slice(0, 5).map((eval_) => (
             <div key={eval_.id} className="flex items-center justify-between p-4 bg-[var(--surface-container-low)] rounded-xl">
               <div>
                 <p className="font-medium text-[var(--on-surface)]">{eval_.evaluation?.title || 'Sin título'}</p>

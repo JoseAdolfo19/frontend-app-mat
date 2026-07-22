@@ -6,7 +6,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
-import { FaUser, FaEnvelope, FaLock, FaGraduationCap, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
 
 const schema = yup.object().shape({
   full_name: yup.string().required('Nombre completo es requerido'),
@@ -15,11 +15,7 @@ const schema = yup.object().shape({
   password_confirmation: yup.string()
     .oneOf([yup.ref('password')], 'Las contraseñas no coinciden')
     .required('Confirmar contraseña es requerida'),
-  role: yup.string().default('student'),
-  academic_level: yup.string().when('role', {
-    is: 'student',
-    then: () => yup.string().required('Nivel académico es requerido')
-  }),
+  academic_level: yup.string().required('Nivel académico es requerido'),
 });
 
 const Register = () => {
@@ -27,19 +23,18 @@ const Register = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  
-  const { register, handleSubmit, watch, formState: { errors } } = useForm({
-    resolver: yupResolver(schema),
-    defaultValues: { role: 'student' }
-  });
 
-  const role = watch('role');
+  const { register, handleSubmit, formState: { errors } } = useForm({
+    resolver: yupResolver(schema),
+  });
 
   const onSubmit = async (data) => {
     setLoading(true);
-    const result = await registerUser(data);
+    // El rol siempre es "student" al registrarse.
+    // El admin puede cambiarlo después desde el panel de administración.
+    const result = await registerUser({ ...data, role: 'student' });
     setLoading(false);
-    
+
     if (result.success) {
       toast.success('¡Registro exitoso! Bienvenido a MathFlow');
       navigate('/dashboard');
@@ -50,7 +45,7 @@ const Register = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50 p-4">
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -58,12 +53,12 @@ const Register = () => {
       >
         {/* Registration Container - 2 Column Layout */}
         <div className="grid md:grid-cols-2 bg-white rounded-3xl overflow-hidden shadow-xl border border-gray-100">
-          
+
           {/* Left Side - Branding (Hidden on mobile) */}
           <div className="hidden md:flex flex-col justify-between p-12 bg-gradient-to-br from-blue-600 to-blue-700 relative overflow-hidden">
             <div className="absolute -top-20 -left-20 w-40 h-40 bg-blue-500 rounded-full opacity-50 blur-3xl"></div>
             <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-indigo-500 rounded-full opacity-50 blur-3xl"></div>
-            
+
             <div className="relative z-10">
               <div className="flex items-center gap-3 mb-12">
                 <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
@@ -73,7 +68,7 @@ const Register = () => {
                 </div>
                 <span className="text-white font-bold text-xl tracking-tight">MathFlow</span>
               </div>
-              
+
               <h1 className="text-white font-bold text-4xl mb-6 leading-tight">Tu camino al dominio matemático comienza aquí.</h1>
               <p className="text-white/90 font-medium max-w-md leading-relaxed">
                 Únete a miles de estudiantes que transforman su relación con los números a través de aprendizaje interactivo y datos en tiempo real.
@@ -106,7 +101,7 @@ const Register = () => {
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
               {/* Full Name */}
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: 0.1 }}
@@ -127,7 +122,7 @@ const Register = () => {
               </motion.div>
 
               {/* Email */}
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: 0.15 }}
@@ -148,7 +143,7 @@ const Register = () => {
               </motion.div>
 
               {/* Password */}
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
@@ -178,7 +173,7 @@ const Register = () => {
               </motion.div>
 
               {/* Confirm Password */}
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: 0.25 }}
@@ -198,51 +193,29 @@ const Register = () => {
                 )}
               </motion.div>
 
-              {/* Role Selection */}
-              <motion.div 
+              {/* Academic Level (siempre visible: todo registro nuevo es estudiante) */}
+              <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: 0.3 }}
               >
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  <FaGraduationCap className="inline mr-2 text-blue-600" />
-                  ¿QUÉ ERES?
+                  <svg className="inline mr-2 w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.669 0-3.218.51-4.5 1.385A7.968 7.968 0 009 4.804z"/></svg>
+                  NIVEL ACADÉMICO
                 </label>
                 <select
-                  {...register('role')}
+                  {...register('academic_level')}
                   className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-600 focus:outline-none bg-white text-gray-900 transition-all"
                 >
-                  <option value="student">Estudiante</option>
-                  <option value="teacher">Docente</option>
+                  <option value="">Selecciona tu nivel</option>
+                  <option value="basic">Básico</option>
+                  <option value="intermediate">Intermedio</option>
+                  <option value="advanced">Avanzado</option>
                 </select>
+                {errors.academic_level && (
+                  <p className="text-sm text-red-500 mt-1 font-medium">{errors.academic_level.message}</p>
+                )}
               </motion.div>
-
-              {/* Academic Level (for students) */}
-              {role === 'student' && (
-                <motion.div 
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="overflow-hidden"
-                >
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    <svg className="inline mr-2 w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.669 0-3.218.51-4.5 1.385A7.968 7.968 0 009 4.804z"/></svg>
-                    NIVEL ACADÉMICO
-                  </label>
-                  <select
-                    {...register('academic_level')}
-                    className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-600 focus:outline-none bg-white text-gray-900 transition-all"
-                  >
-                    <option value="">Selecciona tu nivel</option>
-                    <option value="basic">Básico</option>
-                    <option value="intermediate">Intermedio</option>
-                    <option value="advanced">Avanzado</option>
-                  </select>
-                  {errors.academic_level && (
-                    <p className="text-sm text-red-500 mt-1 font-medium">{errors.academic_level.message}</p>
-                  )}
-                </motion.div>
-              )}
 
               {/* Submit Button */}
               <motion.button
@@ -260,8 +233,8 @@ const Register = () => {
             {/* Login Link */}
             <p className="text-center mt-6 text-gray-600 text-sm">
               ¿Ya tienes cuenta?{' '}
-              <Link 
-                to="/login" 
+              <Link
+                to="/login"
                 className="text-blue-600 font-bold hover:underline"
               >
                 Inicia sesión

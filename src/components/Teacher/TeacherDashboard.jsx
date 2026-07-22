@@ -23,23 +23,41 @@ const TeacherDashboard = () => {
     fetchDashboardData();
   }, []);
 
-  const fetchDashboardData = async () => {
-    try {
-      setLoading(true);
-      const [dashboardRes, studentsRes, evaluationsRes] = await Promise.all([
-        usersApi.getMyStats(),
-        adminApi.getUsers({ limit: 5, role: 'student' }),
-        evaluationsApi.getEvaluations({ limit: 5 })
-      ]);
+  // Normaliza cualquier forma de respuesta (array plano, paginado, null, o error) a un array seguro
+  const toArray = (value) => {
+    if (Array.isArray(value)) return value;
+    if (value && Array.isArray(value.data)) return value.data;
+    return [];
+  };
 
-      setStats(dashboardRes.data);
-      setRecentStudents(studentsRes.data.data || []);
-      setRecentEvaluations(evaluationsRes.data.data || []);
-    } catch (error) {
-      console.error('Error fetching dashboard:', error);
-    } finally {
-      setLoading(false);
+  const fetchDashboardData = async () => {
+    setLoading(true);
+
+    const [dashboardResult, studentsResult, evaluationsResult] = await Promise.allSettled([
+      usersApi.getMyStats(),
+      adminApi.getUsers({ limit: 5, role: 'student' }),
+      evaluationsApi.getEvaluations({ limit: 5 })
+    ]);
+
+    if (dashboardResult.status === 'fulfilled') {
+      setStats(dashboardResult.value.data);
+    } else {
+      console.error('Error fetching stats:', dashboardResult.reason);
     }
+
+    if (studentsResult.status === 'fulfilled') {
+      setRecentStudents(toArray(studentsResult.value.data?.data));
+    } else {
+      console.error('Error fetching students:', studentsResult.reason);
+    }
+
+    if (evaluationsResult.status === 'fulfilled') {
+      setRecentEvaluations(toArray(evaluationsResult.value.data?.data));
+    } else {
+      console.error('Error fetching evaluations:', evaluationsResult.reason);
+    }
+
+    setLoading(false);
   };
 
   if (loading) return <Loading />;
@@ -162,7 +180,7 @@ const TeacherDashboard = () => {
             Estudiantes Recientes
           </h3>
           <div className="space-y-3">
-            {recentStudents.map((student) => (
+            {(Array.isArray(recentStudents) ? recentStudents : []).map((student) => (
               <div key={student.id} className="flex items-center justify-between p-3 bg-[var(--surface-container-low)] rounded-xl">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-[var(--primary)]/10 flex items-center justify-center text-[var(--primary)] font-bold">
@@ -190,7 +208,7 @@ const TeacherDashboard = () => {
             Evaluaciones Recientes
           </h3>
           <div className="space-y-3">
-            {recentEvaluations.map((eval_) => (
+            {(Array.isArray(recentEvaluations) ? recentEvaluations : []).map((eval_) => (
               <div key={eval_.id} className="flex items-center justify-between p-3 bg-[var(--surface-container-low)] rounded-xl">
                 <div>
                   <p className="font-medium text-[var(--on-surface)]">{eval_.title}</p>

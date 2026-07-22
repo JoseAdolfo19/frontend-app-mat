@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { lessonsApi } from '../../api/lessons';
 import { FaArrowLeft, FaArrowRight, FaClock, FaUser, FaTag } from 'react-icons/fa';
 import { formatDate, getDifficultyColor } from '../../utils/helpers';
@@ -22,13 +22,15 @@ const LessonDetail = () => {
     try {
       setLoading(true);
       const response = await lessonsApi.getLesson(id);
-      setLesson(response.data.data);
-      if (response.data.data.user_progress) {
-        setProgress(response.data.data.user_progress.progress || 0);
+      const lessonData = response.data?.data || null;
+      setLesson(lessonData);
+      if (lessonData?.user_progress) {
+        setProgress(lessonData.user_progress.progress || 0);
       }
     } catch (error) {
       console.error('Error fetching lesson:', error);
       toast.error('Error al cargar la lección');
+      setLesson(null);
     } finally {
       setLoading(false);
     }

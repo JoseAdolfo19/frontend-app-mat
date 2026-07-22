@@ -157,7 +157,11 @@
   }
 
   .card-hover {
-    @apply transition-all hover:shadow-lg hover:border-[var(--primary)]/20;
+    @apply transition-all hover:shadow-lg;
+  }
+
+  .card-hover:hover {
+    border-color: var(--primary);
   }
 
   /* Botones */

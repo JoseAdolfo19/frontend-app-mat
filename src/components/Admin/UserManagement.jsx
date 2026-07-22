@@ -29,12 +29,20 @@ const UserManagement = () => {
     fetchUsers();
   }, []);
 
+  // Normaliza cualquier forma de respuesta (array plano, paginado, null, o error) a un array seguro
+  const toArray = (value) => {
+    if (Array.isArray(value)) return value;
+    if (value && Array.isArray(value.data)) return value.data;
+    return [];
+  };
+
   const fetchUsers = async () => {
     try {
       const response = await axios.get('/admin/users');
-      setUsers(response.data.data);
+      setUsers(toArray(response.data?.data));
     } catch (error) {
       toast.error('Error al cargar usuarios');
+      setUsers([]);
     } finally {
       setLoading(false);
     }
@@ -90,7 +98,7 @@ const UserManagement = () => {
     reset({
       full_name: user.full_name,
       email: user.email,
-      role: user.role.name,
+      role: user.role?.name || 'student',
       institution: user.institution || '',
       grade: user.grade || ''
     });
@@ -155,19 +163,19 @@ const UserManagement = () => {
         <div className="p-4 bg-[var(--surface-container-low)] rounded-xl">
           <p className="text-sm text-[var(--on-surface-variant)]">Estudiantes</p>
           <p className="text-2xl font-bold text-[var(--on-surface)]">
-            {users.filter(u => u.role.name === 'student').length}
+            {users.filter(u => u.role?.name === 'student').length}
           </p>
         </div>
         <div className="p-4 bg-[var(--surface-container-low)] rounded-xl">
           <p className="text-sm text-[var(--on-surface-variant)]">Docentes</p>
           <p className="text-2xl font-bold text-[var(--on-surface)]">
-            {users.filter(u => u.role.name === 'teacher').length}
+            {users.filter(u => u.role?.name === 'teacher').length}
           </p>
         </div>
         <div className="p-4 bg-[var(--surface-container-low)] rounded-xl">
           <p className="text-sm text-[var(--on-surface-variant)]">Administradores</p>
           <p className="text-2xl font-bold text-[var(--on-surface)]">
-            {users.filter(u => u.role.name === 'admin').length}
+            {users.filter(u => u.role?.name === 'admin').length}
           </p>
         </div>
       </div>
@@ -200,18 +208,18 @@ const UserManagement = () => {
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-[var(--primary)]/10 flex items-center justify-center text-[var(--primary)] font-bold">
-                      {user.full_name.charAt(0).toUpperCase()}
+                      {user.full_name?.charAt(0)?.toUpperCase() || '?'}
                     </div>
                     <div>
-                      <p className="font-medium text-[var(--on-surface)]">{user.full_name}</p>
-                      <p className="text-sm text-[var(--on-surface-variant)]">ID: {user.id.slice(0, 8)}</p>
+                      <p className="font-medium text-[var(--on-surface)]">{user.full_name || 'Sin nombre'}</p>
+                      <p className="text-sm text-[var(--on-surface-variant)]">ID: {user.id?.slice(0, 8) || '—'}</p>
                     </div>
                   </div>
                 </td>
                 <td className="px-6 py-4 text-[var(--on-surface)]">{user.email}</td>
                 <td className="px-6 py-4">
-                  <span className={`px-3 py-1 rounded-full text-white text-xs font-bold ${getRoleBadgeColor(user.role.name)}`}>
-                    {user.role.name.toUpperCase()}
+                  <span className={`px-3 py-1 rounded-full text-white text-xs font-bold ${getRoleBadgeColor(user.role?.name)}`}>
+                    {user.role?.name?.toUpperCase() || 'SIN ROL'}
                   </span>
                 </td>
                 <td className="px-6 py-4">
@@ -237,7 +245,7 @@ const UserManagement = () => {
                     >
                       <FaEdit />
                     </button>
-                    {user.role.name !== 'admin' && (
+                    {user.role?.name !== 'admin' && (
                       <button
                         onClick={() => handleDelete(user.id)}
                         className="p-2 rounded-lg hover:bg-[var(--surface-container-high)] text-red-500 transition-colors"

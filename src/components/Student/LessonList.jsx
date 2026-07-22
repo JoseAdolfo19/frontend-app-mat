@@ -19,17 +19,26 @@ const LessonList = () => {
     fetchLessons();
   }, [filters]);
 
+  // Normaliza cualquier forma de respuesta (array plano, paginado, null, o error) a un array seguro
+  const toArray = (value) => {
+    if (Array.isArray(value)) return value;
+    if (value && Array.isArray(value.data)) return value.data; // respuesta paginada anidada
+    return [];
+  };
+
   const fetchLessons = async () => {
     try {
       setLoading(true);
       const response = await lessonsApi.getLessons(filters);
-      setLessons(response.data.data || []);
-      
+      const lessonsArray = toArray(response.data?.data);
+      setLessons(lessonsArray);
+
       // Extraer unidades únicas
-      const uniqueUnits = [...new Set(response.data.data?.map(l => l.unit).filter(Boolean))];
+      const uniqueUnits = [...new Set(lessonsArray.map(l => l.unit).filter(Boolean))];
       setUnits(uniqueUnits);
     } catch (error) {
       console.error('Error fetching lessons:', error);
+      setLessons([]);
     } finally {
       setLoading(false);
     }

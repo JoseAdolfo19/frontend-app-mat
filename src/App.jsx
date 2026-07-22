@@ -14,6 +14,12 @@ import MainLayout from './components/Layout/MainLayout';
 import Login from './components/Auth/Login';
 import Register from './components/Auth/Register';
 
+// Common (páginas compartidas por todos los roles)
+import Profile from './components/Common/Profile';
+import Notifications from './components/Common/Notifications';
+import Settings from './components/Common/Settings';
+import Help from './components/Common/Help';
+
 // Student
 import StudentDashboard from './components/Student/StudentDashboard';
 import LessonList from './components/Student/LessonList';
@@ -26,6 +32,7 @@ import TeacherDashboard from './components/Teacher/TeacherDashboard';
 import LessonEditor from './components/Teacher/LessonEditor';
 import EvaluationCreator from './components/Teacher/EvaluationCreator';
 import StudentProgress from './components/Teacher/StudentProgress';
+import Reports from './components/Teacher/Reports';
 
 // Admin
 import AdminDashboard from './components/Admin/AdminDashboard';
@@ -80,6 +87,13 @@ function App() {
                       <Route path="/teacher/evaluations/create" element={<EvaluationCreator />} />
                       <Route path="/teacher/evaluations/:id/edit" element={<EvaluationCreator />} />
                       <Route path="/teacher/students/:id/progress" element={<StudentProgress />} />
+                      <Route path="/reports" element={<Reports />} />
+
+                      {/* Común a todos los roles */}
+                      <Route path="/profile" element={<Profile />} />
+                      <Route path="/notifications" element={<Notifications />} />
+                      <Route path="/settings" element={<Settings />} />
+                      <Route path="/help" element={<Help />} />
                       
                       {/* Admin */}
                       <Route path="/admin/dashboard" element={<AdminDashboard />} />

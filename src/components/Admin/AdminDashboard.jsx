@@ -21,21 +21,34 @@ const AdminDashboard = () => {
     fetchDashboardData();
   }, []);
 
-  const fetchDashboardData = async () => {
-    try {
-      setLoading(true);
-      const [dashboardRes, usersRes] = await Promise.all([
-        adminApi.getDashboard(),
-        adminApi.getUsers({ limit: 5 })
-      ]);
+  // Normaliza cualquier forma de respuesta (array plano, paginado, null, o error) a un array seguro
+  const toArray = (value) => {
+    if (Array.isArray(value)) return value;
+    if (value && Array.isArray(value.data)) return value.data;
+    return [];
+  };
 
-      setStats(dashboardRes.data.stats);
-      setRecentUsers(usersRes.data.data || []);
-    } catch (error) {
-      console.error('Error fetching dashboard:', error);
-    } finally {
-      setLoading(false);
+  const fetchDashboardData = async () => {
+    setLoading(true);
+
+    const [dashboardResult, usersResult] = await Promise.allSettled([
+      adminApi.getDashboard(),
+      adminApi.getUsers({ limit: 5 })
+    ]);
+
+    if (dashboardResult.status === 'fulfilled') {
+      setStats(dashboardResult.value.data?.stats);
+    } else {
+      console.error('Error fetching dashboard stats:', dashboardResult.reason);
     }
+
+    if (usersResult.status === 'fulfilled') {
+      setRecentUsers(toArray(usersResult.value.data?.data));
+    } else {
+      console.error('Error fetching recent users:', usersResult.reason);
+    }
+
+    setLoading(false);
   };
 
   if (loading) return <Loading />;
@@ -201,7 +214,7 @@ const AdminDashboard = () => {
           </button>
         </div>
         <div className="space-y-4">
-          {recentUsers.map((user) => (
+          {(Array.isArray(recentUsers) ? recentUsers : []).map((user) => (
             <div key={user.id} className="flex items-center gap-4 p-4 bg-[var(--surface-container-low)] rounded-xl">
               <div className="w-10 h-10 rounded-full bg-[var(--primary)]/10 flex items-center justify-center text-[var(--primary)] font-bold">
                 {user.full_name?.charAt(0) || 'U'}

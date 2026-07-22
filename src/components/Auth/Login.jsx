@@ -121,7 +121,6 @@ const Login = () => {
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
               onError={() => toast.error('Error al iniciar sesión con Google')}
-              useOneTap
               theme="filled_blue"
               shape="pill"
               text="continue_with"

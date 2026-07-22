@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { evaluationsApi } from '../../api/evaluations';
 import { FaCheckCircle, FaTimesCircle, FaClock, FaArrowLeft, FaDownload } from 'react-icons/fa';
 import { formatDate, formatDateTime } from '../../utils/helpers';
@@ -17,13 +17,20 @@ const EvaluationResult = () => {
     fetchResults();
   }, [id]);
 
+  // Normaliza cualquier forma de respuesta (array plano, paginado, null, o error) a un array seguro
+  const toArray = (value) => {
+    if (Array.isArray(value)) return value;
+    if (value && Array.isArray(value.data)) return value.data;
+    return [];
+  };
+
   const fetchResults = async () => {
     try {
       setLoading(true);
       // Obtener resultados
       const resultsRes = await evaluationsApi.getResults(id);
-      const results = resultsRes.data.data || [];
-      
+      const results = toArray(resultsRes.data?.data);
+
       // Tomar el último resultado completado
       const lastResult = results.find(r => r.status === 'completed');
       if (lastResult) {
@@ -38,6 +45,7 @@ const EvaluationResult = () => {
     } catch (error) {
       console.error('Error fetching results:', error);
       toast.error('Error al cargar los resultados');
+      navigate('/evaluations');
     } finally {
       setLoading(false);
     }

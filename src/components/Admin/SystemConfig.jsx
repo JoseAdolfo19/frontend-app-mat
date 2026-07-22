@@ -28,22 +28,35 @@ const SystemConfig = () => {
     fetchConfig();
   }, []);
 
+  // Normaliza cualquier forma de respuesta (array plano, paginado, null, o error) a un array seguro
+  const toArray = (value) => {
+    if (Array.isArray(value)) return value;
+    if (value && Array.isArray(value.data)) return value.data;
+    return [];
+  };
+
   const fetchConfig = async () => {
-    try {
-      setLoading(true);
-      const [configRes, periodsRes] = await Promise.all([
-        adminApi.getConfig(),
-        adminApi.getPeriods()
-      ]);
-      
-      setConfig(configRes.data);
-      setPeriods(periodsRes.data || []);
-    } catch (error) {
-      console.error('Error fetching config:', error);
+    setLoading(true);
+
+    const [configResult, periodsResult] = await Promise.allSettled([
+      adminApi.getConfig(),
+      adminApi.getPeriods()
+    ]);
+
+    if (configResult.status === 'fulfilled') {
+      setConfig(configResult.value.data || {});
+    } else {
+      console.error('Error fetching config:', configResult.reason);
       toast.error('Error al cargar la configuración');
-    } finally {
-      setLoading(false);
     }
+
+    if (periodsResult.status === 'fulfilled') {
+      setPeriods(toArray(periodsResult.value.data));
+    } else {
+      console.error('Error fetching periods:', periodsResult.reason);
+    }
+
+    setLoading(false);
   };
 
   const handleConfigChange = (e) => {
@@ -219,7 +232,7 @@ const SystemConfig = () => {
 
         {/* Lista de períodos */}
         <div className="space-y-3">
-          {periods.map((period) => (
+          {(Array.isArray(periods) ? periods : []).map((period) => (
             <div key={period.id} className="flex items-center justify-between p-4 bg-[var(--surface-container-low)] rounded-xl">
               <div>
                 <p className="font-medium text-[var(--on-surface)]">{period.name}</p>

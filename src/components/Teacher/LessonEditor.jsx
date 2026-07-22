@@ -67,17 +67,23 @@ const LessonEditor = () => {
     try {
       setLoading(true);
       const response = await lessonsApi.getLesson(id);
-      const lesson = response.data.data;
-      
+      const lesson = response.data?.data;
+
+      if (!lesson) {
+        toast.error('No se encontró la lección');
+        navigate('/lessons');
+        return;
+      }
+
       setValue('title', lesson.title);
       setValue('description', lesson.description || '');
       setValue('content', lesson.content);
       setValue('unit', lesson.unit || '');
       setValue('topic', lesson.topic || '');
       setValue('difficulty', lesson.difficulty);
-      setValue('tags', lesson.tags || []);
+      setValue('tags', Array.isArray(lesson.tags) ? lesson.tags : []);
       setValue('estimated_time', lesson.estimated_time || 45);
-      setValue('resources', lesson.resources || []);
+      setValue('resources', Array.isArray(lesson.resources) ? lesson.resources : []);
     } catch (error) {
       console.error('Error fetching lesson:', error);
       toast.error('Error al cargar la lección');
