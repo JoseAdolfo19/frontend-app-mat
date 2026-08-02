@@ -191,7 +191,7 @@ const Login = () => {
 
         <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-10 pb-12">
           <img
-            src="/ejemplo_login.png"
+            src="/mathflow_login.jpg"
             alt="MathFlow Community"
             className="w-full max-w-md mx-auto object-contain drop-shadow-[0_10px_30px_rgba(168,85,247,0.4)]"
           />
