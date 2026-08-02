@@ -17,8 +17,7 @@ const LandingPage = React.lazy(() => import('./components/Landing/LandingPage'))
 import MainLayout from './components/Layout/MainLayout';
 
 // Auth
-import Login from './components/Auth/Login';
-import Register from './components/Auth/Register';
+import Auth from './components/Auth/Auth';
 import ForgotPassword from './components/Auth/ForgotPassword';
 
 // Common (páginas compartidas por todos los roles)
@@ -96,8 +95,8 @@ function App() {
                   <Route path="/" element={<LandingPage />} />
 
                   {/* Auth Routes */}
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<Register />} />
+              <Route path="/login" element={<Auth />} />
+              <Route path="/register" element={<Auth />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />
                   
                   {/* Protected Routes */}

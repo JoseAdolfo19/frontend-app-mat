@@ -30,3 +30,6 @@ Thumbs.db
 # Misc
 coverage/
 *.pem
+
+.vercel
+.env*
