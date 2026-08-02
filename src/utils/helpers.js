@@ -1,17 +1,23 @@
-export const formatDate = (date) => {
+const LOCALE_MAP = {
+  es: 'es-ES',
+  en: 'en-US',
+  qu: 'es-PE',
+};
+
+export const formatDate = (date, lang = 'es') => {
   if (!date) return '';
   const d = new Date(date);
-  return d.toLocaleDateString('es-ES', {
+  return d.toLocaleDateString(LOCALE_MAP[lang] || 'es-ES', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric'
   });
 };
 
-export const formatDateTime = (date) => {
+export const formatDateTime = (date, lang = 'es') => {
   if (!date) return '';
   const d = new Date(date);
-  return d.toLocaleString('es-ES', {
+  return d.toLocaleString(LOCALE_MAP[lang] || 'es-ES', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -82,14 +88,63 @@ export const getBadgeIcon = (badgeId) => {
   return badges[badgeId] || '🏅';
 };
 
-export const getBadgeName = (badgeId) => {
-  const badges = {
+const BADGE_NAMES = {
+  es: {
     'first_lesson': 'Primera Lección',
     'lesson_master': 'Maestro de Lecciones',
     'perfect_score': 'Puntuación Perfecta',
     'streak_7': 'Racha de 7 Días',
     'streak_30': 'Racha de 30 Días',
     'math_genius': 'Genio Matemático'
-  };
-  return badges[badgeId] || badgeId;
+  },
+  en: {
+    'first_lesson': 'First Lesson',
+    'lesson_master': 'Lesson Master',
+    'perfect_score': 'Perfect Score',
+    'streak_7': '7-Day Streak',
+    'streak_30': '30-Day Streak',
+    'math_genius': 'Math Genius'
+  },
+  qu: {
+    'first_lesson': 'Ñawpa Yachay',
+    'lesson_master': 'Yachachiq',
+    'perfect_score': 'Perfecto',
+    'streak_7': '7 Punchay Racha',
+    'streak_30': '30 Punchay Racha',
+    'math_genius': 'Yachachiq Matemática'
+  }
+};
+
+export const getBadgeName = (badgeId, lang = 'es') => {
+  return BADGE_NAMES[lang]?.[badgeId] || BADGE_NAMES.es[badgeId] || badgeId;
+};
+
+export const DIFFICULTY_LABELS = {
+  es: { basic: 'Básico', intermediate: 'Intermedio', advanced: 'Avanzado' },
+  en: { basic: 'Basic', intermediate: 'Intermediate', advanced: 'Advanced' },
+  qu: { basic: 'Ñawpaq', intermediate: 'Chawpi', advanced: 'Llaqpaq' },
+};
+
+export const getDifficultyLabel = (level, lang = 'es') => {
+  return DIFFICULTY_LABELS[lang]?.[level] || DIFFICULTY_LABELS.es[level] || level;
+};
+
+export const getLetterGrade = (score) => {
+  if (score >= 18) return 'AD';
+  if (score >= 15) return 'A';
+  if (score >= 12) return 'B';
+  return 'C';
+};
+
+export const getLetterGradeColor = (score) => {
+  if (score >= 18) return 'text-emerald-600 bg-emerald-100';
+  if (score >= 15) return 'text-blue-600 bg-blue-100';
+  if (score >= 12) return 'text-yellow-600 bg-yellow-100';
+  return 'text-red-600 bg-red-100';
+};
+
+export const toArray = (value) => {
+  if (Array.isArray(value)) return value;
+  if (value && Array.isArray(value.data)) return value.data;
+  return [];
 };

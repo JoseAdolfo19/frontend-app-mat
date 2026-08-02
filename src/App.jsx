@@ -1,11 +1,17 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { NotificationProvider } from './contexts/NotificationContext';
+import { LanguageProvider } from './contexts/LanguageContext';
 import ProtectedRoute from './components/Common/ProtectedRoute';
+import ErrorBoundary from './components/Common/ErrorBoundary';
+import Loading from './components/Common/Loading';
+
+// Landing
+const LandingPage = React.lazy(() => import('./components/Landing/LandingPage'));
 
 // Layout
 import MainLayout from './components/Layout/MainLayout';
@@ -13,6 +19,7 @@ import MainLayout from './components/Layout/MainLayout';
 // Auth
 import Login from './components/Auth/Login';
 import Register from './components/Auth/Register';
+import ForgotPassword from './components/Auth/ForgotPassword';
 
 // Common (páginas compartidas por todos los roles)
 import Profile from './components/Common/Profile';
@@ -21,24 +28,42 @@ import Settings from './components/Common/Settings';
 import Help from './components/Common/Help';
 
 // Student
-import StudentDashboard from './components/Student/StudentDashboard';
-import LessonList from './components/Student/LessonList';
-import LessonDetail from './components/Student/LessonDetail';
-import EvaluationList from './components/Student/EvaluationList';
-import EvaluationResult from './components/Student/EvaluationResult';
+const StudentDashboard = React.lazy(() => import('./components/Student/StudentDashboard'));
+const LessonList = React.lazy(() => import('./components/Student/LessonList'));
+const LessonDetail = React.lazy(() => import('./components/Student/LessonDetail'));
+const EvaluationList = React.lazy(() => import('./components/Student/EvaluationList'));
+const EvaluationResult = React.lazy(() => import('./components/Student/EvaluationResult'));
+const ExamList = React.lazy(() => import('./components/Student/ExamList'));
+const ExamPlayer = React.lazy(() => import('./components/Student/ExamPlayer'));
+const StudentWorkBoard = React.lazy(() => import('./components/Student/StudentWorkBoard'));
+const StudentRanking = React.lazy(() => import('./components/Student/StudentRanking'));
 
 // Teacher
-import TeacherDashboard from './components/Teacher/TeacherDashboard';
-import LessonEditor from './components/Teacher/LessonEditor';
-import EvaluationCreator from './components/Teacher/EvaluationCreator';
-import StudentProgress from './components/Teacher/StudentProgress';
-import Reports from './components/Teacher/Reports';
+const TeacherDashboard = React.lazy(() => import('./components/Teacher/TeacherDashboard'));
+const LessonEditor = React.lazy(() => import('./components/Teacher/LessonEditor'));
+const EvaluationCreator = React.lazy(() => import('./components/Teacher/EvaluationCreator'));
+const StudentProgress = React.lazy(() => import('./components/Teacher/StudentProgress'));
+const Reports = React.lazy(() => import('./components/Teacher/Reports'));
+const ExamManager = React.lazy(() => import('./components/Teacher/ExamManager'));
+const ExamEditor = React.lazy(() => import('./components/Teacher/ExamEditor'));
+const ExamStats = React.lazy(() => import('./components/Teacher/ExamStats'));
+const TeacherStudentRanking = React.lazy(() => import('./components/Teacher/TeacherStudentRanking'));
+const TeacherWorkBoard = React.lazy(() => import('./components/Teacher/TeacherWorkBoard'));
+
+// Admin - Work Board
+const AdminWorkBoard = React.lazy(() => import('./components/Admin/AdminWorkBoard'));
+
+// Parent
+const ParentDashboard = React.lazy(() => import('./components/Parent/ParentDashboard'));
+const ChildProgress = React.lazy(() => import('./components/Parent/ChildProgress'));
+const ChildReport = React.lazy(() => import('./components/Parent/ChildReport'));
+const ParentStudentLookup = React.lazy(() => import('./components/Parent/ParentStudentLookup'));
 
 // Admin
-import AdminDashboard from './components/Admin/AdminDashboard';
-import UserManagement from './components/Admin/UserManagement';
-import SystemConfig from './components/Admin/SystemConfig';
-import ColorSettings from './components/Admin/ColorSettings';
+const AdminDashboard = React.lazy(() => import('./components/Admin/AdminDashboard'));
+const UserManagement = React.lazy(() => import('./components/Admin/UserManagement'));
+const SystemConfig = React.lazy(() => import('./components/Admin/SystemConfig'));
+const ColorSettings = React.lazy(() => import('./components/Admin/ColorSettings'));
 
 import './App.css';
 
@@ -48,9 +73,11 @@ function App() {
   return (
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <Router>
-        <ThemeProvider>
-          <AuthProvider>
-            <NotificationProvider>
+        <LanguageProvider>
+          <ThemeProvider>
+            <AuthProvider>
+              <NotificationProvider>
+              <ErrorBoundary>
               <div className="min-h-screen bg-[var(--background)]">
                 <Toaster
                   position="top-right"
@@ -63,50 +90,90 @@ function App() {
                     }
                   }}
                 />
+                <Suspense fallback={<Loading />}>
                 <Routes>
+                  {/* Landing */}
+                  <Route path="/" element={<LandingPage />} />
+
                   {/* Auth Routes */}
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
                   
                   {/* Protected Routes */}
                   <Route element={<ProtectedRoute />}>
                     <Route element={<MainLayout />}>
-                      <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                      
                       {/* Student */}
                       <Route path="/dashboard" element={<StudentDashboard />} />
+                      <Route path="/my-work" element={<StudentWorkBoard />} />
+                      <Route path="/ranking" element={<StudentRanking />} />
                       <Route path="/lessons" element={<LessonList />} />
                       <Route path="/lessons/:id" element={<LessonDetail />} />
                       <Route path="/evaluations" element={<EvaluationList />} />
                       <Route path="/evaluations/:id/result" element={<EvaluationResult />} />
+                      <Route path="/exams" element={<ExamList />} />
+                      <Route path="/exams/:id/take" element={<ExamPlayer />} />
                       
-                      {/* Teacher */}
+                      {/* Common */}
+                      <Route path="/profile" element={<Profile />} />
+                      <Route path="/notifications" element={<Notifications />} />
+                      <Route path="/settings" element={<Settings />} />
+                      <Route path="/help" element={<Help />} />
+                    </Route>
+                  </Route>
+
+                  {/* Teacher Routes */}
+                  <Route element={<ProtectedRoute roles={['teacher', 'admin']} />}>
+                    <Route element={<MainLayout />}>
                       <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
                       <Route path="/teacher/lessons/create" element={<LessonEditor />} />
                       <Route path="/teacher/lessons/:id/edit" element={<LessonEditor />} />
                       <Route path="/teacher/evaluations/create" element={<EvaluationCreator />} />
                       <Route path="/teacher/evaluations/:id/edit" element={<EvaluationCreator />} />
+                      <Route path="/teacher/exams" element={<ExamManager />} />
+                      <Route path="/teacher/exams/create" element={<ExamEditor />} />
+                      <Route path="/teacher/exams/:id/edit" element={<ExamEditor />} />
+                      <Route path="/teacher/exams/:id/stats" element={<ExamStats />} />
+                      <Route path="/teacher/ranking" element={<TeacherStudentRanking />} />
+                      <Route path="/teacher/works" element={<TeacherWorkBoard />} />
                       <Route path="/teacher/students/:id/progress" element={<StudentProgress />} />
                       <Route path="/reports" element={<Reports />} />
+                    </Route>
+                  </Route>
 
-                      {/* Común a todos los roles */}
-                      <Route path="/profile" element={<Profile />} />
-                      <Route path="/notifications" element={<Notifications />} />
-                      <Route path="/settings" element={<Settings />} />
-                      <Route path="/help" element={<Help />} />
-                      
-                      {/* Admin */}
+                  {/* Admin Routes */}
+                  <Route element={<ProtectedRoute roles={['admin']} />}>
+                    <Route element={<MainLayout />}>
                       <Route path="/admin/dashboard" element={<AdminDashboard />} />
                       <Route path="/admin/users" element={<UserManagement />} />
                       <Route path="/admin/config" element={<SystemConfig />} />
                       <Route path="/admin/colors" element={<ColorSettings />} />
+                      <Route path="/admin/works" element={<AdminWorkBoard />} />
                     </Route>
                   </Route>
+
+                  {/* Public Parent Route - DNI Lookup (no auth required) */}
+                  <Route path="/parent/lookup" element={<ParentStudentLookup />} />
+
+                  {/* Protected Parent Routes */}
+                  <Route element={<ProtectedRoute roles={['parent']} />}>
+                    <Route element={<MainLayout />}>
+                      <Route path="/parent" element={<ParentDashboard />} />
+                      <Route path="/parent/children/:studentId" element={<ChildProgress />} />
+                      <Route path="/parent/children/:studentId/report" element={<ChildReport />} />
+                    </Route>
+                  </Route>
+
+                  {/* 404 Catch-all */}
+                  <Route path="*" element={<Navigate to="/dashboard" replace />} />
                 </Routes>
+                </Suspense>
               </div>
+              </ErrorBoundary>
             </NotificationProvider>
           </AuthProvider>
         </ThemeProvider>
+        </LanguageProvider>
       </Router>
     </GoogleOAuthProvider>
   );

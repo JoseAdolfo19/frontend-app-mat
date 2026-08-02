@@ -3,18 +3,14 @@ import { notificationsApi } from '../../api/notifications';
 import toast from 'react-hot-toast';
 import { FaBell, FaCheck, FaTrash, FaCheckDouble } from 'react-icons/fa';
 import Loading from '../Common/Loading';
-
-// Normaliza cualquier forma de respuesta (array plano, paginado, null, o error) a un array seguro
-const toArray = (value) => {
-  if (Array.isArray(value)) return value;
-  if (value && Array.isArray(value.data)) return value.data;
-  return [];
-};
+import { useLanguage } from '../../contexts/LanguageContext';
+import { toArray } from '../../utils/helpers';
 
 const Notifications = () => {
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState([]);
   const [processingId, setProcessingId] = useState(null);
+  const { t } = useLanguage();
 
   useEffect(() => {
     fetchNotifications();
@@ -26,8 +22,7 @@ const Notifications = () => {
       const response = await notificationsApi.getNotifications();
       setNotifications(toArray(response.data?.data));
     } catch (error) {
-      console.error('Error fetching notifications:', error);
-      toast.error('Error al cargar notificaciones');
+      toast.error(t('notifications.loadedError'));
       setNotifications([]);
     } finally {
       setLoading(false);
@@ -39,11 +34,10 @@ const Notifications = () => {
       setProcessingId(id);
       await notificationsApi.markAsRead(id);
       setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, read_at: new Date().toISOString() } : n))
+        prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
       );
     } catch (error) {
-      console.error('Error marking as read:', error);
-      toast.error('Error al marcar como leída');
+      toast.error(t('notifications.markReadError'));
     } finally {
       setProcessingId(null);
     }
@@ -52,11 +46,10 @@ const Notifications = () => {
   const handleMarkAllAsRead = async () => {
     try {
       await notificationsApi.markAllAsRead();
-      setNotifications((prev) => prev.map((n) => ({ ...n, read_at: n.read_at || new Date().toISOString() })));
-      toast.success('Todas marcadas como leídas');
+      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+      toast.success(t('notifications.markAllRead'));
     } catch (error) {
-      console.error('Error marking all as read:', error);
-      toast.error('Error al marcar todas como leídas');
+      toast.error(t('notifications.markAllReadError'));
     }
   };
 
@@ -65,16 +58,15 @@ const Notifications = () => {
       setProcessingId(id);
       await notificationsApi.deleteNotification(id);
       setNotifications((prev) => prev.filter((n) => n.id !== id));
-      toast.success('Notificación eliminada');
+      toast.success(t('notifications.deletedSuccess'));
     } catch (error) {
-      console.error('Error deleting notification:', error);
-      toast.error('Error al eliminar la notificación');
+      toast.error(t('notifications.deleteError'));
     } finally {
       setProcessingId(null);
     }
   };
 
-  const unreadCount = notifications.filter((n) => !n.read_at).length;
+  const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   if (loading) return <Loading />;
 
@@ -82,9 +74,13 @@ const Notifications = () => {
     <div className="max-w-3xl mx-auto space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-[var(--on-surface)]">Notificaciones</h2>
+          <h2 className="text-3xl font-bold text-[var(--on-surface)]">{t('notifications.title')}</h2>
           <p className="text-[var(--on-surface-variant)]">
-            {unreadCount > 0 ? `Tienes ${unreadCount} notificación${unreadCount !== 1 ? 'es' : ''} sin leer` : 'Estás al día'}
+            {unreadCount > 0
+              ? (unreadCount === 1
+                ? t('notifications.unreadCount').replace('{count}', unreadCount)
+                : t('notifications.unreadCountPlural').replace('{count}', unreadCount))
+              : t('notifications.upToDate')}
           </p>
         </div>
         {unreadCount > 0 && (
@@ -93,17 +89,18 @@ const Notifications = () => {
             className="px-4 py-2 bg-[var(--surface-container)] text-[var(--on-surface)] font-bold rounded-xl hover:bg-[var(--surface-container-high)] transition-all flex items-center gap-2"
           >
             <FaCheckDouble />
-            Marcar todas como leídas
+            {t('notifications.markAllRead')}
           </button>
         )}
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-3" role="list" aria-label={t('notifications.listLabel') || 'Lista de notificaciones'}>
         {notifications.map((notification) => (
           <div
             key={notification.id}
+            role="listitem"
             className={`p-5 rounded-2xl border transition-all flex items-start gap-4 ${
-              notification.read_at
+              notification.is_read
                 ? 'bg-[var(--surface)] border-[var(--surface-container)]'
                 : 'bg-[var(--primary)]/5 border-[var(--primary)]/20'
             }`}
@@ -113,7 +110,7 @@ const Notifications = () => {
             </div>
             <div className="flex-1">
               <p className={`font-medium ${notification.read_at ? 'text-[var(--on-surface-variant)]' : 'text-[var(--on-surface)]'}`}>
-                {notification.title || notification.message || 'Notificación'}
+                {notification.title || notification.message || t('notifications.title')}
               </p>
               {notification.body && (
                 <p className="text-sm text-[var(--on-surface-variant)] mt-1">{notification.body}</p>
@@ -123,12 +120,13 @@ const Notifications = () => {
               </p>
             </div>
             <div className="flex items-center gap-2">
-              {!notification.read_at && (
+              {!notification.is_read && (
                 <button
                   onClick={() => handleMarkAsRead(notification.id)}
                   disabled={processingId === notification.id}
                   className="p-2 text-[var(--secondary)] hover:bg-[var(--secondary)]/10 rounded-lg transition-colors disabled:opacity-50"
-                  title="Marcar como leída"
+                  title={t('notifications.markAsRead')}
+                  aria-label={t('notifications.markAsRead') || 'Marcar como leído'}
                 >
                   <FaCheck className="w-4 h-4" />
                 </button>
@@ -137,7 +135,8 @@ const Notifications = () => {
                 onClick={() => handleDelete(notification.id)}
                 disabled={processingId === notification.id}
                 className="p-2 text-[var(--error)] hover:bg-[var(--error)]/10 rounded-lg transition-colors disabled:opacity-50"
-                title="Eliminar"
+                  title={t('notifications.delete')}
+                  aria-label={t('notifications.delete') || 'Eliminar notificación'}
               >
                 <FaTrash className="w-4 h-4" />
               </button>
@@ -149,8 +148,8 @@ const Notifications = () => {
       {notifications.length === 0 && (
         <div className="text-center py-16">
           <FaBell className="mx-auto text-5xl text-[var(--on-surface-variant)] mb-4" />
-          <h3 className="text-xl font-bold text-[var(--on-surface)]">No tienes notificaciones</h3>
-          <p className="text-[var(--on-surface-variant)]">Te avisaremos cuando haya algo nuevo</p>
+          <h3 className="text-xl font-bold text-[var(--on-surface)]">{t('notifications.empty')}</h3>
+          <p className="text-[var(--on-surface-variant)]">{t('notifications.emptyDesc')}</p>
         </div>
       )}
     </div>

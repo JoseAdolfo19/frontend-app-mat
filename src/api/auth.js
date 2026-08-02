@@ -11,7 +11,7 @@ export const authApi = {
   googleLogin: (accessToken) => api.post('/auth/google/login', { access_token: accessToken }),
   
   // Logout
-  logout: () => api.post('/auth/logout'),
+  logout: () => api.post('/user/logout'),
   
   // Recuperar contraseña
   forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
@@ -33,4 +33,16 @@ export const authApi = {
   
   // Desvincular Google
   disconnectGoogle: () => api.post('/user/disconnect-google'),
+
+  // Refrescar token (renovar expiración)
+  refreshToken: () => api.post('/user/refresh-token'),
+
+  // Cerrar sesiones de una plataforma
+  logoutPlatform: (platform) => api.post('/user/logout-platform', { platform }),
+
+  // Cerrar todas las sesiones excepto la actual
+  logoutAll: () => api.post('/user/logout-all'),
+
+  // Listar sesiones activas
+  getDevices: () => api.get('/user/devices'),
 };

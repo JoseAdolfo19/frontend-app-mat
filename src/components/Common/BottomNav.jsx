@@ -1,23 +1,44 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { FaHome, FaBook, FaClipboardList, FaUser } from 'react-icons/fa';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { FaHome, FaBook, FaClipboardList, FaUser, FaUsers, FaChartBar, FaChild, FaFileAlt, FaTrophy, FaClipboardCheck } from 'react-icons/fa';
 
 const BottomNav = () => {
   const location = useLocation();
-  const { isAdmin, isTeacher } = useAuth();
+  const { isAdmin, isTeacher, isParent } = useAuth();
+  const { t } = useLanguage();
 
-  const isActive = (path) => location.pathname === path;
+  const isActive = (path) => location.pathname.startsWith(path);
 
-  const navItems = [
-    { path: '/dashboard', label: 'Inicio', icon: FaHome },
-    { path: '/lessons', label: 'Lecciones', icon: FaBook },
-    { path: '/evaluations', label: 'Tests', icon: FaClipboardList },
-    { path: '/profile', label: 'Perfil', icon: FaUser },
+  const baseItems = [
+    { path: '/dashboard', label: t('nav.dashboard'), icon: FaHome, alwaysShow: true },
+    { path: '/lessons', label: t('nav.lessons'), icon: FaBook, alwaysShow: true },
+    { path: '/evaluations', label: t('nav.evaluations'), icon: FaClipboardList, alwaysShow: true },
+    { path: '/my-work', label: t('workBoard.title'), icon: FaClipboardList, studentOnly: true },
+    { path: '/ranking', label: t('ranking.title'), icon: FaTrophy, studentOnly: true },
+    { path: '/exams', label: t('exam.title'), icon: FaFileAlt, studentOnly: true },
+    { path: '/teacher/works', label: t('teacherWorkBoard.title'), icon: FaClipboardCheck, teacherOnly: true },
+    { path: '/teacher/ranking', label: t('ranking.title'), icon: FaTrophy, teacherOnly: true },
+    { path: '/admin/works', label: t('workBoard.title'), icon: FaClipboardList, adminOnly: true },
+    { path: '/parent', label: t('nav.children'), icon: FaChild, parentOnly: true },
+    { path: '/admin', label: t('nav.users'), icon: FaUsers, adminOnly: true },
+    { path: '/reports', label: t('nav.reports'), icon: FaChartBar, teacherOnly: true },
+    { path: '/teacher/exams', label: t('exam.title'), icon: FaFileAlt, teacherOnly: true },
+    { path: '/profile', label: t('topbar.profile'), icon: FaUser, alwaysShow: true },
   ];
 
+  const navItems = baseItems.filter(item => {
+    if (item.alwaysShow) return true;
+    if (item.studentOnly) return !isAdmin() && !isTeacher() && !isParent();
+    if (item.parentOnly) return isParent();
+    if (item.adminOnly) return isAdmin();
+    if (item.teacherOnly) return isTeacher();
+    return false;
+  }).slice(0, 5);
+
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[var(--surface)] shadow-[0px_-4px_20px_rgba(0,0,0,0.05)] flex justify-around items-center py-3 z-50 border-t border-[var(--outline-variant)]/20">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[var(--surface)] shadow-[0px_-4px_20px_rgba(0,0,0,0.05)] flex justify-around items-center py-3 z-50 border-t border-[var(--outline-variant)]/20" role="navigation" aria-label={t('nav.bottomNav') || 'Navegación principal'}>
       {navItems.map((item) => (
         <Link
           key={item.path}

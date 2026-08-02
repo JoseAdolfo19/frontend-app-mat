@@ -1,20 +1,30 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import axios from '../api/axios';
-import { useNavigate } from 'react-router-dom';
+import translations from './LanguageContext';
 
 const AuthContext = createContext();
 
 export const useAuth = () => useContext(AuthContext);
 
+const getT = () => {
+  const lang = localStorage.getItem('mathflow_language') || 'es';
+  return (key) => {
+    const keys = key.split('.');
+    let value = translations[lang];
+    for (const k of keys) {
+      value = value?.[k];
+    }
+    return value || key;
+  };
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [token, setToken] = useState(localStorage.getItem('access_token'));
-  const navigate = useNavigate();
+  const [token, setToken] = useState(() => localStorage.getItem('access_token'));
 
   useEffect(() => {
     if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       fetchUser();
     } else {
       setLoading(false);
@@ -26,8 +36,9 @@ export const AuthProvider = ({ children }) => {
       const response = await axios.get('/user/profile');
       setUser(response.data.user);
     } catch (error) {
-      console.error('Error fetching user:', error);
-      logout();
+      if (error.response?.status === 401) {
+        logout();
+      }
     } finally {
       setLoading(false);
     }
@@ -36,39 +47,37 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const response = await axios.post('/auth/login', { email, password });
-      const { access_token, user } = response.data;
-      
+      const { access_token, user: userData } = response.data;
+
       localStorage.setItem('access_token', access_token);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
       setToken(access_token);
-      setUser(user);
-      
-      return { success: true, user };
+      setUser(userData);
+
+      return { success: true, user: userData };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Error al iniciar sesión'
+      return {
+        success: false,
+        error: error.response?.data?.message || getT()('auth.login.error')
       };
     }
   };
 
   const loginWithGoogle = async (googleToken) => {
     try {
-      const response = await axios.post('/auth/google/login', { 
-        access_token: googleToken 
+      const response = await axios.post('/auth/google/login', {
+        access_token: googleToken
       });
-      const { access_token, user } = response.data;
-      
+      const { access_token, user: userData } = response.data;
+
       localStorage.setItem('access_token', access_token);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
       setToken(access_token);
-      setUser(user);
-      
-      return { success: true, user };
+      setUser(userData);
+
+      return { success: true, user: userData };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Error al iniciar sesión con Google'
+      return {
+        success: false,
+        error: error.response?.data?.message || getT()('auth.login.googleError')
       };
     }
   };
@@ -76,43 +85,48 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       const response = await axios.post('/auth/register', userData);
-      const { access_token, user } = response.data;
-      
+      const { access_token, user: newUser } = response.data;
+
       localStorage.setItem('access_token', access_token);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
       setToken(access_token);
-      setUser(user);
-      
-      return { success: true, user };
+      setUser(newUser);
+
+      return { success: true, user: newUser };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Error al registrar usuario'
+      return {
+        success: false,
+        error: error.response?.data?.message || getT()('auth.register.error')
       };
     }
   };
 
-  const logout = () => {
+  const logout = useCallback(async () => {
+    try {
+      await axios.post('/user/logout');
+    } catch {
+      // Token might already be invalid
+    }
+
     localStorage.removeItem('access_token');
-    delete axios.defaults.headers.common['Authorization'];
     setToken(null);
     setUser(null);
-    navigate('/login');
-  };
+  }, []);
 
   const hasRole = (roles) => {
-    if (!user) return false;
+    if (!user?.role) return false;
     return roles.includes(user.role.name);
   };
 
   const isAdmin = () => hasRole(['admin']);
   const isTeacher = () => hasRole(['teacher', 'admin']);
   const isStudent = () => hasRole(['student']);
+  const isParent = () => hasRole(['parent']);
 
   return (
     <AuthContext.Provider value={{
       user,
       loading,
+      token,
       login,
       loginWithGoogle,
       register,
@@ -120,7 +134,8 @@ export const AuthProvider = ({ children }) => {
       hasRole,
       isAdmin,
       isTeacher,
-      isStudent
+      isStudent,
+      isParent
     }}>
       {children}
     </AuthContext.Provider>

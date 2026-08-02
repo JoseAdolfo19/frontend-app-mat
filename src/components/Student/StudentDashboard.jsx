@@ -4,35 +4,26 @@ import { usersApi } from '../../api/users';
 import { lessonsApi } from '../../api/lessons';
 import { evaluationsApi } from '../../api/evaluations';
 import { useAuth } from '../../hooks/useAuth';
-import { FaBook, FaClipboardList, FaChartLine, FaFire, FaClock } from 'react-icons/fa';
-import { formatDate, calculateProgress, getBadgeIcon, getBadgeName } from '../../utils/helpers';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { FaBook, FaClipboardList, FaChartLine, FaFire } from 'react-icons/fa';
+import { formatDate, calculateProgress, getBadgeIcon, getBadgeName, getDifficultyLabel, toArray } from '../../utils/helpers';
 import Loading from '../Common/Loading';
 
 const StudentDashboard = () => {
   const { user } = useAuth();
+  const { lang, t } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
   const [inProgressLessons, setInProgressLessons] = useState([]);
   const [recentEvaluations, setRecentEvaluations] = useState([]);
-  const [upcomingEvaluations, setUpcomingEvaluations] = useState([]);
   const [badges, setBadges] = useState([]);
 
   useEffect(() => {
     fetchDashboardData();
   }, []);
 
-  // Normaliza cualquier forma de respuesta (array plano, paginado, o vacío) a un array seguro
-  const toArray = (value) => {
-    if (Array.isArray(value)) return value;
-    if (value && Array.isArray(value.data)) return value.data; // respuesta paginada anidada
-    return [];
-  };
-
   const fetchDashboardData = async () => {
     setLoading(true);
-
-    // Usamos allSettled en vez de Promise.all: si UNA petición falla
-    // (ej. error de red), las demás igual se procesan y no truena la pantalla.
     const [statsResult, progressResult, evaluationsResult, badgesResult] = await Promise.allSettled([
       usersApi.getMyStats(),
       lessonsApi.getLessons({ status: 'in_progress' }),
@@ -40,29 +31,10 @@ const StudentDashboard = () => {
       usersApi.getBadges()
     ]);
 
-    if (statsResult.status === 'fulfilled') {
-      setStats(statsResult.value.data);
-    } else {
-      console.error('Error fetching stats:', statsResult.reason);
-    }
-
-    if (progressResult.status === 'fulfilled') {
-      setInProgressLessons(toArray(progressResult.value.data?.data));
-    } else {
-      console.error('Error fetching lessons:', progressResult.reason);
-    }
-
-    if (evaluationsResult.status === 'fulfilled') {
-      setRecentEvaluations(toArray(evaluationsResult.value.data?.data));
-    } else {
-      console.error('Error fetching evaluations:', evaluationsResult.reason);
-    }
-
-    if (badgesResult.status === 'fulfilled') {
-      setBadges(toArray(badgesResult.value.data?.badges));
-    } else {
-      console.error('Error fetching badges:', badgesResult.reason);
-    }
+    if (statsResult.status === 'fulfilled') setStats(statsResult.value.data);
+    if (progressResult.status === 'fulfilled') setInProgressLessons(toArray(progressResult.value.data?.data));
+    if (evaluationsResult.status === 'fulfilled') setRecentEvaluations(toArray(evaluationsResult.value.data?.data));
+    if (badgesResult.status === 'fulfilled') setBadges(toArray(badgesResult.value.data?.badges));
 
     setLoading(false);
   };
@@ -71,51 +43,49 @@ const StudentDashboard = () => {
 
   return (
     <div className="space-y-8">
-      {/* Welcome Section */}
       <div className="relative overflow-hidden rounded-3xl bg-[var(--primary)] p-8 md:p-12">
         <div className="relative z-10 max-w-2xl">
           <h2 className="text-3xl font-bold text-white mb-2">
-            ¡Hola de nuevo, {user?.full_name?.split(' ')[0]}! 👋
+            {t('student.welcome').replace('{name}', user?.full_name?.split(' ')[0] || '')}
           </h2>
           <p className="text-blue-100 mb-6">
-            Has completado el {stats?.summary?.completion_rate || 0}% de tus objetivos semanales.
-            Estás a solo {stats?.summary?.total_lessons - stats?.summary?.completed_lessons || 0} lecciones de dominar el módulo.
+            {t('student.welcomeMsg')
+              .replace('{percent}', stats?.summary?.completion_rate || 0)
+              .replace('{count}', (stats?.summary?.total_lessons - stats?.summary?.completed_lessons) || 0)}
           </p>
           <div className="flex flex-wrap gap-4">
             <Link
               to="/lessons"
               className="bg-white text-[var(--primary)] font-bold px-6 py-3 rounded-xl flex items-center gap-2 hover:shadow-lg transition-all"
             >
-              Continuar: Álgebra Lineal
+              {t('student.continue')}
               <span className="text-lg">→</span>
             </Link>
             <button
               onClick={() => document.getElementById('logros-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
               className="bg-white/10 border border-white/20 text-white font-bold px-6 py-3 rounded-xl hover:bg-white/20 transition-all"
             >
-              Ver mis logros
+              {t('student.viewAchievements')}
             </button>
           </div>
         </div>
-        {/* Decorative Math Symbol */}
         <div className="absolute right-[-5%] top-[-10%] opacity-10 select-none pointer-events-none text-9xl font-bold text-white">
           ∑
         </div>
       </div>
 
-      {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-[var(--surface)] p-6 rounded-xl shadow-sm border border-[var(--surface-container)]">
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-[var(--primary)]/10 rounded-lg text-[var(--primary)]">
+            <div className="p-2 bg-[var(--primary)]/10 rounded-lg text-[var(--primary)]" aria-hidden="true">
               <FaBook className="w-5 h-5" />
             </div>
             <span className="text-xs font-bold text-[var(--secondary)] bg-[var(--secondary)]/10 px-2 py-0.5 rounded-full">
               {stats?.summary?.completion_rate || 0}%
             </span>
           </div>
-          <p className="text-sm text-[var(--on-surface-variant)]">Lecciones</p>
-          <p className="text-2xl font-bold text-[var(--on-surface)]">
+          <p className="text-sm text-[var(--on-surface-variant)]">{t('student.lessons')}</p>
+          <p className="text-2xl font-bold text-[var(--on-surface)]" aria-label={`${t('student.lessons')}: ${stats?.summary?.completed_lessons || 0} de ${stats?.summary?.total_lessons || 0}`}>
             {stats?.summary?.completed_lessons || 0}/{stats?.summary?.total_lessons || 0}
           </p>
         </div>
@@ -126,7 +96,7 @@ const StudentDashboard = () => {
               <FaClipboardList className="w-5 h-5" />
             </div>
           </div>
-          <p className="text-sm text-[var(--on-surface-variant)]">Evaluaciones</p>
+          <p className="text-sm text-[var(--on-surface-variant)]">{t('student.evaluations')}</p>
           <p className="text-2xl font-bold text-[var(--on-surface)]">
             {stats?.summary?.completed_evaluations || 0}
           </p>
@@ -138,7 +108,7 @@ const StudentDashboard = () => {
               <FaChartLine className="w-5 h-5" />
             </div>
           </div>
-          <p className="text-sm text-[var(--on-surface-variant)]">Promedio</p>
+          <p className="text-sm text-[var(--on-surface-variant)]">{t('student.average')}</p>
           <p className="text-2xl font-bold text-[var(--on-surface)]">
             {stats?.summary?.average_score || 0}
           </p>
@@ -150,21 +120,18 @@ const StudentDashboard = () => {
               <FaFire className="w-5 h-5" />
             </div>
           </div>
-          <p className="text-sm text-[var(--on-surface-variant)]">Racha</p>
+          <p className="text-sm text-[var(--on-surface-variant)]">{t('student.streak')}</p>
           <p className="text-2xl font-bold text-[var(--on-surface)]">
-            {stats?.summary?.current_streak || 0} días
+            {stats?.summary?.current_streak || 0} {t('student.days')}
           </p>
         </div>
       </div>
 
-      {/* Lecciones en progreso */}
       <div>
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-bold text-[var(--on-surface)]">
-            Lecciones en curso
-          </h3>
+          <h3 className="text-xl font-bold text-[var(--on-surface)]">{t('student.inProgress')}</h3>
           <Link to="/lessons" className="text-sm text-[var(--primary)] font-bold hover:underline">
-            Ver todas
+            {t('student.viewAll')}
           </Link>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -172,6 +139,7 @@ const StudentDashboard = () => {
             <Link
               key={lesson.id}
               to={`/lessons/${lesson.id}`}
+              aria-label={lesson.title}
               className="bg-[var(--surface)] p-6 rounded-2xl shadow-sm hover:shadow-lg transition-all border border-[var(--surface-container)] hover:border-[var(--primary)]/20 group"
             >
               <div className="flex justify-between items-start mb-4">
@@ -179,18 +147,18 @@ const StudentDashboard = () => {
                   <FaBook className="w-6 h-6" />
                 </div>
                 <span className={`px-3 py-1 rounded-full text-xs font-bold ${lesson.difficulty === 'basic' ? 'bg-green-100 text-green-700' : lesson.difficulty === 'intermediate' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>
-                  {lesson.difficulty}
+                  {getDifficultyLabel(lesson.difficulty, lang)}
                 </span>
               </div>
               <h4 className="font-bold text-[var(--on-surface)] mb-1 group-hover:text-[var(--primary)] transition-colors">
                 {lesson.title}
               </h4>
               <p className="text-sm text-[var(--on-surface-variant)] mb-4">
-                {lesson.unit || 'Sin unidad'}
+                {lesson.unit || t('lessons.noUnit')}
               </p>
               <div className="space-y-2">
                 <div className="flex justify-between text-xs">
-                  <span className="text-[var(--on-surface-variant)]">Progreso</span>
+                  <span className="text-[var(--on-surface-variant)]">{t('student.progress')}</span>
                   <span className="font-bold text-[var(--on-surface)]">
                     {lesson.progress?.progress || 0}%
                   </span>
@@ -207,53 +175,49 @@ const StudentDashboard = () => {
         </div>
       </div>
 
-      {/* Evaluaciones y Badges */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Evaluaciones recientes */}
         <div className="lg:col-span-2 bg-[var(--surface)] p-6 rounded-2xl shadow-sm border border-[var(--surface-container)]">
-          <h3 className="text-xl font-bold text-[var(--on-surface)] mb-4">
-            Evaluaciones Recientes
-          </h3>
+          <h3 className="text-xl font-bold text-[var(--on-surface)] mb-4">{t('student.recentEvaluations')}</h3>
           <div className="space-y-3">
             {(Array.isArray(recentEvaluations) ? recentEvaluations : []).slice(0, 5).map((eval_) => (
               <div key={eval_.id} className="flex items-center justify-between p-4 bg-[var(--surface-container-low)] rounded-xl hover:bg-[var(--surface-container)] transition-colors">
                 <div>
                   <p className="font-medium text-[var(--on-surface)]">{eval_.title}</p>
                   <p className="text-sm text-[var(--on-surface-variant)]">
-                    {formatDate(eval_.created_at)}
+                    {formatDate(eval_.created_at, lang)}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
                   {eval_.user_result?.score !== undefined ? (
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${eval_.user_result.score >= 7 ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                      {eval_.user_result.score.toFixed(1)}/10
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${eval_.user_result.score >= 15 ? 'bg-green-100 text-green-700' : eval_.user_result.score >= 12 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>
+                      {eval_.user_result.score.toFixed(1)}/20
                     </span>
                   ) : (
                     <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700">
-                      Pendiente
+                      {t('student.pending')}
                     </span>
                   )}
-                  <Link
-                    to={`/evaluations/${eval_.id}/result`}
-                    className="text-[var(--primary)] hover:underline text-sm font-medium"
-                  >
-                    Ver
+            <Link
+              to={`/evaluations/${eval_.id}/result`}
+              className="text-[var(--primary)] hover:underline text-sm font-medium"
+              aria-label={`${t('common.next')} - ${eval_.title}`}
+            >
+                    {t('common.next')}
                   </Link>
                 </div>
               </div>
             ))}
             {recentEvaluations.length === 0 && (
               <p className="text-center text-[var(--on-surface-variant)] py-4">
-                No tienes evaluaciones recientes
+                {t('student.noEvaluations')}
               </p>
             )}
           </div>
         </div>
 
-        {/* Badges */}
         <div id="logros-section" className="bg-[var(--surface)] p-6 rounded-2xl shadow-sm border border-[var(--surface-container)]">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-bold text-[var(--on-surface)]">Mis Logros</h3>
+            <h3 className="text-xl font-bold text-[var(--on-surface)]">{t('student.myAchievements')}</h3>
             <span className="text-sm text-[var(--primary)] font-bold">
               {(Array.isArray(badges) ? badges : []).filter(b => b.unlocked).length}/{(Array.isArray(badges) ? badges : []).length}
             </span>
@@ -276,7 +240,7 @@ const StudentDashboard = () => {
                   {getBadgeIcon(badge.id)}
                 </div>
                 <p className="text-xs font-medium text-[var(--on-surface)] leading-tight">
-                  {getBadgeName(badge.id)}
+                  {getBadgeName(badge.id, lang)}
                 </p>
                 {!badge.unlocked && (
                   <p className="text-[10px] text-[var(--on-surface-variant)] mt-1">🔒</p>
@@ -286,7 +250,7 @@ const StudentDashboard = () => {
           </div>
           {badges.length === 0 && (
             <p className="text-center text-[var(--on-surface-variant)] py-4">
-              Completa más lecciones para desbloquear insignias
+              {t('student.noBadges')}
             </p>
           )}
         </div>

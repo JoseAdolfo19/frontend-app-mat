@@ -9,31 +9,33 @@ import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { FaSave, FaTimes, FaPlus, FaTrash, FaUpload } from 'react-icons/fa';
 import Loading from '../Common/Loading';
-
-const schema = yup.object().shape({
-  title: yup.string().required('El título es requerido'),
-  description: yup.string().nullable(),
-  content: yup.string().required('El contenido es requerido'),
-  unit: yup.string().nullable(),
-  topic: yup.string().nullable(),
-  difficulty: yup.string().required('La dificultad es requerida'),
-  tags: yup.array().of(yup.string()),
-  estimated_time: yup.number().min(1, 'Mínimo 1 minuto'),
-  resources: yup.array().of(
-    yup.object().shape({
-      type: yup.string().required(),
-      url: yup.string().url('URL inválida').required(),
-      title: yup.string().required()
-    })
-  )
-});
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const LessonEditor = () => {
+  const { t } = useLanguage();
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [tagInput, setTagInput] = useState('');
+
+  const schema = yup.object().shape({
+    title: yup.string().required(t('teacher.lessonEditor.title') + ' *'),
+    description: yup.string().nullable(),
+    content: yup.string().required(t('teacher.lessonEditor.content') + ' *'),
+    unit: yup.string().nullable(),
+    topic: yup.string().nullable(),
+    difficulty: yup.string().required(t('teacher.lessonEditor.difficulty') + ' *'),
+    tags: yup.array().of(yup.string()),
+    estimated_time: yup.number().min(1, 'Min 1'),
+    resources: yup.array().of(
+      yup.object().shape({
+        type: yup.string().required(),
+        url: yup.string().url().required(),
+        title: yup.string().required()
+      })
+    )
+  });
 
   const { register, control, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     resolver: yupResolver(schema),
@@ -70,7 +72,7 @@ const LessonEditor = () => {
       const lesson = response.data?.data;
 
       if (!lesson) {
-        toast.error('No se encontró la lección');
+        toast.error(t('teacher.lessonEditor.notFound'));
         navigate('/lessons');
         return;
       }
@@ -85,8 +87,7 @@ const LessonEditor = () => {
       setValue('estimated_time', lesson.estimated_time || 45);
       setValue('resources', Array.isArray(lesson.resources) ? lesson.resources : []);
     } catch (error) {
-      console.error('Error fetching lesson:', error);
-      toast.error('Error al cargar la lección');
+      toast.error(t('teacher.lessonEditor.loadError'));
     } finally {
       setLoading(false);
     }
@@ -97,15 +98,14 @@ const LessonEditor = () => {
       setSaving(true);
       if (id) {
         await lessonsApi.updateLesson(id, data);
-        toast.success('Lección actualizada exitosamente');
+        toast.success(t('teacher.lessonEditor.saveSuccess'));
       } else {
         await lessonsApi.createLesson(data);
-        toast.success('Lección creada exitosamente');
+        toast.success(t('teacher.lessonEditor.saveSuccess'));
       }
       navigate('/lessons');
     } catch (error) {
-      console.error('Error saving lesson:', error);
-      toast.error(error.response?.data?.message || 'Error al guardar la lección');
+      toast.error(error.response?.data?.message || t('teacher.lessonEditor.saveError'));
     } finally {
       setSaving(false);
     }
@@ -128,31 +128,32 @@ const LessonEditor = () => {
     <div className="max-w-4xl mx-auto space-y-8">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-[var(--on-surface)]">
-          {id ? 'Editar Lección' : 'Nueva Lección'}
+          {id ? t('teacher.lessonEditor.editLesson') : t('teacher.lessonEditor.newLesson')}
         </h2>
         <button
           onClick={() => navigate('/lessons')}
           className="px-4 py-2 text-[var(--on-surface-variant)] hover:bg-[var(--surface-container)] rounded-xl transition-colors"
         >
-          Cancelar
+          {t('teacher.lessonEditor.cancel')}
         </button>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Basic Info */}
         <div className="bg-[var(--surface)] p-6 rounded-2xl shadow-sm border border-[var(--surface-container)]">
-          <h3 className="text-lg font-bold text-[var(--on-surface)] mb-4">Información Básica</h3>
+          <h3 className="text-lg font-bold text-[var(--on-surface)] mb-4">{t('teacher.lessonEditor.basicInfo')}</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
-                Título *
+              <label htmlFor="lesson-title" className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
+                {t('teacher.lessonEditor.title')} *
               </label>
               <input
+                id="lesson-title"
                 type="text"
                 {...register('title')}
                 className="w-full px-4 py-3 rounded-xl border-2 border-[var(--surface-container-high)] focus:border-[var(--primary)] focus:outline-none bg-[var(--surface-container-low)]"
-                placeholder="Título de la lección"
+                placeholder={t('teacher.lessonEditor.titlePlaceholder')}
               />
               {errors.title && (
                 <p className="text-sm text-[var(--error)] mt-1">{errors.title.message}</p>
@@ -160,48 +161,52 @@ const LessonEditor = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
-                Dificultad *
+              <label htmlFor="lesson-difficulty" className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
+                {t('teacher.lessonEditor.difficulty')} *
               </label>
               <select
+                id="lesson-difficulty"
                 {...register('difficulty')}
                 className="w-full px-4 py-3 rounded-xl border-2 border-[var(--surface-container-high)] focus:border-[var(--primary)] focus:outline-none bg-[var(--surface-container-low)]"
               >
-                <option value="basic">Básico</option>
-                <option value="intermediate">Intermedio</option>
-                <option value="advanced">Avanzado</option>
+                <option value="basic">{t('lessons.basic')}</option>
+                <option value="intermediate">{t('lessons.intermediate')}</option>
+                <option value="advanced">{t('lessons.advanced')}</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
-                Unidad
+              <label htmlFor="lesson-unit" className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
+                {t('teacher.lessonEditor.unit')}
               </label>
               <input
+                id="lesson-unit"
                 type="text"
                 {...register('unit')}
                 className="w-full px-4 py-3 rounded-xl border-2 border-[var(--surface-container-high)] focus:border-[var(--primary)] focus:outline-none bg-[var(--surface-container-low)]"
-                placeholder="Ej: Unidad 1: Álgebra"
+                placeholder={t('teacher.lessonEditor.unitPlaceholder')}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
-                Tema
+              <label htmlFor="lesson-topic" className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
+                {t('teacher.lessonEditor.topic')}
               </label>
               <input
+                id="lesson-topic"
                 type="text"
                 {...register('topic')}
                 className="w-full px-4 py-3 rounded-xl border-2 border-[var(--surface-container-high)] focus:border-[var(--primary)] focus:outline-none bg-[var(--surface-container-low)]"
-                placeholder="Ej: Ecuaciones de segundo grado"
+                placeholder={t('teacher.lessonEditor.topicPlaceholder')}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
-                Tiempo estimado (minutos)
+              <label htmlFor="lesson-estimated-time" className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
+                {t('teacher.lessonEditor.estimatedTime')}
               </label>
               <input
+                id="lesson-estimated-time"
                 type="number"
                 {...register('estimated_time')}
                 className="w-full px-4 py-3 rounded-xl border-2 border-[var(--surface-container-high)] focus:border-[var(--primary)] focus:outline-none bg-[var(--surface-container-low)]"
@@ -211,21 +216,22 @@ const LessonEditor = () => {
           </div>
 
           <div className="mt-4">
-            <label className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
-              Descripción
+            <label htmlFor="lesson-description" className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
+              {t('teacher.lessonEditor.description')}
             </label>
             <textarea
+              id="lesson-description"
               {...register('description')}
               rows="3"
               className="w-full px-4 py-3 rounded-xl border-2 border-[var(--surface-container-high)] focus:border-[var(--primary)] focus:outline-none bg-[var(--surface-container-low)] resize-none"
-              placeholder="Descripción breve de la lección"
+              placeholder={t('teacher.lessonEditor.descriptionPlaceholder')}
             />
           </div>
         </div>
 
         {/* Tags */}
         <div className="bg-[var(--surface)] p-6 rounded-2xl shadow-sm border border-[var(--surface-container)]">
-          <h3 className="text-lg font-bold text-[var(--on-surface)] mb-4">Etiquetas</h3>
+          <h3 className="text-lg font-bold text-[var(--on-surface)] mb-4">{t('teacher.lessonEditor.tags')}</h3>
           <div className="flex flex-wrap gap-2 mb-3">
             {tags.map((tag, index) => (
               <span
@@ -250,7 +256,7 @@ const LessonEditor = () => {
               onChange={(e) => setTagInput(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && addTag()}
               className="flex-1 px-4 py-2 rounded-xl border-2 border-[var(--surface-container-high)] focus:border-[var(--primary)] focus:outline-none bg-[var(--surface-container-low)]"
-              placeholder="Agregar etiqueta..."
+              placeholder={t('teacher.lessonEditor.addTag')}
             />
             <button
               type="button"
@@ -264,7 +270,7 @@ const LessonEditor = () => {
 
         {/* Content */}
         <div className="bg-[var(--surface)] p-6 rounded-2xl shadow-sm border border-[var(--surface-container)]">
-          <h3 className="text-lg font-bold text-[var(--on-surface)] mb-4">Contenido *</h3>
+          <h3 className="text-lg font-bold text-[var(--on-surface)] mb-4">{t('teacher.lessonEditor.content')} *</h3>
           <ReactQuill
             theme="snow"
             value={watch('content')}
@@ -288,7 +294,7 @@ const LessonEditor = () => {
 
         {/* Resources */}
         <div className="bg-[var(--surface)] p-6 rounded-2xl shadow-sm border border-[var(--surface-container)]">
-          <h3 className="text-lg font-bold text-[var(--on-surface)] mb-4">Recursos</h3>
+          <h3 className="text-lg font-bold text-[var(--on-surface)] mb-4">{t('teacher.lessonEditor.resources')}</h3>
           
           {fields.map((field, index) => (
             <div key={field.id} className="flex gap-4 mb-3 p-4 bg-[var(--surface-container-low)] rounded-xl">
@@ -299,12 +305,12 @@ const LessonEditor = () => {
                 >
                   <option value="pdf">PDF</option>
                   <option value="video">Video</option>
-                  <option value="image">Imagen</option>
-                  <option value="link">Enlace</option>
+                  <option value="image">{t('teacher.evaluationCreator.formula')}</option>
+                  <option value="link">Link</option>
                 </select>
                 <input
                   {...register(`resources.${index}.title`)}
-                  placeholder="Título"
+                  placeholder={t('teacher.lessonEditor.titleField')}
                   className="px-4 py-2 rounded-xl border-2 border-[var(--surface-container-high)] focus:border-[var(--primary)] focus:outline-none bg-white"
                 />
                 <input
@@ -313,11 +319,12 @@ const LessonEditor = () => {
                   className="px-4 py-2 rounded-xl border-2 border-[var(--surface-container-high)] focus:border-[var(--primary)] focus:outline-none bg-white"
                 />
               </div>
-              <button
-                type="button"
-                onClick={() => remove(index)}
-                className="text-[var(--error)] hover:bg-[var(--error)]/10 p-2 rounded-xl transition-colors"
-              >
+                <button
+                  type="button"
+                  onClick={() => remove(index)}
+                  className="text-[var(--error)] hover:bg-[var(--error)]/10 p-2 rounded-xl transition-colors"
+                  aria-label={`Eliminar recurso ${index + 1}`}
+                >
                 <FaTrash />
               </button>
             </div>
@@ -329,7 +336,7 @@ const LessonEditor = () => {
             className="w-full py-3 border-2 border-dashed border-[var(--outline-variant)] rounded-xl text-[var(--outline)] hover:border-[var(--primary)] hover:text-[var(--primary)] transition-all flex items-center justify-center gap-2"
           >
             <FaUpload />
-            Agregar recurso
+            {t('teacher.lessonEditor.addResource')}
           </button>
         </div>
 
@@ -341,14 +348,14 @@ const LessonEditor = () => {
             className="flex-1 px-6 py-3 bg-[var(--primary)] text-white font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
           >
             <FaSave />
-            {saving ? 'Guardando...' : id ? 'Actualizar Lección' : 'Crear Lección'}
+            {saving ? t('teacher.lessonEditor.saving') : id ? t('teacher.lessonEditor.updateLesson') : t('teacher.lessonEditor.createLesson')}
           </button>
           <button
             type="button"
             onClick={() => navigate('/lessons')}
             className="px-6 py-3 bg-[var(--surface-container)] text-[var(--on-surface)] font-bold rounded-xl hover:bg-[var(--surface-container-high)] transition-all"
           >
-            Cancelar
+            {t('teacher.lessonEditor.cancel')}
           </button>
         </div>
       </form>

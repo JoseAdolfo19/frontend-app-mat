@@ -1,21 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { lessonsApi } from '../../api/lessons';
-import { FaArrowLeft, FaArrowRight, FaClock, FaUser, FaTag } from 'react-icons/fa';
+import { FaArrowLeft, FaArrowRight, FaClock, FaTag } from 'react-icons/fa';
 import { formatDate, getDifficultyColor } from '../../utils/helpers';
 import Loading from '../Common/Loading';
 import toast from 'react-hot-toast';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const LessonDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [lesson, setLesson] = useState(null);
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
   const [isUpdating, setIsUpdating] = useState(false);
+  const startTimeRef = useRef(Date.now());
 
   useEffect(() => {
     fetchLesson();
+    startTimeRef.current = Date.now();
+    return () => {};
   }, [id]);
 
   const fetchLesson = async () => {
@@ -28,63 +33,81 @@ const LessonDetail = () => {
         setProgress(lessonData.user_progress.progress || 0);
       }
     } catch (error) {
-      console.error('Error fetching lesson:', error);
-      toast.error('Error al cargar la lección');
+      toast.error(t('lessonDetail.loadError'));
       setLesson(null);
     } finally {
       setLoading(false);
     }
   };
 
+  const getTimeSpent = () => {
+    const elapsed = Math.round((Date.now() - startTimeRef.current) / 1000 / 60);
+    return Math.max(elapsed, 1);
+  };
+
   const updateProgress = async (newProgress) => {
     try {
       setIsUpdating(true);
-      await lessonsApi.updateProgress(id, { 
+      await lessonsApi.updateProgress(id, {
         progress: newProgress,
-        time_spent: 5 // Simular 5 minutos
+        time_spent: getTimeSpent()
       });
       setProgress(newProgress);
       if (newProgress >= 100) {
-        toast.success('🎉 ¡Lección completada!');
+        toast.success(t('lessonDetail.completed'));
       }
     } catch (error) {
-      console.error('Error updating progress:', error);
-      toast.error('Error al actualizar el progreso');
+      toast.error(t('lessonDetail.progressError'));
     } finally {
       setIsUpdating(false);
     }
   };
 
+  const sanitizeHtml = (html) => {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const tags = ['SCRIPT', 'IFRAME', 'OBJECT', 'EMBED', 'FORM', 'INPUT', 'TEXTAREA', 'SELECT', 'LINK', 'META'];
+    tags.forEach((tag) => {
+      doc.querySelectorAll(tag).forEach((el) => el.remove());
+    });
+    doc.querySelectorAll('*').forEach((el) => {
+      [...el.attributes].forEach((attr) => {
+        if (attr.name.startsWith('on') || attr.value.trim().toLowerCase().startsWith('javascript:')) {
+          el.removeAttribute(attr.name);
+        }
+      });
+    });
+    return doc.body.innerHTML;
+  };
+
   if (loading) return <Loading />;
   if (!lesson) return (
     <div className="text-center py-12">
-      <h3 className="text-xl font-bold text-[var(--on-surface)]">Lección no encontrada</h3>
+      <h3 className="text-xl font-bold text-[var(--on-surface)]">{t('lessonDetail.notFound')}</h3>
     </div>
   );
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
-      {/* Navigation */}
       <button
         onClick={() => navigate('/lessons')}
         className="flex items-center gap-2 text-[var(--on-surface-variant)] hover:text-[var(--primary)] transition-colors"
+        aria-label={t('lessonDetail.backToLessons') || 'Volver a lecciones'}
       >
         <FaArrowLeft className="w-4 h-4" />
-        Volver a lecciones
+        {t('lessonDetail.backToLessons')}
       </button>
 
-      {/* Header */}
       <div className="bg-[var(--surface)] rounded-2xl p-8 shadow-sm border border-[var(--surface-container)]">
         <div className="flex flex-col md:flex-row justify-between items-start gap-4">
           <div className="space-y-2">
             <div className="flex items-center gap-3">
               <span className={`px-3 py-1 rounded-full text-xs font-bold ${getDifficultyColor(lesson.difficulty)}`}>
-                {lesson.difficulty === 'basic' ? 'Básico' : 
-                 lesson.difficulty === 'intermediate' ? 'Intermedio' : 'Avanzado'}
+                {lesson.difficulty === 'basic' ? t('lessonDetail.basic') :
+                 lesson.difficulty === 'intermediate' ? t('lessonDetail.intermediate') : t('lessonDetail.advanced')}
               </span>
               {lesson.unit && (
                 <span className="text-xs text-[var(--on-surface-variant)] bg-[var(--surface-container-low)] px-2 py-1 rounded">
-                  📚 {lesson.unit}
+                  {lesson.unit}
                 </span>
               )}
             </div>
@@ -93,57 +116,55 @@ const LessonDetail = () => {
               <p className="text-[var(--on-surface-variant)]">{lesson.description}</p>
             )}
           </div>
-          
+
           {lesson.estimated_time && (
             <div className="flex items-center gap-2 text-sm text-[var(--on-surface-variant)] bg-[var(--surface-container-low)] px-4 py-2 rounded-xl">
               <FaClock className="w-4 h-4" />
-              {lesson.estimated_time} min aprox.
+              {lesson.estimated_time} {t('lessonDetail.minApprox')}
             </div>
           )}
         </div>
 
-        {/* Progress */}
         <div className="mt-6 space-y-2">
           <div className="flex justify-between text-sm">
-            <span className="text-[var(--on-surface-variant)]">Progreso</span>
+            <span className="text-[var(--on-surface-variant)]">{t('lessonDetail.progress')}</span>
             <span className="font-bold text-[var(--on-surface)]">{progress}%</span>
           </div>
           <div className="w-full bg-[var(--surface-container)] rounded-full h-3 overflow-hidden">
-            <div 
+            <div
               className="bg-[var(--primary)] h-full rounded-full transition-all duration-1000"
               style={{ width: `${progress}%` }}
             ></div>
           </div>
           <div className="flex justify-between text-xs text-[var(--on-surface-variant)]">
-            <span>No iniciado</span>
-            <span>Completado</span>
+            <span>{t('lessonDetail.notStarted')}</span>
+            <span>{t('lessonDetail.completedLabel')}</span>
           </div>
         </div>
       </div>
 
-      {/* Content */}
       <div className="bg-[var(--surface)] rounded-2xl p-8 shadow-sm border border-[var(--surface-container)] prose prose-sm max-w-none">
         <div className="prose-headings:text-[var(--on-surface)] prose-p:text-[var(--on-surface-variant)] prose-strong:text-[var(--on-surface)]">
-          <div dangerouslySetInnerHTML={{ __html: lesson.content }} />
+          <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(lesson.content) }} />
         </div>
       </div>
 
-      {/* Resources */}
       {lesson.resources && lesson.resources.length > 0 && (
         <div className="bg-[var(--surface)] rounded-2xl p-8 shadow-sm border border-[var(--surface-container)]">
-          <h3 className="text-xl font-bold text-[var(--on-surface)] mb-4">Recursos</h3>
+          <h3 className="text-xl font-bold text-[var(--on-surface)] mb-4">{t('lessonDetail.resources')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {lesson.resources.map((resource, index) => (
-              <a
-                key={index}
-                href={resource.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 p-4 bg-[var(--surface-container-low)] rounded-xl hover:bg-[var(--surface-container)] transition-colors"
-              >
+          <a
+            key={index}
+            href={resource.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 p-4 bg-[var(--surface-container-low)] rounded-xl hover:bg-[var(--surface-container)] transition-colors"
+            aria-label={`${resource.title} - ${resource.type}`}
+          >
                 <span className="text-2xl">
-                  {resource.type === 'pdf' ? '📄' : 
-                   resource.type === 'video' ? '🎥' : 
+                  {resource.type === 'pdf' ? '📄' :
+                   resource.type === 'video' ? '🎥' :
                    resource.type === 'image' ? '🖼️' : '🔗'}
                 </span>
                 <div>
@@ -156,10 +177,9 @@ const LessonDetail = () => {
         </div>
       )}
 
-      {/* Navigation Buttons */}
       <div className="flex justify-between items-center pt-4 border-t border-[var(--surface-container)]">
-        <button className="px-6 py-3 text-[var(--on-surface-variant)] font-bold hover:bg-[var(--surface-container)] rounded-xl transition-all">
-          Lección anterior
+        <button className="px-6 py-3 text-[var(--on-surface-variant)] font-bold hover:bg-[var(--surface-container)] rounded-xl transition-all" aria-label={t('lessonDetail.previousLesson') || 'Lección anterior'}>
+          {t('lessonDetail.previousLesson')}
         </button>
         <div className="flex gap-3">
           {progress < 100 && (
@@ -168,7 +188,7 @@ const LessonDetail = () => {
               disabled={isUpdating}
               className="px-8 py-3 bg-[var(--primary)] text-white font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-2"
             >
-              {isUpdating ? 'Actualizando...' : 'Marcar como completada'}
+              {isUpdating ? t('lessonDetail.updating') : t('lessonDetail.markComplete')}
               <FaArrowRight className="w-4 h-4" />
             </button>
           )}
@@ -177,7 +197,7 @@ const LessonDetail = () => {
               to="/evaluations"
               className="px-8 py-3 bg-[var(--secondary)] text-white font-bold rounded-xl hover:opacity-90 transition-all flex items-center gap-2"
             >
-              Ir a evaluaciones
+              {t('lessonDetail.goToEvaluations')}
               <FaArrowRight className="w-4 h-4" />
             </Link>
           )}

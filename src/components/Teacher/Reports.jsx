@@ -10,22 +10,16 @@ import {
   ResponsiveContainer
 } from 'recharts';
 import Loading from '../Common/Loading';
-
-// Normaliza cualquier forma de respuesta (array plano, paginado, null, o error) a un array seguro
-const toArray = (value) => {
-  if (Array.isArray(value)) return value;
-  if (value && Array.isArray(value.data)) return value.data;
-  return [];
-};
+import { useLanguage } from '../../contexts/LanguageContext';
+import { toArray } from '../../utils/helpers';
 
 const Reports = () => {
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [exportingPDF, setExportingPDF] = useState(false);
   const [exportingExcel, setExportingExcel] = useState(false);
 
-  // Filas de EvaluationResult (una por evaluación resuelta, no una por estudiante)
   const [grades, setGrades] = useState([]);
-  // Objeto de estadísticas: { total_evaluations, average_score, total_students, passing_rate, top_performers, difficulty_areas }
   const [stats, setStats] = useState(null);
 
   const [search, setSearch] = useState('');
@@ -46,16 +40,14 @@ const Reports = () => {
     if (gradesResult.status === 'fulfilled') {
       setGrades(toArray(gradesResult.value.data?.data));
     } else {
-      console.error('Error fetching grades report:', gradesResult.reason);
-      toast.error('Error al cargar el reporte de calificaciones');
+      toast.error(t('teacher.reports.loadGradesError'));
       setGrades([]);
     }
 
     if (performanceResult.status === 'fulfilled') {
       setStats(performanceResult.value.data?.data || null);
     } else {
-      console.error('Error fetching performance report:', performanceResult.reason);
-      toast.error('Error al cargar el reporte de rendimiento');
+      toast.error(t('teacher.reports.loadPerfError'));
       setStats(null);
     }
 
@@ -78,10 +70,9 @@ const Reports = () => {
       setExportingPDF(true);
       const response = await reportsApi.exportPDF({ period });
       downloadBlob(response.data, `reporte-rendimiento-${period}.pdf`);
-      toast.success('PDF descargado exitosamente');
+      toast.success(t('teacher.reports.pdfSuccess'));
     } catch (error) {
-      console.error('Error exporting PDF:', error);
-      toast.error('Error al exportar PDF');
+      toast.error(t('teacher.reports.pdfError'));
     } finally {
       setExportingPDF(false);
     }
@@ -92,17 +83,14 @@ const Reports = () => {
       setExportingExcel(true);
       const response = await reportsApi.exportExcel({ period });
       downloadBlob(response.data, `reporte-rendimiento-${period}.xlsx`);
-      toast.success('Excel descargado exitosamente');
+      toast.success(t('teacher.reports.excelSuccess'));
     } catch (error) {
-      console.error('Error exporting Excel:', error);
-      toast.error('Error al exportar Excel');
+      toast.error(t('teacher.reports.excelError'));
     } finally {
       setExportingExcel(false);
     }
   };
 
-  // Filtro de búsqueda en cliente sobre las filas ya cargadas.
-  // Cada fila es un EvaluationResult con relaciones user/evaluation anidadas.
   const filteredGrades = grades.filter((row) => {
     if (!search.trim()) return true;
     const term = search.toLowerCase();
@@ -115,12 +103,11 @@ const Reports = () => {
 
   const getScoreBadge = (score) => {
     const value = Number(score) || 0;
-    if (value >= 8) return 'bg-green-100 text-green-700';
-    if (value >= 6) return 'bg-yellow-100 text-yellow-700';
+    if (value >= 16) return 'bg-green-100 text-green-700';
+    if (value >= 12) return 'bg-yellow-100 text-yellow-700';
     return 'bg-red-100 text-red-700';
   };
 
-  // difficulty_areas trae { type, avg_score, total } por tipo de evaluación — lo usamos para el gráfico
   const chartData = toArray(stats?.difficulty_areas).map((item) => ({
     type: item.type || 'Sin tipo',
     avg_score: Number(item.avg_score) || 0,
@@ -134,9 +121,9 @@ const Reports = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-[var(--on-surface)]">Reportes</h2>
+          <h2 className="text-3xl font-bold text-[var(--on-surface)]">{t('teacher.reports.title')}</h2>
           <p className="text-[var(--on-surface-variant)]">
-            Rendimiento y calificaciones de tus estudiantes
+            {t('teacher.reports.subtitle')}
           </p>
         </div>
         <div className="flex gap-3">
@@ -146,7 +133,7 @@ const Reports = () => {
             className="px-4 py-2.5 bg-[var(--error)] text-white font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-2"
           >
             <FaFilePdf />
-            {exportingPDF ? 'Generando...' : 'Exportar PDF'}
+            {exportingPDF ? t('teacher.reports.generating') : t('teacher.reports.exportPdf')}
           </button>
           <button
             onClick={handleExportExcel}
@@ -154,7 +141,7 @@ const Reports = () => {
             className="px-4 py-2.5 bg-[var(--secondary)] text-white font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-2"
           >
             <FaFileExcel />
-            {exportingExcel ? 'Generando...' : 'Exportar Excel'}
+            {exportingExcel ? t('teacher.reports.generating') : t('teacher.reports.exportExcel')}
           </button>
         </div>
       </div>
@@ -166,7 +153,7 @@ const Reports = () => {
             <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--outline)]" />
             <input
               type="text"
-              placeholder="Buscar por estudiante, email o evaluación..."
+              placeholder={t('teacher.reports.searchPlaceholder')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-12 pr-4 py-3 rounded-xl border-2 border-[var(--surface-container-high)] focus:border-[var(--primary)] focus:outline-none bg-[var(--surface-container-low)]"
@@ -177,14 +164,14 @@ const Reports = () => {
             onChange={(e) => setPeriod(e.target.value)}
             className="px-4 py-3 rounded-xl border-2 border-[var(--surface-container-high)] focus:border-[var(--primary)] focus:outline-none bg-[var(--surface-container-low)] min-w-[180px]"
           >
-            <option value="current">Últimos 30 días</option>
-            <option value="week">Esta semana</option>
-            <option value="month">Este mes</option>
-            <option value="last_month">Mes pasado</option>
-            <option value="quarter">Este trimestre</option>
-            <option value="last_quarter">Trimestre pasado</option>
-            <option value="year">Este año</option>
-            <option value="all_time">Histórico completo</option>
+            <option value="current">{t('teacher.reports.last30Days')}</option>
+            <option value="week">{t('teacher.reports.thisWeek')}</option>
+            <option value="month">{t('teacher.reports.thisMonth')}</option>
+            <option value="last_month">{t('teacher.reports.lastMonth')}</option>
+            <option value="quarter">{t('teacher.reports.thisQuarter')}</option>
+            <option value="last_quarter">{t('teacher.reports.lastQuarter')}</option>
+            <option value="year">{t('teacher.reports.thisYear')}</option>
+            <option value="all_time">{t('teacher.reports.allTime')}</option>
           </select>
         </div>
       </div>
@@ -195,7 +182,7 @@ const Reports = () => {
           <div className="p-2 bg-[var(--primary)]/10 rounded-lg text-[var(--primary)] w-fit mb-2">
             <FaTable className="w-5 h-5" />
           </div>
-          <p className="text-sm text-[var(--on-surface-variant)]">Evaluaciones</p>
+          <p className="text-sm text-[var(--on-surface-variant)]">{t('teacher.reports.evaluations')}</p>
           <p className="text-2xl font-bold text-[var(--on-surface)]">
             {stats?.total_evaluations ?? 0}
           </p>
@@ -204,7 +191,7 @@ const Reports = () => {
           <div className="p-2 bg-[var(--secondary)]/10 rounded-lg text-[var(--secondary)] w-fit mb-2">
             <FaUsers className="w-5 h-5" />
           </div>
-          <p className="text-sm text-[var(--on-surface-variant)]">Estudiantes</p>
+          <p className="text-sm text-[var(--on-surface-variant)]">{t('teacher.reports.students')}</p>
           <p className="text-2xl font-bold text-[var(--on-surface)]">
             {stats?.total_students ?? 0}
           </p>
@@ -213,7 +200,7 @@ const Reports = () => {
           <div className="p-2 bg-[var(--tertiary)]/10 rounded-lg text-[var(--tertiary)] w-fit mb-2">
             <FaChartLine className="w-5 h-5" />
           </div>
-          <p className="text-sm text-[var(--on-surface-variant)]">Promedio</p>
+          <p className="text-sm text-[var(--on-surface-variant)]">{t('teacher.reports.average')}</p>
           <p className="text-2xl font-bold text-[var(--on-surface)]">
             {stats?.average_score !== undefined && stats?.average_score !== null
               ? Number(stats.average_score).toFixed(1)
@@ -224,20 +211,20 @@ const Reports = () => {
           <div className="p-2 bg-green-500/10 rounded-lg text-green-600 w-fit mb-2">
             <FaCheckCircle className="w-5 h-5" />
           </div>
-          <p className="text-sm text-[var(--on-surface-variant)]">Tasa de aprobación</p>
+          <p className="text-sm text-[var(--on-surface-variant)]">{t('teacher.reports.passRate')}</p>
           <p className="text-2xl font-bold text-[var(--on-surface)]">
             {stats?.passing_rate ?? 0}%
           </p>
         </div>
       </div>
 
-      {/* Performance Chart (por tipo de evaluación) */}
+      {/* Performance Chart */}
       <div className="bg-[var(--surface)] p-6 rounded-2xl shadow-sm border border-[var(--surface-container)]">
         <h3 className="text-lg font-bold text-[var(--on-surface)] mb-4 flex items-center gap-2">
           <FaChartLine className="text-[var(--primary)]" />
-          Promedio por Tipo de Evaluación
+          {t('teacher.reports.avgByEvalType')}
         </h3>
-        <div className="h-72">
+        <div className="h-72" aria-label={t('teacher.reports.avgByEvalType') || 'Gráfico de rendimiento promedio'} role="img">
           {chartData.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData}>
@@ -251,12 +238,12 @@ const Reports = () => {
                     borderRadius: '8px'
                   }}
                 />
-                <Bar dataKey="avg_score" name="Promedio" fill="var(--primary)" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="avg_score" name={t('teacher.reports.average')} fill="var(--primary)" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
             <div className="h-full flex items-center justify-center text-[var(--on-surface-variant)]">
-              No hay datos de rendimiento para este período
+              {t('teacher.reports.noPerformanceData')}
             </div>
           )}
         </div>
@@ -267,7 +254,7 @@ const Reports = () => {
         <div className="bg-[var(--surface)] p-6 rounded-2xl shadow-sm border border-[var(--surface-container)]">
           <h3 className="text-lg font-bold text-[var(--on-surface)] mb-4 flex items-center gap-2">
             <FaTrophy className="text-[var(--tertiary)]" />
-            Mejores Estudiantes
+            {t('teacher.reports.topStudents')}
           </h3>
           <div className="space-y-2">
             {toArray(stats.top_performers).map((performer, index) => (
@@ -277,11 +264,11 @@ const Reports = () => {
                     {index + 1}
                   </span>
                   <p className="font-medium text-[var(--on-surface)]">
-                    {performer.user?.full_name || 'Estudiante'}
+                    {performer.user?.full_name || t('teacher.reports.student')}
                   </p>
                 </div>
                 <span className="px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">
-                  {Number(performer.avg_score || 0).toFixed(1)}/10
+                  {Number(performer.avg_score || 0).toFixed(1)}/20
                 </span>
               </div>
             ))}
@@ -289,23 +276,23 @@ const Reports = () => {
         </div>
       )}
 
-      {/* Grades Table (una fila por resultado de evaluación) */}
+      {/* Grades Table */}
       <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--surface-container)] overflow-hidden">
         <div className="p-6 pb-0">
           <h3 className="text-lg font-bold text-[var(--on-surface)] mb-4 flex items-center gap-2">
             <FaTable className="text-[var(--primary)]" />
-            Calificaciones
+            {t('teacher.reports.grades')}
           </h3>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full" aria-label={t('teacher.reports.grades') || 'Tabla de calificaciones'}>
             <thead className="bg-[var(--surface-container-low)]">
               <tr>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-[var(--on-surface-variant)]">Estudiante</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-[var(--on-surface-variant)]">Email</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-[var(--on-surface-variant)]">Evaluación</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-[var(--on-surface-variant)]">Fecha</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-[var(--on-surface-variant)]">Calificación</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-[var(--on-surface-variant)]">{t('teacher.reports.student')}</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-[var(--on-surface-variant)]">{t('teacher.reports.email')}</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-[var(--on-surface-variant)]">{t('teacher.reports.evaluation')}</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-[var(--on-surface-variant)]">{t('teacher.reports.date')}</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-[var(--on-surface-variant)]">{t('teacher.reports.score')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--surface-container)]">
@@ -317,7 +304,7 @@ const Reports = () => {
                         {row.user?.full_name?.charAt(0)?.toUpperCase() || '?'}
                       </div>
                       <p className="font-medium text-[var(--on-surface)]">
-                        {row.user?.full_name || 'Sin nombre'}
+                        {row.user?.full_name || '—'}
                       </p>
                     </div>
                   </td>
@@ -325,14 +312,14 @@ const Reports = () => {
                     {row.user?.email || '—'}
                   </td>
                   <td className="px-6 py-4 text-[var(--on-surface)]">
-                    {row.evaluation?.title || 'Sin título'}
+                    {row.evaluation?.title || '—'}
                   </td>
                   <td className="px-6 py-4 text-[var(--on-surface-variant)] text-sm">
                     {row.created_at ? new Date(row.created_at).toLocaleDateString() : '—'}
                   </td>
                   <td className="px-6 py-4">
                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${getScoreBadge(row.score)}`}>
-                      {row.score !== undefined && row.score !== null ? Number(row.score).toFixed(1) : '0.0'}/10
+                      {row.score !== undefined && row.score !== null ? Number(row.score).toFixed(1) : '0.0'}/20
                     </span>
                   </td>
                 </tr>
@@ -345,7 +332,7 @@ const Reports = () => {
           <div className="text-center py-12">
             <FaTrophy className="mx-auto text-4xl text-[var(--on-surface-variant)] mb-3" />
             <h3 className="text-lg font-bold text-[var(--on-surface)]">
-              {search ? 'No se encontraron resultados' : 'No hay calificaciones para este período'}
+              {search ? t('teacher.reports.noResults') : t('teacher.reports.noGrades')}
             </h3>
           </div>
         )}

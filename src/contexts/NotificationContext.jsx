@@ -2,6 +2,19 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { usersApi } from '../api/users';
 import toast from 'react-hot-toast';
 import { useAuth } from './AuthContext';
+import translations from './LanguageContext';
+
+const getT = () => {
+  const lang = localStorage.getItem('mathflow_language') || 'es';
+  return (key) => {
+    const keys = key.split('.');
+    let value = translations[lang];
+    for (const k of keys) {
+      value = value?.[k];
+    }
+    return value || key;
+  };
+};
 
 const NotificationContext = createContext();
 
@@ -20,8 +33,8 @@ export const NotificationProvider = ({ children }) => {
       setNotifications(response.data.data || []);
       const unread = response.data.data?.filter(n => !n.is_read) || [];
       setUnreadCount(unread.length);
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
+    } catch {
+      toast.error(getT()('notifications.loadedError'));
     } finally {
       setLoading(false);
     }
@@ -31,8 +44,8 @@ export const NotificationProvider = ({ children }) => {
     try {
       const response = await usersApi.getUnreadCount();
       setUnreadCount(response.data.unread_count || 0);
-    } catch (error) {
-      console.error('Error fetching unread count:', error);
+    } catch {
+      toast.error(getT()('notifications.loadedError'));
     }
   };
 
@@ -44,7 +57,7 @@ export const NotificationProvider = ({ children }) => {
       );
       setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (error) {
-      toast.error('Error al marcar como leída');
+      toast.error(getT()('notifications.markReadError'));
     }
   };
 
@@ -55,9 +68,9 @@ export const NotificationProvider = ({ children }) => {
         prev.map(n => ({ ...n, is_read: true }))
       );
       setUnreadCount(0);
-      toast.success('Todas las notificaciones marcadas como leídas');
+      toast.success(getT()('notifications.markAllRead'));
     } catch (error) {
-      toast.error('Error al marcar todas como leídas');
+      toast.error(getT()('notifications.markAllReadError'));
     }
   };
 
@@ -69,7 +82,7 @@ export const NotificationProvider = ({ children }) => {
         setUnreadCount(prev => Math.max(0, prev - 1));
       }
     } catch (error) {
-      toast.error('Error al eliminar notificación');
+      toast.error(getT()('notifications.deleteError'));
     }
   };
 

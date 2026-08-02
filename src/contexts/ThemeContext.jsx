@@ -1,18 +1,117 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import axios from '../api/axios';
+import toast from 'react-hot-toast';
+import translations from './LanguageContext';
+
+const getT = () => {
+  const lang = localStorage.getItem('mathflow_language') || 'es';
+  return (key) => {
+    const keys = key.split('.');
+    let value = translations[lang];
+    for (const k of keys) {
+      value = value?.[k];
+    }
+    return value || key;
+  };
+};
+
+const THEMES = {
+  light: {
+    '--primary': '#004AC6',
+    '--primary-container': '#e5eeff',
+    '--secondary': '#006C49',
+    '--tertiary': '#996100',
+    '--background': '#f8f9ff',
+    '--surface': '#ffffff',
+    '--surface-variant': '#d3e4fe',
+    '--on-background': '#0b1c30',
+    '--on-surface': '#0b1c30',
+    '--on-primary': '#ffffff',
+    '--outline': '#737686',
+    '--outline-variant': '#c3c6d7',
+    '--error': '#ba1a1a',
+    '--success': '#006C49',
+    '--warning': '#996100',
+    '--info': '#004AC6',
+    '--accent': '#004AC6',
+    '--card-shadow': '0 1px 3px rgba(0,0,0,0.08)',
+  },
+  dark: {
+    '--primary': '#4a90d9',
+    '--primary-container': '#1a3a6e',
+    '--secondary': '#4caf7e',
+    '--tertiary': '#d4a030',
+    '--background': '#121212',
+    '--surface': '#1e1e1e',
+    '--surface-variant': '#2d2d2d',
+    '--on-background': '#e0e0e0',
+    '--on-surface': '#e0e0e0',
+    '--on-primary': '#000000',
+    '--outline': '#666666',
+    '--outline-variant': '#444444',
+    '--error': '#cf6679',
+    '--success': '#4caf7e',
+    '--warning': '#d4a030',
+    '--info': '#4a90d9',
+    '--accent': '#4a90d9',
+    '--card-shadow': '0 1px 3px rgba(0,0,0,0.3)',
+  },
+  grayscale: {
+    '--primary': '#616161',
+    '--primary-container': '#e0e0e0',
+    '--secondary': '#757575',
+    '--tertiary': '#9e9e9e',
+    '--background': '#f5f5f5',
+    '--surface': '#ffffff',
+    '--surface-variant': '#e0e0e0',
+    '--on-background': '#212121',
+    '--on-surface': '#212121',
+    '--on-primary': '#ffffff',
+    '--outline': '#9e9e9e',
+    '--outline-variant': '#bdbdbd',
+    '--error': '#9e9e9e',
+    '--success': '#757575',
+    '--warning': '#9e9e9e',
+    '--info': '#757575',
+    '--accent': '#616161',
+    '--card-shadow': '0 1px 3px rgba(0,0,0,0.12)',
+  },
+};
 
 const ThemeContext = createContext();
 
 export const useTheme = () => useContext(ThemeContext);
 
 export const ThemeProvider = ({ children }) => {
+  const [theme, setThemeState] = useState(() => {
+    return localStorage.getItem('mathflow_theme') || 'light';
+  });
   const [primaryColor, setPrimaryColor] = useState('#004AC6');
   const [secondaryColor, setSecondaryColor] = useState('#006C49');
   const [tertiaryColor, setTertiaryColor] = useState('#996100');
   const [backgroundColor, setBackgroundColor] = useState('#f8f9ff');
   const [surfaceColor, setSurfaceColor] = useState('#ffffff');
-  
-  // Cargar colores desde el backend
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === 'grayscale') {
+      document.body.style.filter = 'grayscale(1)';
+      root.classList.add('grayscale-mode');
+    } else {
+      document.body.style.filter = '';
+      root.classList.remove('grayscale-mode');
+    }
+    return () => {
+      document.body.style.filter = '';
+      root.classList.remove('grayscale-mode');
+    };
+  }, [theme]);
+
+  const setTheme = useCallback((newTheme) => {
+    setThemeState(newTheme);
+    localStorage.setItem('mathflow_theme', newTheme);
+  }, []);
+
   useEffect(() => {
     const fetchColors = async () => {
       try {
@@ -23,8 +122,9 @@ export const ThemeProvider = ({ children }) => {
           setTertiaryColor(response.data.tertiary_color || '#996100');
           setBackgroundColor(response.data.background_color || '#f8f9ff');
           setSurfaceColor(response.data.surface_color || '#ffffff');
-          
-          // Aplicar colores al CSS
+
+          if (theme === 'grayscale') return;
+
           applyColors({
             primary: response.data.primary_color || '#004AC6',
             secondary: response.data.secondary_color || '#006C49',
@@ -33,11 +133,11 @@ export const ThemeProvider = ({ children }) => {
             surface: response.data.surface_color || '#ffffff'
           });
         }
-      } catch (error) {
-        console.error('Error cargando colores:', error);
+      } catch {
+        toast.error('Error al cargar el tema');
       }
     };
-    
+
     fetchColors();
   }, []);
 
@@ -48,14 +148,22 @@ export const ThemeProvider = ({ children }) => {
     root.style.setProperty('--tertiary', colors.tertiary);
     root.style.setProperty('--background', colors.background);
     root.style.setProperty('--surface', colors.surface);
-    
-    // Derivados
+
     root.style.setProperty('--primary-light', lightenColor(colors.primary, 40));
     root.style.setProperty('--primary-dark', darkenColor(colors.primary, 20));
     root.style.setProperty('--primary-container', lightenColor(colors.primary, 70));
     root.style.setProperty('--on-primary', '#ffffff');
     root.style.setProperty('--on-primary-container', '#eeefff');
   };
+
+  useEffect(() => {
+    if (theme !== 'light' && theme !== 'dark') return;
+    const palette = THEMES[theme];
+    const root = document.documentElement;
+    Object.entries(palette).forEach(([prop, val]) => {
+      root.style.setProperty(prop, val);
+    });
+  }, [theme]);
 
   const lightenColor = (hex, percent) => {
     const num = parseInt(hex.replace('#', ''), 16);
@@ -77,7 +185,12 @@ export const ThemeProvider = ({ children }) => {
 
   const updateColors = async (newColors) => {
     try {
-      await axios.put('/admin/config', newColors);
+      const token = localStorage.getItem('access_token');
+      if (!token) return { success: false, error: getT()('theme.notAuthenticated') };
+
+      await axios.put('/admin/config', newColors, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       
       if (newColors.primary_color) setPrimaryColor(newColors.primary_color);
       if (newColors.secondary_color) setSecondaryColor(newColors.secondary_color);
@@ -95,13 +208,14 @@ export const ThemeProvider = ({ children }) => {
       
       return { success: true };
     } catch (error) {
-      console.error('Error actualizando colores:', error);
       return { success: false, error: error.message };
     }
   };
 
   return (
     <ThemeContext.Provider value={{
+      theme,
+      setTheme,
       primaryColor,
       secondaryColor,
       tertiaryColor,

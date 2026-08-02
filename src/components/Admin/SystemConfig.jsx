@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { adminApi } from '../../api/admin';
 import toast from 'react-hot-toast';
-import { FaSave, FaDatabase, FaCloudUploadAlt, FaHistory } from 'react-icons/fa';
+import { FaSave, FaDatabase, FaCloudUploadAlt, FaHistory, FaTimes } from 'react-icons/fa';
+import { useLanguage } from '../../contexts/LanguageContext';
 import Loading from '../Common/Loading';
+import { toArray } from '../../utils/helpers';
 
 const SystemConfig = () => {
   const [loading, setLoading] = useState(true);
@@ -23,17 +25,15 @@ const SystemConfig = () => {
     is_active: false,
     description: ''
   });
+  const [showHistory, setShowHistory] = useState(false);
+  const [backupHistory, setBackupHistory] = useState([]);
+  const { t } = useLanguage();
+
+  const cp = (key) => t(`admin.configPage.${key}`);
 
   useEffect(() => {
     fetchConfig();
   }, []);
-
-  // Normaliza cualquier forma de respuesta (array plano, paginado, null, o error) a un array seguro
-  const toArray = (value) => {
-    if (Array.isArray(value)) return value;
-    if (value && Array.isArray(value.data)) return value.data;
-    return [];
-  };
 
   const fetchConfig = async () => {
     setLoading(true);
@@ -46,14 +46,11 @@ const SystemConfig = () => {
     if (configResult.status === 'fulfilled') {
       setConfig(configResult.value.data || {});
     } else {
-      console.error('Error fetching config:', configResult.reason);
-      toast.error('Error al cargar la configuración');
+      toast.error(cp('errorLoad'));
     }
 
     if (periodsResult.status === 'fulfilled') {
       setPeriods(toArray(periodsResult.value.data));
-    } else {
-      console.error('Error fetching periods:', periodsResult.reason);
     }
 
     setLoading(false);
@@ -76,10 +73,9 @@ const SystemConfig = () => {
     try {
       setSaving(true);
       await adminApi.updateConfig(config);
-      toast.success('Configuración actualizada exitosamente');
+      toast.success(cp('successSave'));
     } catch (error) {
-      console.error('Error saving config:', error);
-      toast.error('Error al guardar la configuración');
+      toast.error(cp('errorSave'));
     } finally {
       setSaving(false);
     }
@@ -88,7 +84,7 @@ const SystemConfig = () => {
   const createPeriod = async () => {
     try {
       await adminApi.createPeriod(newPeriod);
-      toast.success('Período académico creado exitosamente');
+      toast.success(cp('successCreatePeriod'));
       setNewPeriod({
         name: '',
         start_date: '',
@@ -98,50 +94,61 @@ const SystemConfig = () => {
       });
       fetchConfig();
     } catch (error) {
-      console.error('Error creating period:', error);
-      toast.error('Error al crear el período académico');
+      toast.error(cp('errorCreatePeriod'));
     }
   };
 
   const deletePeriod = async (id) => {
-    if (!confirm('¿Estás seguro de eliminar este período académico?')) return;
+    if (!confirm(cp('confirmDeletePeriod'))) return;
     
     try {
       await adminApi.deletePeriod(id);
-      toast.success('Período académico eliminado');
+      toast.success(cp('successDeletePeriod'));
       fetchConfig();
     } catch (error) {
-      console.error('Error deleting period:', error);
-      toast.error('Error al eliminar el período');
+      toast.error(cp('errorDeletePeriod'));
     }
   };
 
   const createBackup = async () => {
     try {
       await adminApi.createBackup();
-      toast.success('Copia de seguridad creada exitosamente');
+      toast.success(t('admin.createBackup') + ' ✓');
+      fetchConfig();
     } catch (error) {
-      console.error('Error creating backup:', error);
-      toast.error('Error al crear la copia de seguridad');
+      toast.error(t('admin.createBackup') + ' ✗');
     }
+  };
+
+  const toggleHistory = async () => {
+    if (!showHistory) {
+      try {
+        const result = await adminApi.getBackups();
+        setBackupHistory(toArray(result.data?.data));
+      } catch {
+        toast.error(cp('errorLoad'));
+        setBackupHistory([]);
+      }
+    }
+    setShowHistory(!showHistory);
   };
 
   if (loading) return <Loading />;
 
   return (
     <div className="space-y-8">
-      <h2 className="text-2xl font-bold text-[var(--on-surface)]">Configuración del Sistema</h2>
+      <h2 className="text-2xl font-bold text-[var(--on-surface)]">{cp('title')}</h2>
 
-      {/* Configuración General */}
       <div className="bg-[var(--surface)] p-8 rounded-2xl shadow-sm border border-[var(--surface-container)]">
-        <h3 className="text-lg font-bold text-[var(--on-surface)] mb-6">Configuración General</h3>
+        <h3 className="text-lg font-bold text-[var(--on-surface)] mb-6">{cp('generalConfig')}</h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
-              Nombre de la Institución
+            <label htmlFor="config-institution-name" className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
+              {cp('institutionName')}
             </label>
             <input
+              id="config-institution-name"
               type="text"
               name="institution_name"
               value={config.institution_name || ''}
@@ -151,33 +158,35 @@ const SystemConfig = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
-              Logo URL
+            <label htmlFor="config-logo" className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
+              {cp('logoUrl')}
             </label>
             <input
+              id="config-logo"
               type="text"
               name="logo"
               value={config.logo || ''}
               onChange={handleConfigChange}
               className="w-full px-4 py-3 rounded-xl border-2 border-[var(--surface-container-high)] focus:border-[var(--primary)] focus:outline-none bg-[var(--surface-container-low)]"
-              placeholder="URL del logo"
+              placeholder={cp('logoPlaceholder')}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
-              Frecuencia de Backup
+            <label htmlFor="config-backup-frequency" className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
+              {cp('backupFrequency')}
             </label>
             <select
+              id="config-backup-frequency"
               name="backup_frequency"
               value={config.backup_frequency || 'daily'}
               onChange={handleConfigChange}
               className="w-full px-4 py-3 rounded-xl border-2 border-[var(--surface-container-high)] focus:border-[var(--primary)] focus:outline-none bg-[var(--surface-container-low)]"
             >
-              <option value="hourly">Cada hora</option>
-              <option value="daily">Diario</option>
-              <option value="weekly">Semanal</option>
-              <option value="monthly">Mensual</option>
+              <option value="hourly">{cp('hourly')}</option>
+              <option value="daily">{cp('daily')}</option>
+              <option value="weekly">{cp('weekly')}</option>
+              <option value="monthly">{cp('monthly')}</option>
             </select>
           </div>
         </div>
@@ -189,33 +198,36 @@ const SystemConfig = () => {
             className="px-6 py-3 bg-[var(--primary)] text-white font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-2"
           >
             <FaSave />
-            {saving ? 'Guardando...' : 'Guardar Configuración'}
+            {saving ? cp('saving') : cp('save')}
           </button>
         </div>
       </div>
 
-      {/* Períodos Académicos */}
       <div className="bg-[var(--surface)] p-8 rounded-2xl shadow-sm border border-[var(--surface-container)]">
-        <h3 className="text-lg font-bold text-[var(--on-surface)] mb-6">Períodos Académicos</h3>
+        <h3 className="text-lg font-bold text-[var(--on-surface)] mb-6">{cp('periods')}</h3>
         
-        {/* Crear nuevo período */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <input
+            id="period-name"
             type="text"
             name="name"
             value={newPeriod.name}
             onChange={handlePeriodChange}
-            placeholder="Nombre del período"
+            placeholder={cp('periodName')}
             className="px-4 py-3 rounded-xl border-2 border-[var(--surface-container-high)] focus:border-[var(--primary)] focus:outline-none bg-[var(--surface-container-low)]"
           />
+          <label htmlFor="period-start" className="sr-only">Fecha de inicio</label>
           <input
+            id="period-start"
             type="date"
             name="start_date"
             value={newPeriod.start_date}
             onChange={handlePeriodChange}
             className="px-4 py-3 rounded-xl border-2 border-[var(--surface-container-high)] focus:border-[var(--primary)] focus:outline-none bg-[var(--surface-container-low)]"
           />
+          <label htmlFor="period-end" className="sr-only">Fecha de fin</label>
           <input
+            id="period-end"
             type="date"
             name="end_date"
             value={newPeriod.end_date}
@@ -226,11 +238,10 @@ const SystemConfig = () => {
             onClick={createPeriod}
             className="px-4 py-3 bg-[var(--primary)] text-white font-bold rounded-xl hover:opacity-90 transition-all"
           >
-            Crear Período
+            {cp('createPeriod')}
           </button>
         </div>
 
-        {/* Lista de períodos */}
         <div className="space-y-3">
           {(Array.isArray(periods) ? periods : []).map((period) => (
             <div key={period.id} className="flex items-center justify-between p-4 bg-[var(--surface-container-low)] rounded-xl">
@@ -244,7 +255,7 @@ const SystemConfig = () => {
                 <span className={`px-3 py-1 rounded-full text-xs font-bold ${
                   period.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
                 }`}>
-                  {period.is_active ? 'Activo' : 'Inactivo'}
+                  {period.is_active ? cp('active') : cp('inactive')}
                 </span>
                 <button
                   onClick={() => deletePeriod(period.id)}
@@ -258,9 +269,8 @@ const SystemConfig = () => {
         </div>
       </div>
 
-      {/* Backup */}
       <div className="bg-[var(--surface)] p-8 rounded-2xl shadow-sm border border-[var(--surface-container)]">
-        <h3 className="text-lg font-bold text-[var(--on-surface)] mb-6">Copias de Seguridad</h3>
+        <h3 className="text-lg font-bold text-[var(--on-surface)] mb-6">{cp('backups')}</h3>
         
         <div className="flex flex-col md:flex-row gap-4">
           <button
@@ -268,18 +278,39 @@ const SystemConfig = () => {
             className="px-6 py-3 bg-[var(--secondary)] text-white font-bold rounded-xl hover:opacity-90 transition-all flex items-center gap-2"
           >
             <FaCloudUploadAlt />
-            Crear Backup
+            {cp('createBackup')}
           </button>
           <button
+            onClick={toggleHistory}
             className="px-6 py-3 bg-[var(--surface-container)] text-[var(--on-surface)] font-bold rounded-xl hover:bg-[var(--surface-container-high)] transition-all flex items-center gap-2"
           >
-            <FaHistory />
-            Ver Historial
+            {showHistory ? <FaTimes /> : <FaHistory />}
+            {showHistory ? cp('closeHistory') : cp('viewHistory')}
           </button>
         </div>
+
+        {showHistory && (
+          <div className="mt-6 p-4 bg-[var(--surface-container-low)] rounded-xl">
+            <h4 className="font-bold text-[var(--on-surface)] mb-3">{cp('historyTitle')}</h4>
+            {backupHistory.length > 0 ? (
+              <div className="space-y-2">
+                {backupHistory.map((backup, i) => (
+                  <div key={i} className="flex justify-between items-center p-3 bg-[var(--surface)] rounded-lg">
+                    <span className="text-sm text-[var(--on-surface)]">
+                      {new Date(backup.created_at).toLocaleString()}
+                    </span>
+                    <span className="text-xs text-[var(--on-surface-variant)]">{backup.size || ''}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-[var(--on-surface-variant)]">{cp('noHistory')}</p>
+            )}
+          </div>
+        )}
         
         <p className="mt-4 text-sm text-[var(--on-surface-variant)]">
-          Último backup: {config.last_backup ? new Date(config.last_backup).toLocaleString() : 'No realizado'}
+          {cp('lastBackup')}: {config.last_backup ? new Date(config.last_backup).toLocaleString() : cp('noBackup')}
         </p>
       </div>
     </div>

@@ -2,66 +2,78 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { evaluationsApi } from '../../api/evaluations';
 import { FaCheckCircle, FaTimesCircle, FaClock, FaArrowLeft, FaDownload } from 'react-icons/fa';
-import { formatDate, formatDateTime } from '../../utils/helpers';
+import { formatDate, formatDateTime, toArray } from '../../utils/helpers';
 import Loading from '../Common/Loading';
 import toast from 'react-hot-toast';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const EvaluationResult = () => {
+  const { t } = useLanguage();
   const { id } = useParams();
   const navigate = useNavigate();
   const [result, setResult] = useState(null);
   const [evaluation, setEvaluation] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [exportingPdf, setExportingPdf] = useState(false);
 
   useEffect(() => {
     fetchResults();
   }, [id]);
 
-  // Normaliza cualquier forma de respuesta (array plano, paginado, null, o error) a un array seguro
-  const toArray = (value) => {
-    if (Array.isArray(value)) return value;
-    if (value && Array.isArray(value.data)) return value.data;
-    return [];
-  };
-
   const fetchResults = async () => {
     try {
       setLoading(true);
-      // Obtener resultados
       const resultsRes = await evaluationsApi.getResults(id);
       const results = toArray(resultsRes.data?.data);
 
-      // Tomar el último resultado completado
       const lastResult = results.find(r => r.status === 'completed');
       if (lastResult) {
         setResult(lastResult);
-        // Obtener detalles de la evaluación
         const evalRes = await evaluationsApi.getEvaluation(id);
         setEvaluation(evalRes.data.data);
       } else {
-        toast.error('No se encontraron resultados para esta evaluación');
+        toast.error(t('evaluations.result.noResults'));
         navigate('/evaluations');
       }
     } catch (error) {
-      console.error('Error fetching results:', error);
-      toast.error('Error al cargar los resultados');
+      toast.error(t('evaluations.result.loadError'));
       navigate('/evaluations');
     } finally {
       setLoading(false);
     }
   };
 
+  const handleDownloadPdf = async () => {
+    try {
+      setExportingPdf(true);
+      const response = await evaluationsApi.getResults(id);
+      const blobData = response.data;
+      const url = window.URL.createObjectURL(new Blob([blobData]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `evaluacion-${id}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      toast.error(t('evaluations.result.loadError'));
+    } finally {
+      setExportingPdf(false);
+    }
+  };
+
   const getScoreColor = (score) => {
-    if (score >= 8) return 'text-green-600';
-    if (score >= 6) return 'text-yellow-600';
+    if (score >= 16) return 'text-green-600';
+    if (score >= 12) return 'text-yellow-600';
     return 'text-red-600';
   };
 
   const getScoreMessage = (score) => {
-    if (score >= 8) return '¡Excelente trabajo! 🎉';
-    if (score >= 6) return 'Buen trabajo, sigue así 💪';
-    if (score >= 4) return 'Puedes mejorar, sigue practicando 📚';
-    return 'Necesitas reforzar estos temas 🤔';
+    if (score >= 18) return t('evaluations.result.excellentWork');
+    if (score >= 15) return t('evaluations.result.goodWork');
+    if (score >= 12) return t('evaluations.result.approved');
+    return t('evaluations.result.needsReview');
   };
 
   if (loading) return <Loading />;
@@ -73,9 +85,10 @@ const EvaluationResult = () => {
       <button
         onClick={() => navigate('/evaluations')}
         className="flex items-center gap-2 text-[var(--on-surface-variant)] hover:text-[var(--primary)] transition-colors"
+        aria-label={t('evaluations.result.back') || 'Volver a evaluaciones'}
       >
         <FaArrowLeft className="w-4 h-4" />
-        Volver a evaluaciones
+        {t('evaluations.result.back')}
       </button>
 
       {/* Header */}
@@ -84,13 +97,18 @@ const EvaluationResult = () => {
           <div>
             <h1 className="text-2xl font-bold text-[var(--on-surface)]">{evaluation.title}</h1>
             <p className="text-[var(--on-surface-variant)]">
-              Completada el {formatDateTime(result.completed_at)}
+              {t('evaluations.result.completedOn')} {formatDateTime(result.completed_at)}
             </p>
           </div>
           <div className="flex items-center gap-4">
-            <button className="px-4 py-2 border border-[var(--outline-variant)] rounded-xl text-sm font-medium hover:bg-[var(--surface-container-low)] transition-colors flex items-center gap-2">
+            <button
+              onClick={handleDownloadPdf}
+              disabled={exportingPdf}
+              className="px-4 py-2 border border-[var(--outline-variant)] rounded-xl text-sm font-medium hover:bg-[var(--surface-container-low)] transition-colors flex items-center gap-2 disabled:opacity-50"
+              aria-label={t('evaluations.result.downloadPdf') || 'Descargar PDF'}
+            >
               <FaDownload className="w-4 h-4" />
-              Descargar PDF
+              {exportingPdf ? t('evaluations.result.exporting') : t('evaluations.result.downloadPdf')}
             </button>
           </div>
         </div>
@@ -104,7 +122,7 @@ const EvaluationResult = () => {
             <div className="w-full h-full rounded-full border-8 border-[var(--surface-container)] flex items-center justify-center">
               <div className={`text-4xl font-bold ${getScoreColor(result.score)}`}>
                 {result.score.toFixed(1)}
-                <span className="text-base text-[var(--on-surface-variant)]">/10</span>
+                <span className="text-base text-[var(--on-surface-variant)]">/20</span>
               </div>
             </div>
             <svg className="absolute top-0 left-0 w-full h-full -rotate-90">
@@ -121,10 +139,10 @@ const EvaluationResult = () => {
                 cy="80"
                 r="72"
                 fill="none"
-                stroke={result.score >= 8 ? '#22c55e' : result.score >= 6 ? '#eab308' : '#ef4444'}
+                stroke={result.score >= 16 ? '#22c55e' : result.score >= 12 ? '#eab308' : '#ef4444'}
                 strokeWidth="8"
                 strokeDasharray="452.16"
-                strokeDashoffset={452.16 - (result.score / 10) * 452.16}
+                strokeDashoffset={452.16 - (result.score / 20) * 452.16}
                 className="transition-all duration-1000"
               />
             </svg>
@@ -135,24 +153,21 @@ const EvaluationResult = () => {
             <h3 className="text-2xl font-bold text-[var(--on-surface)] mb-2">
               {getScoreMessage(result.score)}
             </h3>
-            <p className="text-[var(--on-surface-variant)] mb-4">
-              Has superado el promedio del grupo por un 12%. ¡Sigue así!
-            </p>
             <div className="grid grid-cols-3 gap-4">
               <div className="p-4 bg-[var(--surface-container-low)] rounded-xl">
-                <p className="text-sm text-[var(--on-surface-variant)]">Correctas</p>
+                <p className="text-sm text-[var(--on-surface-variant)]">{t('evaluations.result.correct')}</p>
                 <p className="text-xl font-bold text-[var(--secondary)]">
                   {result.correct_answers}/{result.total_questions}
                 </p>
               </div>
               <div className="p-4 bg-[var(--surface-container-low)] rounded-xl">
-                <p className="text-sm text-[var(--on-surface-variant)]">Tiempo</p>
+                <p className="text-sm text-[var(--on-surface-variant)]">{t('evaluations.result.time')}</p>
                 <p className="text-xl font-bold text-[var(--tertiary)]">
                   {Math.floor(result.time_taken / 60)}:{String(result.time_taken % 60).padStart(2, '0')}
                 </p>
               </div>
               <div className="p-4 bg-[var(--surface-container-low)] rounded-xl">
-                <p className="text-sm text-[var(--on-surface-variant)]">Intento</p>
+                <p className="text-sm text-[var(--on-surface-variant)]">{t('evaluations.result.attempt')}</p>
                 <p className="text-xl font-bold text-[var(--on-surface)]">
                   #{result.attempt_number}
                 </p>
@@ -164,7 +179,7 @@ const EvaluationResult = () => {
 
       {/* Question Review */}
       <div className="space-y-4">
-        <h3 className="text-xl font-bold text-[var(--on-surface)]">Revisión de respuestas</h3>
+        <h3 className="text-xl font-bold text-[var(--on-surface)]">{t('evaluations.result.questionReview')}</h3>
         {result.student_answers && result.student_answers.map((answer, index) => (
           <div
             key={answer.id}
@@ -183,7 +198,7 @@ const EvaluationResult = () => {
               <div className="flex-1">
                 <div className="flex justify-between items-start mb-2">
                   <h4 className="font-bold text-[var(--on-surface)]">
-                    {answer.question?.question_text || 'Pregunta sin texto'}
+                    {answer.question?.question_text || t('evaluations.result.noText')}
                   </h4>
                   <span className={`flex items-center gap-1 text-sm font-bold ${
                     answer.is_correct ? 'text-[var(--secondary)]' : 'text-[var(--error)]'
@@ -193,19 +208,19 @@ const EvaluationResult = () => {
                     ) : (
                       <FaTimesCircle className="w-4 h-4" />
                     )}
-                    {answer.is_correct ? 'Correcto' : 'Incorrecto'}
+                    {answer.is_correct ? t('evaluations.result.correct') : t('evaluations.result.incorrect')}
                   </span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                   <div className="p-3 bg-[var(--surface-container-low)] rounded-lg">
-                    <p className="text-xs text-[var(--on-surface-variant)]">Tu respuesta</p>
+                    <p className="text-xs text-[var(--on-surface-variant)]">{t('evaluations.result.yourAnswer')}</p>
                     <p className={`font-mono ${answer.is_correct ? 'text-[var(--secondary)]' : 'text-[var(--error)]'}`}>
-                      {answer.answer || 'Sin respuesta'}
+                      {answer.answer || t('evaluations.result.noAnswer')}
                     </p>
                   </div>
                   {!answer.is_correct && answer.question?.correct_answer && (
                     <div className="p-3 bg-[var(--secondary)]/10 rounded-lg border border-[var(--secondary)]/20">
-                      <p className="text-xs text-[var(--on-surface-variant)]">Respuesta correcta</p>
+                      <p className="text-xs text-[var(--on-surface-variant)]">{t('evaluations.result.correctAnswer')}</p>
                       <p className="font-mono text-[var(--secondary)]">
                         {answer.question.correct_answer}
                       </p>
@@ -214,7 +229,7 @@ const EvaluationResult = () => {
                 </div>
                 {answer.question?.explanation && (
                   <div className="mt-3 p-3 bg-[var(--surface-container-low)] rounded-lg">
-                    <p className="text-xs text-[var(--on-surface-variant)]">💡 Explicación</p>
+                    <p className="text-xs text-[var(--on-surface-variant)]">💡 {t('evaluations.result.explanation')}</p>
                     <p className="text-sm text-[var(--on-surface)]">
                       {answer.question.explanation}
                     </p>
@@ -230,20 +245,23 @@ const EvaluationResult = () => {
       <div className="bg-[var(--primary)] p-8 rounded-2xl text-white">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <div>
-            <h3 className="text-xl font-bold">Tu Próximo Paso</h3>
+            <h3 className="text-xl font-bold">{t('evaluations.result.nextStep')}</h3>
             <p className="text-blue-100">
-              Basado en tus errores, te recomendamos repasar {result.score < 6 ? 'temas básicos' : 'conceptos avanzados'}
+              {t('evaluations.result.needsReview')} — {result.score < 12 ? t('evaluations.result.basicTopics') : t('evaluations.result.advancedTopics')}
             </p>
           </div>
           <div className="flex gap-3">
-            <button className="px-6 py-3 bg-white text-[var(--primary)] font-bold rounded-xl hover:shadow-lg transition-all">
-              Repasar temas
-            </button>
+            <Link
+              to="/lessons"
+              className="px-6 py-3 bg-white text-[var(--primary)] font-bold rounded-xl hover:shadow-lg transition-all"
+            >
+              {t('evaluations.result.reviewTopics')}
+            </Link>
             <Link
               to="/lessons"
               className="px-6 py-3 bg-[var(--primary)] border border-white/30 font-bold rounded-xl hover:bg-white/10 transition-all"
             >
-              Ver guía de estudio
+              {t('evaluations.result.viewStudyGuide')}
             </Link>
           </div>
         </div>

@@ -1,30 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { lessonsApi } from '../../api/lessons';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { FaSearch, FaFilter, FaBook, FaClock, FaChevronRight } from 'react-icons/fa';
-import { getDifficultyColor, formatDate, calculateProgress } from '../../utils/helpers';
+import { getDifficultyColor, getDifficultyLabel, formatDate, calculateProgress, toArray } from '../../utils/helpers';
 import Loading from '../Common/Loading';
 
 const LessonList = () => {
+  const { lang, t } = useLanguage();
   const [lessons, setLessons] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({
-    search: '',
-    difficulty: '',
-    unit: ''
-  });
+  const [filters, setFilters] = useState({ search: '', difficulty: '', unit: '' });
   const [units, setUnits] = useState([]);
 
-  useEffect(() => {
-    fetchLessons();
-  }, [filters]);
-
-  // Normaliza cualquier forma de respuesta (array plano, paginado, null, o error) a un array seguro
-  const toArray = (value) => {
-    if (Array.isArray(value)) return value;
-    if (value && Array.isArray(value.data)) return value.data; // respuesta paginada anidada
-    return [];
-  };
+  useEffect(() => { fetchLessons(); }, [filters]);
 
   const fetchLessons = async () => {
     try {
@@ -32,12 +22,9 @@ const LessonList = () => {
       const response = await lessonsApi.getLessons(filters);
       const lessonsArray = toArray(response.data?.data);
       setLessons(lessonsArray);
-
-      // Extraer unidades únicas
-      const uniqueUnits = [...new Set(lessonsArray.map(l => l.unit).filter(Boolean))];
-      setUnits(uniqueUnits);
+      setUnits([...new Set(lessonsArray.map(l => l.unit).filter(Boolean))]);
     } catch (error) {
-      console.error('Error fetching lessons:', error);
+      toast.error(t('lessons.loadError'));
       setLessons([]);
     } finally {
       setLoading(false);
@@ -52,24 +39,20 @@ const LessonList = () => {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-[var(--on-surface)]">Biblioteca de Lecciones</h2>
-          <p className="text-[var(--on-surface-variant)]">
-            Explora y aprende con nuestras lecciones interactivas
-          </p>
+          <h2 className="text-3xl font-bold text-[var(--on-surface)]">{t('lessons.title')}</h2>
+          <p className="text-[var(--on-surface-variant)]">{t('lessons.subtitle')}</p>
         </div>
       </div>
 
-      {/* Filters */}
       <div className="bg-[var(--surface)] p-6 rounded-2xl shadow-sm border border-[var(--surface-container)]">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1 relative">
             <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--outline)]" />
             <input
               type="text"
-              placeholder="Buscar lecciones..."
+              placeholder={t('lessons.search')}
               value={filters.search}
               onChange={(e) => handleFilterChange('search', e.target.value)}
               className="w-full pl-12 pr-4 py-3 rounded-xl border-2 border-[var(--surface-container-high)] focus:border-[var(--primary)] focus:outline-none bg-[var(--surface-container-low)]"
@@ -80,39 +63,38 @@ const LessonList = () => {
             onChange={(e) => handleFilterChange('difficulty', e.target.value)}
             className="px-4 py-3 rounded-xl border-2 border-[var(--surface-container-high)] focus:border-[var(--primary)] focus:outline-none bg-[var(--surface-container-low)] min-w-[150px]"
           >
-            <option value="">Todas las dificultades</option>
-            <option value="basic">Básico</option>
-            <option value="intermediate">Intermedio</option>
-            <option value="advanced">Avanzado</option>
+            <option value="">{t('lessons.allDifficulties')}</option>
+            <option value="basic">{t('lessons.basic')}</option>
+            <option value="intermediate">{t('lessons.intermediate')}</option>
+            <option value="advanced">{t('lessons.advanced')}</option>
           </select>
           <select
             value={filters.unit}
             onChange={(e) => handleFilterChange('unit', e.target.value)}
             className="px-4 py-3 rounded-xl border-2 border-[var(--surface-container-high)] focus:border-[var(--primary)] focus:outline-none bg-[var(--surface-container-low)] min-w-[150px]"
           >
-            <option value="">Todas las unidades</option>
+            <option value="">{t('lessons.allUnits')}</option>
             {units.map(unit => (
               <option key={unit} value={unit}>{unit}</option>
             ))}
           </select>
-          <button className="px-6 py-3 bg-[var(--surface-container-high)] rounded-xl hover:bg-[var(--surface-container-highest)] transition-colors">
+          <button className="px-6 py-3 bg-[var(--surface-container-high)] rounded-xl hover:bg-[var(--surface-container-highest)] transition-colors" aria-label={t('lessons.filter') || 'Filtrar lecciones'}>
             <FaFilter />
           </button>
         </div>
       </div>
 
-      {/* Lessons Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {lessons.map((lesson) => (
           <Link
             key={lesson.id}
             to={`/lessons/${lesson.id}`}
+            aria-label={lesson.title}
             className="bg-[var(--surface)] rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all border border-[var(--surface-container)] hover:border-[var(--primary)]/20 group flex flex-col"
           >
             <div className="flex justify-between items-start mb-4">
               <span className={`px-3 py-1 rounded-lg text-xs font-bold ${getDifficultyColor(lesson.difficulty)}`}>
-                {lesson.difficulty === 'basic' ? 'Básico' : 
-                 lesson.difficulty === 'intermediate' ? 'Intermedio' : 'Avanzado'}
+                {getDifficultyLabel(lesson.difficulty, lang)}
               </span>
               {lesson.estimated_time && (
                 <span className="flex items-center gap-1 text-xs text-[var(--on-surface-variant)]">
@@ -127,7 +109,7 @@ const LessonList = () => {
             </h3>
             
             <p className="text-sm text-[var(--on-surface-variant)] mb-4 line-clamp-2 flex-1">
-              {lesson.description || 'Sin descripción'}
+              {lesson.description || t('lessons.noDescription')}
             </p>
 
             {lesson.unit && (
@@ -148,14 +130,11 @@ const LessonList = () => {
               </div>
             )}
 
-            {/* Progreso */}
             {lesson.user_progress && (
               <div className="mt-auto space-y-2">
                 <div className="flex justify-between text-xs">
-                  <span className="text-[var(--on-surface-variant)]">Progreso</span>
-                  <span className="font-bold text-[var(--on-surface)]">
-                    {lesson.user_progress.progress || 0}%
-                  </span>
+                  <span className="text-[var(--on-surface-variant)]">{t('student.progress')}</span>
+                  <span className="font-bold text-[var(--on-surface)]">{lesson.user_progress.progress || 0}%</span>
                 </div>
                 <div className="w-full bg-[var(--surface-container)] rounded-full h-2 overflow-hidden">
                   <div 
@@ -169,7 +148,7 @@ const LessonList = () => {
             {!lesson.user_progress && (
               <div className="mt-auto pt-4">
                 <span className="text-sm font-medium text-[var(--primary)] flex items-center gap-1">
-                  Empezar ahora
+                  {t('student.startNow')}
                   <FaChevronRight className="w-3 h-3" />
                 </span>
               </div>
@@ -181,10 +160,8 @@ const LessonList = () => {
       {lessons.length === 0 && (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">📚</div>
-          <h3 className="text-xl font-bold text-[var(--on-surface)]">No hay lecciones disponibles</h3>
-          <p className="text-[var(--on-surface-variant)]">
-            Pronto se agregarán nuevas lecciones
-          </p>
+          <h3 className="text-xl font-bold text-[var(--on-surface)]">{t('student.noLessons')}</h3>
+          <p className="text-[var(--on-surface-variant)]">{t('student.comingSoon')}</p>
         </div>
       )}
     </div>

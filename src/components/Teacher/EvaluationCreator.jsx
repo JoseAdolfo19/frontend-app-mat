@@ -8,42 +8,45 @@ import * as yup from 'yup';
 import toast from 'react-hot-toast';
 import { FaSave, FaTimes, FaPlus, FaTrash, FaCopy } from 'react-icons/fa';
 import Loading from '../Common/Loading';
-
-const questionSchema = yup.object().shape({
-  type: yup.string().required(),
-  question_text: yup.string().required('El texto de la pregunta es requerido'),
-  options: yup.array().when('type', {
-    is: 'multiple_choice',
-    then: () => yup.array().min(2, 'Mínimo 2 opciones').of(
-      yup.object().shape({
-        label: yup.string().required(),
-        value: yup.string().required()
-      })
-    )
-  }),
-  correct_answer: yup.string().required('La respuesta correcta es requerida'),
-  explanation: yup.string().nullable(),
-  points: yup.number().min(1, 'Mínimo 1 punto')
-});
-
-const schema = yup.object().shape({
-  title: yup.string().required('El título es requerido'),
-  description: yup.string().nullable(),
-  lesson_id: yup.string().nullable(),
-  type: yup.string().required('El tipo es requerido'),
-  difficulty: yup.string().required('La dificultad es requerida'),
-  time_limit: yup.number().min(1, 'Mínimo 1 minuto'),
-  due_date: yup.string().nullable(),
-  max_attempts: yup.number().min(1, 'Mínimo 1 intento'),
-  questions: yup.array().of(questionSchema)
-});
+import { useLanguage } from '../../contexts/LanguageContext';
+import { toArray } from '../../utils/helpers';
 
 const EvaluationCreator = () => {
+  const { t } = useLanguage();
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [lessons, setLessons] = useState([]);
+
+  const questionSchema = yup.object().shape({
+    type: yup.string().required(),
+    question_text: yup.string().required(),
+    options: yup.array().when('type', {
+      is: 'multiple_choice',
+      then: () => yup.array().min(2).of(
+        yup.object().shape({
+          label: yup.string().required(),
+          value: yup.string().required()
+        })
+      )
+    }),
+    correct_answer: yup.string().required(),
+    explanation: yup.string().nullable(),
+    points: yup.number().min(1)
+  });
+
+  const schema = yup.object().shape({
+    title: yup.string().required(),
+    description: yup.string().nullable(),
+    lesson_id: yup.string().nullable(),
+    type: yup.string().required(),
+    difficulty: yup.string().required(),
+    time_limit: yup.number().min(1),
+    due_date: yup.string().nullable(),
+    max_attempts: yup.number().min(1),
+    questions: yup.array().of(questionSchema)
+  });
 
   const { register, control, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     resolver: yupResolver(schema),
@@ -72,19 +75,12 @@ const EvaluationCreator = () => {
     }
   }, [id]);
 
-  // Normaliza cualquier forma de respuesta (array plano, paginado, null, o error) a un array seguro
-  const toArray = (value) => {
-    if (Array.isArray(value)) return value;
-    if (value && Array.isArray(value.data)) return value.data;
-    return [];
-  };
-
   const fetchLessons = async () => {
     try {
       const response = await lessonsApi.getLessons({ limit: 100 });
       setLessons(toArray(response.data?.data));
-    } catch (error) {
-      console.error('Error fetching lessons:', error);
+    } catch {
+      toast.error('Error al cargar lecciones');
       setLessons([]);
     }
   };
@@ -96,7 +92,7 @@ const EvaluationCreator = () => {
       const evaluation = response.data?.data;
 
       if (!evaluation) {
-        toast.error('No se encontró la evaluación');
+        toast.error(t('teacher.evaluationCreator.notFound'));
         navigate('/evaluations');
         return;
       }
@@ -111,8 +107,7 @@ const EvaluationCreator = () => {
       setValue('max_attempts', evaluation.max_attempts || 1);
       setValue('questions', toArray(evaluation.questions));
     } catch (error) {
-      console.error('Error fetching evaluation:', error);
-      toast.error('Error al cargar la evaluación');
+      toast.error(t('teacher.evaluationCreator.loadError'));
     } finally {
       setLoading(false);
     }
@@ -123,15 +118,14 @@ const EvaluationCreator = () => {
       setSaving(true);
       if (id) {
         await evaluationsApi.updateEvaluation(id, data);
-        toast.success('Evaluación actualizada exitosamente');
+        toast.success(t('teacher.evaluationCreator.saveSuccess'));
       } else {
         await evaluationsApi.createEvaluation(data);
-        toast.success('Evaluación creada exitosamente');
+        toast.success(t('teacher.evaluationCreator.saveSuccess'));
       }
       navigate('/evaluations');
     } catch (error) {
-      console.error('Error saving evaluation:', error);
-      toast.error(error.response?.data?.message || 'Error al guardar la evaluación');
+      toast.error(error.response?.data?.message || t('teacher.evaluationCreator.saveError'));
     } finally {
       setSaving(false);
     }
@@ -166,31 +160,32 @@ const EvaluationCreator = () => {
     <div className="max-w-4xl mx-auto space-y-8">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-[var(--on-surface)]">
-          {id ? 'Editar Evaluación' : 'Nueva Evaluación'}
+          {id ? t('teacher.evaluationCreator.editEvaluation') : t('teacher.evaluationCreator.newEvaluation')}
         </h2>
         <button
           onClick={() => navigate('/evaluations')}
           className="px-4 py-2 text-[var(--on-surface-variant)] hover:bg-[var(--surface-container)] rounded-xl transition-colors"
         >
-          Cancelar
+          {t('teacher.evaluationCreator.cancel')}
         </button>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Basic Info */}
         <div className="bg-[var(--surface)] p-6 rounded-2xl shadow-sm border border-[var(--surface-container)]">
-          <h3 className="text-lg font-bold text-[var(--on-surface)] mb-4">Información Básica</h3>
+          <h3 className="text-lg font-bold text-[var(--on-surface)] mb-4">{t('teacher.evaluationCreator.basicInfo')}</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
-                Título *
+              <label htmlFor="eval-title" className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
+                {t('teacher.evaluationCreator.title')} *
               </label>
               <input
+                id="eval-title"
                 type="text"
                 {...register('title')}
                 className="w-full px-4 py-3 rounded-xl border-2 border-[var(--surface-container-high)] focus:border-[var(--primary)] focus:outline-none bg-[var(--surface-container-low)]"
-                placeholder="Título de la evaluación"
+                placeholder={t('teacher.evaluationCreator.titlePlaceholder')}
               />
               {errors.title && (
                 <p className="text-sm text-[var(--error)] mt-1">{errors.title.message}</p>
@@ -198,43 +193,46 @@ const EvaluationCreator = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
-                Tipo *
+              <label htmlFor="eval-type" className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
+                {t('teacher.evaluationCreator.type')} *
               </label>
               <select
+                id="eval-type"
                 {...register('type')}
                 className="w-full px-4 py-3 rounded-xl border-2 border-[var(--surface-container-high)] focus:border-[var(--primary)] focus:outline-none bg-[var(--surface-container-low)]"
               >
-                <option value="exam">Examen</option>
-                <option value="quiz">Quiz</option>
-                <option value="homework">Tarea</option>
-                <option value="practice">Práctica</option>
+                <option value="exam">{t('teacher.evaluationCreator.exam')}</option>
+                <option value="quiz">{t('teacher.evaluationCreator.quiz')}</option>
+                <option value="homework">{t('teacher.evaluationCreator.homework')}</option>
+                <option value="practice">{t('teacher.evaluationCreator.practice')}</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
-                Dificultad *
+              <label htmlFor="eval-difficulty" className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
+                {t('teacher.evaluationCreator.difficulty')} *
               </label>
               <select
+                id="eval-difficulty"
                 {...register('difficulty')}
                 className="w-full px-4 py-3 rounded-xl border-2 border-[var(--surface-container-high)] focus:border-[var(--primary)] focus:outline-none bg-[var(--surface-container-low)]"
               >
-                <option value="basic">Básico</option>
-                <option value="intermediate">Intermedio</option>
-                <option value="advanced">Avanzado</option>
+                <option value="basic">{t('lessons.basic')}</option>
+                <option value="intermediate">{t('lessons.intermediate')}</option>
+                <option value="advanced">{t('lessons.advanced')}</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
-                Lección asociada
+              <label htmlFor="eval-lesson-id" className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
+                {t('teacher.evaluationCreator.linkedLesson')}
               </label>
               <select
+                id="eval-lesson-id"
                 {...register('lesson_id')}
                 className="w-full px-4 py-3 rounded-xl border-2 border-[var(--surface-container-high)] focus:border-[var(--primary)] focus:outline-none bg-[var(--surface-container-low)]"
               >
-                <option value="">Ninguna</option>
+                <option value="">{t('teacher.evaluationCreator.none')}</option>
                 {lessons.map(lesson => (
                   <option key={lesson.id} value={lesson.id}>{lesson.title}</option>
                 ))}
@@ -242,10 +240,11 @@ const EvaluationCreator = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
-                Tiempo límite (minutos)
+              <label htmlFor="eval-time-limit" className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
+                {t('teacher.evaluationCreator.timeLimit')}
               </label>
               <input
+                id="eval-time-limit"
                 type="number"
                 {...register('time_limit')}
                 className="w-full px-4 py-3 rounded-xl border-2 border-[var(--surface-container-high)] focus:border-[var(--primary)] focus:outline-none bg-[var(--surface-container-low)]"
@@ -254,10 +253,11 @@ const EvaluationCreator = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
-                Fecha de entrega
+              <label htmlFor="eval-due-date" className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
+                {t('teacher.evaluationCreator.dueDate')}
               </label>
               <input
+                id="eval-due-date"
                 type="datetime-local"
                 {...register('due_date')}
                 className="w-full px-4 py-3 rounded-xl border-2 border-[var(--surface-container-high)] focus:border-[var(--primary)] focus:outline-none bg-[var(--surface-container-low)]"
@@ -265,10 +265,11 @@ const EvaluationCreator = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
-                Intentos máximos
+              <label htmlFor="eval-max-attempts" className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
+                {t('teacher.evaluationCreator.maxAttempts')}
               </label>
               <input
+                id="eval-max-attempts"
                 type="number"
                 {...register('max_attempts')}
                 className="w-full px-4 py-3 rounded-xl border-2 border-[var(--surface-container-high)] focus:border-[var(--primary)] focus:outline-none bg-[var(--surface-container-low)]"
@@ -278,14 +279,15 @@ const EvaluationCreator = () => {
           </div>
 
           <div className="mt-4">
-            <label className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
-              Descripción
+            <label htmlFor="eval-description" className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
+              {t('teacher.evaluationCreator.description')}
             </label>
             <textarea
+              id="eval-description"
               {...register('description')}
               rows="2"
               className="w-full px-4 py-3 rounded-xl border-2 border-[var(--surface-container-high)] focus:border-[var(--primary)] focus:outline-none bg-[var(--surface-container-low)] resize-none"
-              placeholder="Descripción de la evaluación"
+              placeholder={t('teacher.evaluationCreator.descriptionPlaceholder')}
             />
           </div>
         </div>
@@ -294,7 +296,7 @@ const EvaluationCreator = () => {
         <div className="bg-[var(--surface)] p-6 rounded-2xl shadow-sm border border-[var(--surface-container)]">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-bold text-[var(--on-surface)]">
-              Preguntas ({fields.length})
+              {t('teacher.evaluationCreator.questions')} ({fields.length})
             </h3>
             <button
               type="button"
@@ -302,7 +304,7 @@ const EvaluationCreator = () => {
               className="px-4 py-2 bg-[var(--primary)] text-white rounded-xl hover:opacity-90 transition-all flex items-center gap-2"
             >
               <FaPlus />
-              Agregar pregunta
+              {t('teacher.evaluationCreator.addQuestion')}
             </button>
           </div>
 
@@ -310,13 +312,14 @@ const EvaluationCreator = () => {
             <div key={field.id} className="mb-6 p-4 bg-[var(--surface-container-low)] rounded-xl border border-[var(--surface-container)]">
               <div className="flex justify-between items-start mb-4">
                 <h4 className="font-bold text-[var(--on-surface)]">
-                  Pregunta {index + 1}
+                  {t('teacher.evaluationCreator.questionNumber').replace('{num}', index + 1)}
                 </h4>
                 <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={() => duplicateQuestion(index)}
                     className="text-[var(--primary)] hover:bg-[var(--primary)]/10 p-2 rounded-lg transition-colors"
+                    aria-label={`Duplicar pregunta ${index + 1}`}
                   >
                     <FaCopy />
                   </button>
@@ -324,6 +327,7 @@ const EvaluationCreator = () => {
                     type="button"
                     onClick={() => remove(index)}
                     className="text-[var(--error)] hover:bg-[var(--error)]/10 p-2 rounded-lg transition-colors"
+                    aria-label={`Eliminar pregunta ${index + 1}`}
                   >
                     <FaTrash />
                   </button>
@@ -333,21 +337,21 @@ const EvaluationCreator = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
-                    Tipo
+                    {t('teacher.evaluationCreator.typeLabel')}
                   </label>
                   <select
                     {...register(`questions.${index}.type`)}
                     className="w-full px-4 py-2 rounded-xl border-2 border-[var(--surface-container-high)] focus:border-[var(--primary)] focus:outline-none bg-white"
                   >
-                    <option value="multiple_choice">Opción múltiple</option>
-                    <option value="fill_blank">Completar</option>
-                    <option value="formula">Fórmula</option>
+                    <option value="multiple_choice">{t('teacher.evaluationCreator.multipleChoice')}</option>
+                    <option value="fill_blank">{t('teacher.evaluationCreator.fillBlank')}</option>
+                    <option value="formula">{t('teacher.evaluationCreator.formula')}</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
-                    Puntos
+                    {t('teacher.evaluationCreator.points')}
                   </label>
                   <input
                     type="number"
@@ -360,13 +364,13 @@ const EvaluationCreator = () => {
 
               <div className="mt-3">
                 <label className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
-                  Texto de la pregunta *
+                  {t('teacher.evaluationCreator.questionText')} *
                 </label>
                 <input
                   type="text"
                   {...register(`questions.${index}.question_text`)}
                   className="w-full px-4 py-2 rounded-xl border-2 border-[var(--surface-container-high)] focus:border-[var(--primary)] focus:outline-none bg-white"
-                  placeholder="Escribe la pregunta"
+                  placeholder={t('teacher.evaluationCreator.questionTextPlaceholder')}
                 />
               </div>
 
@@ -374,7 +378,7 @@ const EvaluationCreator = () => {
               {watch(`questions.${index}.type`) === 'multiple_choice' && (
                 <div className="mt-3">
                   <label className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
-                    Opciones
+                    {t('teacher.evaluationCreator.options')}
                   </label>
                   {watch(`questions.${index}.options`)?.map((option, optIndex) => (
                     <div key={optIndex} className="flex gap-2 mb-2">
@@ -382,7 +386,7 @@ const EvaluationCreator = () => {
                         type="text"
                         {...register(`questions.${index}.options.${optIndex}.value`)}
                         className="flex-1 px-4 py-2 rounded-xl border-2 border-[var(--surface-container-high)] focus:border-[var(--primary)] focus:outline-none bg-white"
-                        placeholder={`Opción ${String.fromCharCode(65 + optIndex)}`}
+                        placeholder={`Option ${String.fromCharCode(65 + optIndex)}`}
                       />
                     </div>
                   ))}
@@ -397,32 +401,32 @@ const EvaluationCreator = () => {
                     }}
                     className="text-sm text-[var(--primary)] hover:underline"
                   >
-                    + Agregar opción
+                    {t('teacher.evaluationCreator.addOption')}
                   </button>
                 </div>
               )}
 
               <div className="mt-3">
                 <label className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
-                  Respuesta correcta *
+                  {t('teacher.evaluationCreator.correctAnswer')} *
                 </label>
                 <input
                   type="text"
                   {...register(`questions.${index}.correct_answer`)}
                   className="w-full px-4 py-2 rounded-xl border-2 border-[var(--secondary)] focus:border-[var(--primary)] focus:outline-none bg-white"
-                  placeholder="Respuesta correcta"
+                  placeholder={t('teacher.evaluationCreator.correctAnswer')}
                 />
               </div>
 
               <div className="mt-3">
                 <label className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
-                  Explicación (opcional)
+                  {t('teacher.evaluationCreator.explanationOptional')}
                 </label>
                 <textarea
                   {...register(`questions.${index}.explanation`)}
                   rows="2"
                   className="w-full px-4 py-2 rounded-xl border-2 border-[var(--surface-container-high)] focus:border-[var(--primary)] focus:outline-none bg-white resize-none"
-                  placeholder="Explicación de la respuesta"
+                  placeholder={t('teacher.evaluationCreator.explanationPlaceholder')}
                 />
               </div>
             </div>
@@ -430,13 +434,13 @@ const EvaluationCreator = () => {
 
           {fields.length === 0 && (
             <div className="text-center py-8">
-              <p className="text-[var(--on-surface-variant)]">No hay preguntas agregadas</p>
+              <p className="text-[var(--on-surface-variant)]">{t('teacher.evaluationCreator.noQuestions')}</p>
               <button
                 type="button"
                 onClick={addQuestion}
                 className="mt-2 text-[var(--primary)] font-bold hover:underline"
               >
-                Agregar primera pregunta
+                {t('teacher.evaluationCreator.addFirstQuestion')}
               </button>
             </div>
           )}
@@ -450,14 +454,14 @@ const EvaluationCreator = () => {
             className="flex-1 px-6 py-3 bg-[var(--primary)] text-white font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
           >
             <FaSave />
-            {saving ? 'Guardando...' : id ? 'Actualizar Evaluación' : 'Crear Evaluación'}
+            {saving ? t('teacher.evaluationCreator.saving') : id ? t('teacher.evaluationCreator.updateEvaluation') : t('teacher.evaluationCreator.createEvaluation')}
           </button>
           <button
             type="button"
             onClick={() => navigate('/evaluations')}
             className="px-6 py-3 bg-[var(--surface-container)] text-[var(--on-surface)] font-bold rounded-xl hover:bg-[var(--surface-container-high)] transition-all"
           >
-            Cancelar
+            {t('teacher.evaluationCreator.cancel')}
           </button>
         </div>
       </form>

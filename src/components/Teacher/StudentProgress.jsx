@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { adminApi } from '../../api/admin';
-import { lessonsApi } from '../../api/lessons';
+import { reportsApi } from '../../api/reports';
 import { evaluationsApi } from '../../api/evaluations';
 import { FaArrowLeft, FaBook, FaClipboardList, FaChartLine, FaClock } from 'react-icons/fa';
-import { formatDate, calculateProgress } from '../../utils/helpers';
+import { formatDate, calculateProgress, toArray } from '../../utils/helpers';
 import Loading from '../Common/Loading';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const StudentProgress = () => {
+  const { t } = useLanguage();
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -20,13 +23,6 @@ const StudentProgress = () => {
   useEffect(() => {
     fetchStudentData();
   }, [id]);
-
-  // Normaliza cualquier forma de respuesta (array plano, paginado, null, o error) a un array seguro
-  const toArray = (value) => {
-    if (Array.isArray(value)) return value;
-    if (value && Array.isArray(value.data)) return value.data;
-    return [];
-  };
 
   const fetchStudentData = async () => {
     try {
@@ -42,18 +38,30 @@ const StudentProgress = () => {
         return;
       }
 
-      // Obtener progreso del estudiante
-      const progressRes = await lessonsApi.getProgress(id);
-      const progressData = toArray(progressRes.data);
-      setProgress(progressData);
+      // Obtener reporte individual del estudiante (incluye progreso de lecciones)
+      let progressData = [];
+      try {
+        const studentReportRes = await reportsApi.getStudentReport(id);
+        const reportData = studentReportRes.data?.data || studentReportRes.data;
+        if (reportData) {
+          progressData = toArray(reportData.lessons || reportData.progress);
+          setProgress(progressData);
+        }
+      } catch {
+        toast.error('Error al cargar reporte del estudiante');
+      }
 
       // Obtener evaluaciones del estudiante
-      const evalRes = await evaluationsApi.getResults(id);
-      const evaluationsData = toArray(evalRes.data?.data);
-      setEvaluations(evaluationsData);
+      let evaluationsData = [];
+      try {
+        const evalRes = await evaluationsApi.getResults(id);
+        evaluationsData = toArray(evalRes.data?.data);
+        setEvaluations(evaluationsData);
+      } catch {
+        toast.error('Error al cargar evaluaciones');
+      }
 
       // Calcular estadísticas usando los datos recién obtenidos
-      // (no el estado, que todavía no se actualizó en este mismo ciclo)
       const totalLessons = progressData.length;
       const completedLessons = progressData.filter(p => p.status === 'completed').length;
       const averageScore = evaluationsData.length > 0
@@ -68,8 +76,8 @@ const StudentProgress = () => {
         totalEvaluations: evaluationsData.length
       });
 
-    } catch (error) {
-      console.error('Error fetching student data:', error);
+    } catch {
+      toast.error('Error al cargar datos del estudiante');
     } finally {
       setLoading(false);
     }
@@ -78,7 +86,7 @@ const StudentProgress = () => {
   if (loading) return <Loading />;
   if (!student) return (
     <div className="text-center py-12">
-      <h3 className="text-xl font-bold text-[var(--on-surface)]">Estudiante no encontrado</h3>
+      <h3 className="text-xl font-bold text-[var(--on-surface)]">{t('teacher.studentProgress.notFound')}</h3>
     </div>
   );
 
@@ -86,11 +94,12 @@ const StudentProgress = () => {
     <div className="space-y-8">
       {/* Back */}
       <button
-        onClick={() => navigate('/admin/users')}
+        onClick={() => navigate('/reports')}
         className="flex items-center gap-2 text-[var(--on-surface-variant)] hover:text-[var(--primary)] transition-colors"
+        aria-label={t('teacher.studentProgress.backToUsers') || 'Volver a reportes'}
       >
         <FaArrowLeft className="w-4 h-4" />
-        Volver a usuarios
+        {t('teacher.studentProgress.backToUsers')}
       </button>
 
       {/* Header */}
@@ -104,10 +113,10 @@ const StudentProgress = () => {
             <p className="text-[var(--on-surface-variant)]">{student.email}</p>
             <div className="flex items-center gap-4 mt-2">
               <span className="px-3 py-1 bg-[var(--surface-container)] rounded-full text-sm">
-                📚 {student.grade || 'Sin grado'}
+                📚 {student.grade || t('teacher.studentProgress.noGrade')}
               </span>
               <span className="px-3 py-1 bg-[var(--surface-container)] rounded-full text-sm">
-                🏫 {student.institution || 'Sin institución'}
+                🏫 {student.institution || t('teacher.studentProgress.noInstitution')}
               </span>
             </div>
           </div>
@@ -122,7 +131,7 @@ const StudentProgress = () => {
               <FaBook className="w-5 h-5" />
             </div>
           </div>
-          <p className="text-sm text-[var(--on-surface-variant)]">Lecciones</p>
+          <p className="text-sm text-[var(--on-surface-variant)]">{t('teacher.studentProgress.lessons')}</p>
           <p className="text-2xl font-bold text-[var(--on-surface)]">
             {stats?.completedLessons || 0}/{stats?.totalLessons || 0}
           </p>
@@ -134,7 +143,7 @@ const StudentProgress = () => {
               <FaClipboardList className="w-5 h-5" />
             </div>
           </div>
-          <p className="text-sm text-[var(--on-surface-variant)]">Evaluaciones</p>
+          <p className="text-sm text-[var(--on-surface-variant)]">{t('teacher.studentProgress.evaluations')}</p>
           <p className="text-2xl font-bold text-[var(--on-surface)]">
             {stats?.totalEvaluations || 0}
           </p>
@@ -146,7 +155,7 @@ const StudentProgress = () => {
               <FaChartLine className="w-5 h-5" />
             </div>
           </div>
-          <p className="text-sm text-[var(--on-surface-variant)]">Promedio</p>
+          <p className="text-sm text-[var(--on-surface-variant)]">{t('teacher.studentProgress.average')}</p>
           <p className="text-2xl font-bold text-[var(--on-surface)]">
             {stats?.averageScore?.toFixed(1) || 0}
           </p>
@@ -158,7 +167,7 @@ const StudentProgress = () => {
               <FaClock className="w-5 h-5" />
             </div>
           </div>
-          <p className="text-sm text-[var(--on-surface-variant)]">Tasa de finalización</p>
+          <p className="text-sm text-[var(--on-surface-variant)]">{t('teacher.studentProgress.completionRate')}</p>
           <p className="text-2xl font-bold text-[var(--on-surface)]">
             {stats?.completionRate?.toFixed(0) || 0}%
           </p>
@@ -167,10 +176,10 @@ const StudentProgress = () => {
 
       {/* Progress Chart */}
       <div className="bg-[var(--surface)] p-6 rounded-2xl shadow-sm border border-[var(--surface-container)]">
-        <h3 className="text-lg font-bold text-[var(--on-surface)] mb-4">Progreso en lecciones</h3>
+        <h3 className="text-lg font-bold text-[var(--on-surface)] mb-4">{t('teacher.studentProgress.lessonProgress')}</h3>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={(Array.isArray(progress) ? progress : []).slice(0, 10)}>
+            <BarChart data={(Array.isArray(progress) ? progress : []).slice(0, 10)} aria-label={t('teacher.studentProgress.lessonProgress') || 'Gráfico de progreso por lección'}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--surface-container)" />
               <XAxis dataKey="lesson.title" stroke="var(--on-surface-variant)" fontSize={12} />
               <YAxis stroke="var(--on-surface-variant)" fontSize={12} />
@@ -190,38 +199,38 @@ const StudentProgress = () => {
       {/* Recent Evaluations */}
       <div className="bg-[var(--surface)] p-6 rounded-2xl shadow-sm border border-[var(--surface-container)]">
         <h3 className="text-lg font-bold text-[var(--on-surface)] mb-4">
-          Evaluaciones Recientes
+          {t('teacher.studentProgress.recentEvaluations')}
         </h3>
         <div className="space-y-3">
           {(Array.isArray(evaluations) ? evaluations : []).slice(0, 5).map((eval_) => (
             <div key={eval_.id} className="flex items-center justify-between p-4 bg-[var(--surface-container-low)] rounded-xl">
               <div>
-                <p className="font-medium text-[var(--on-surface)]">{eval_.evaluation?.title || 'Sin título'}</p>
+                <p className="font-medium text-[var(--on-surface)]">{eval_.evaluation?.title || '—'}</p>
                 <p className="text-sm text-[var(--on-surface-variant)]">
-                  {formatDate(eval_.created_at)} • {eval_.type || 'Sin tipo'}
+                  {formatDate(eval_.created_at)} • {eval_.type || '—'}
                 </p>
               </div>
               <div className="flex items-center gap-3">
                 <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                  eval_.score >= 7 ? 'bg-green-100 text-green-700' :
-                  eval_.score >= 5 ? 'bg-yellow-100 text-yellow-700' :
+                  eval_.score >= 15 ? 'bg-green-100 text-green-700' :
+                  eval_.score >= 12 ? 'bg-yellow-100 text-yellow-700' :
                   'bg-red-100 text-red-700'
                 }`}>
-                  {eval_.score?.toFixed(1) || 0}/10
+                  {eval_.score?.toFixed(1) || 0}/20
                 </span>
                 <span className={`px-2 py-1 rounded-full text-xs font-bold ${
                   eval_.status === 'completed' ? 'bg-green-100 text-green-700' :
                   eval_.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
                   'bg-red-100 text-red-700'
                 }`}>
-                  {eval_.status || 'Pendiente'}
+                  {eval_.status || t('student.pending')}
                 </span>
               </div>
             </div>
           ))}
           {evaluations.length === 0 && (
             <p className="text-center text-[var(--on-surface-variant)] py-4">
-              No hay evaluaciones completadas
+              {t('teacher.studentProgress.noEvaluations')}
             </p>
           )}
         </div>
