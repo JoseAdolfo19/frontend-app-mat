@@ -23,7 +23,7 @@ Plataforma educativa de matemáticas — **frontend en React + Vite**. Interfaz 
 | Recharts | Gráficos (reportes, progreso) |
 | React Quill | Editor de contenido HTML (lecciones) |
 | @react-oauth/google | Login con Google |
-| @google/generative-ai | Integración IA (chat) |
+| Groq (AI SDK) | Integración IA (chat "Profesor Euler" + generación de lecciones) |
 
 ---
 
@@ -153,7 +153,7 @@ frontend-app-mat/
 | `src/api/axios.js` | Instancia central de **Axios**. BaseURL desde `VITE_API_URL`. Interceptor de request: inyecta `Authorization: Bearer <token>` desde `localStorage`. Interceptor de response: maneja **401** haciendo refresh del token (`/user/refresh-token`), encolando peticiones fallidas mientras refresca; si el refresh falla, limpia el token y redirige a `/login`. |
 | `src/api/auth.js` | Endpoints de autenticación: `register`, `login`, `googleLogin`, `logout`, `forgotPassword`, `resetPassword`, perfil (`getProfile`/`updateProfile`), `changePassword`, vincular/desvincular Google, `refreshToken`, gestión de sesiones por plataforma (`logoutPlatform`, `logoutAll`, `getDevices`). |
 | `src/api/users.js` | Perfil del usuario, **progreso** (`getMyStats`, `getBadges`) y **notificaciones** (listar, conteo no leído, marcar leídas, eliminar). |
-| `src/api/lessons.js` | CRUD de **lecciones**: listar, obtener, crear, actualizar, eliminar, publicar/despublicar, duplicar, por unidad, estadísticas. Recursos por lección y **progreso** (`updateProgress`). |
+| `src/api/lessons.js` | CRUD de **lecciones**: listar, obtener, crear, actualizar, eliminar, publicar/despublicar, duplicar, por unidad, estadísticas. Recursos por lección (listar/añadir/eliminar y **subida de archivos** a `/lessons/resources/upload`) y **progreso** (`updateProgress`). Incluye `generateLesson` para la **generación de lecciones con IA** (`/ai/generate-lesson`). |
 | `src/api/evaluations.js` | CRUD de **evaluaciones** (publicar/despublicar/duplicar/estadísticas). Preguntas (CRUD). Resultados: `submitEvaluation`, `getResults`, `getStudentResult`. |
 | `src/api/admin.js` | Panel admin: dashboard, CRUD de **usuarios** (incluye activar/desactivar e **importar CSV / exportar**), configuración del sistema (`getConfig`/`updateConfig`), **períodos académicos** (CRUD) y **backups** de base de datos (crear, consultar último, descargar como blob). |
 | `src/api/notifications.js` | Endpoints de notificaciones (listar con params, conteo no leído, marcar como leída/todas, eliminar una o las leídas). |
@@ -247,8 +247,9 @@ frontend-app-mat/
 
 | Archivo | Qué hace |
 |---------|----------|
-| `Login.jsx` | Formulario de **inicio de sesión** (validación Yup) + **login con Google**. Redirige a `/dashboard`. |
-| `Register.jsx` | Formulario de **registro de estudiantes** (nombre, email, contraseña con confirmación, nivel académico) con validación y animaciones. |
+| `Login.jsx` | Formulario de **inicio de sesión** (validación Yup) + **login con Google**. Redirige a `/dashboard`. Incluye enlaces a las páginas legales (`/terms` y `/privacy`). |
+| `Register.jsx` | Formulario de **registro de estudiantes** (nombre completo, email, contraseña con confirmación, nivel académico Primaria/Secundaria) con validación Yup (contraseña mínima de 8 caracteres, coherente con el backend) y animaciones. |
+| `LegalPage.jsx` | Página legal reutilizable (prop `kind`: `terms` o `privacy`) con **Términos y Condiciones** y **Política de Privacidad** trilingües (es/en/qu), selector de idioma y enlaces cruzados entre ambas; botones de retorno al login. |
 | `ForgotPassword.jsx` | Solicitud de **recuperación de contraseña** por email; muestra confirmación de envío. |
 
 #### `Student/` — Vistas del estudiante
@@ -270,7 +271,7 @@ frontend-app-mat/
 | Archivo | Qué hace |
 |---------|----------|
 | `TeacherDashboard.jsx` | Dashboard docente: estadísticas (estudiantes, lecciones, evaluaciones, tasa de aprobación), acciones rápidas (crear lección/evaluación) y actividad reciente (estudiantes y evaluaciones). |
-| `LessonEditor.jsx` | **Editor de lecciones** (crear/editar): datos básicos, dificultad, unidad/tema, tags, **contenido HTML con React Quill**, y lista dinámica de **recursos** (PDF/video/imagen/link) con `useFieldArray`. |
+| `LessonEditor.jsx` | **Editor de lecciones** (crear/editar): datos básicos, dificultad, unidad/tema, tags, **contenido HTML con React Quill**, **generación automática con IA (Groq)** y lista dinámica de **recursos** (PDF/video/imagen/link) con subida al backend (`useFieldArray`). |
 | `EvaluationCreator.jsx` | **Creador/editor de evaluaciones**: configuración (tipo, dificultad, lección vinculada, límite de tiempo, fecha límite, intentos máximos) y **preguntas** (opción múltiple con opciones dinámicas, completar, fórmula) con duplicado y validación Yup. |
 | `ExamManager.jsx` | **Gestión de exámenes** (listar, filtrar por estado): crear, editar, activar/desactivar, ver estadísticas y eliminar. |
 | `ExamEditor.jsx` | **Editor de exámenes** (crear/editar): configuración (título, unidad, dificultad, tiempo, intentos, autocorrección, preguntas aleatorias) y preguntas de opción múltiple/verdadero-falso/**drag & drop** con reordenamiento y opciones dinámicas. Valida el formulario con un **schema Yup** (`examSchema`) que muestra errores inline (`exam.titleRequired`, `exam.minQuestions`, etc.) y guarda como borrador o publicado/activo. |
@@ -307,6 +308,7 @@ frontend-app-mat/
 |------|-----------|--------|
 | `/` | LandingPage | Público |
 | `/login`, `/register`, `/forgot-password` | Login, Register, ForgotPassword | Público |
+| `/terms`, `/privacy` | LegalPage (términos / privacidad) | Público |
 | `/parent/lookup` | ParentStudentLookup | Público |
 | `/dashboard`, `/my-work`, `/ranking`, `/lessons`, `/lessons/:id`, `/evaluations`, `/evaluations/:id/result`, `/exams`, `/exams/:id/take` | Vistas de estudiante | Sesión |
 | `/profile`, `/notifications`, `/settings`, `/help` | Páginas comunes | Sesión |
@@ -331,9 +333,10 @@ frontend-app-mat/
 - **Autenticación** tradicional + Google OAuth con refresh de token automático.
 - **i18n trilingüe** (español / inglés / quechua) persistido en `localStorage`.
 - **Temas dinámicos** (claro / oscuro / escala de grises) con colores institucionales configurables por el admin.
-- **Chat IA "Profesor Euler"** con streaming (SSE) y renderizado de markdown.
+- **Chat IA "Profesor Euler"** con streaming (SSE) y renderizado de markdown, y **generación automática de lecciones con IA (Groq)** desde el editor del docente.
 - **Exámenes con anti-trampa** (detección y reporte de eventos) y estadísticas por examen. Tipos de pregunta: opción múltiple, verdadero-falso y **arrastrar y soltar** (drag & drop con `@dnd-kit`).
 - **Reportes** con gráficos (Recharts) y exportación PDF/Excel.
+- **Páginas legales** de Términos y Condiciones y Política de Privacidad (rutas `/terms` y `/privacy`), trilingües y enlazadas desde el login y el registro.
 - **PWA instalable**: manifest + Service Worker generados por `vite-plugin-pwa` con `autoUpdate`, estrategia *NetworkFirst* para el API y caché de imágenes → **soporte offline**.
 - **Tests automatizados** con Vitest + React Testing Library (calificación, roles, constantes) y **CI** en GitHub Actions.
 - **Validación de entorno fail-fast** (`src/config/env.js`): errores claros al arranque si faltan variables.
