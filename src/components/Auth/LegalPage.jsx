@@ -1,11 +1,10 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { FaArrowLeft, FaUsers } from 'react-icons/fa';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 const LegalPage = ({ kind }) => {
   const { t, lang, changeLanguage } = useLanguage();
-  const navigate = useNavigate();
   const isTerms = kind === 'terms';
   const sections = isTerms ? t('legal.termsSections') : t('legal.privacySections');
   const title = isTerms ? t('legal.termsTitle') : t('legal.privacyTitle');
@@ -20,13 +19,13 @@ const LegalPage = ({ kind }) => {
     <div className="min-h-screen bg-white">
       <header className="sticky top-0 z-10 bg-white/95 backdrop-blur border-b border-gray-200">
         <div className="max-w-3xl mx-auto flex items-center justify-between px-6 py-4">
-          <button
-            onClick={() => navigate(-1)}
+          <Link
+            to="/login"
             className="inline-flex items-center gap-2 text-gray-600 hover:text-purple-600 font-semibold transition"
           >
             <FaArrowLeft />
             {t('legal.backToLogin')}
-          </button>
+          </Link>
 
           <h1 className="text-xl font-black text-gray-900 tracking-tight">
             Math<span className="text-purple-600">Flow</span>
@@ -72,10 +71,10 @@ const LegalPage = ({ kind }) => {
             {isTerms ? t('legal.privacyTitle') : t('legal.termsTitle')}
           </Link>
           <Link
-            to="/register"
+            to="/login"
             className="flex-1 text-center px-6 py-3 bg-gray-900 text-white font-bold rounded-xl hover:bg-gray-800 transition"
           >
-            {t('legal.backToRegister')}
+            {t('legal.backToLogin')}
           </Link>
         </div>
       </main>
