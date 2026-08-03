@@ -111,7 +111,7 @@ const Register = () => {
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
-              <label htmlFor="reg-name" className="block text-xs font-bold text-gray-600 tracking-wider">{t('auth.register.name')}</label>
+              <label htmlFor="reg-name" className="block text-xs font-bold text-gray-600 tracking-wider">{t('auth.register.fullName')}</label>
               <div className="relative">
                 <FaUser className="absolute left-4 top-3.5 text-gray-400" />
                 <input
@@ -149,10 +149,9 @@ const Register = () => {
                   {...register('academic_level')}
                   className="w-full pl-11 pr-10 py-3 rounded-xl bg-gray-100 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white border border-transparent transition appearance-none cursor-pointer"
                 >
-                  <option value="">{t('auth.register.levelPlaceholder')}</option>
-                  <option value="basic">{t('auth.register.levelPrimary')}</option>
-                  <option value="intermediate">{t('auth.register.levelSecondary')}</option>
-                  <option value="advanced">{t('auth.register.levelUniversity')}</option>
+                  <option value="">{t('auth.register.selectLevel')}</option>
+                  <option value="basic">{t('auth.register.basic')}</option>
+                  <option value="intermediate">{t('auth.register.intermediate')}</option>
                 </select>
                 <FaChevronDown className="absolute right-4 top-3.5 text-gray-400 text-xs pointer-events-none" />
               </div>
