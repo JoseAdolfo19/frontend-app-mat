@@ -22,8 +22,8 @@ const Register = () => {
     email: yup.string().email(t('auth.register.emailInvalid')).required(t('auth.register.emailRequired')),
     password: yup.string().min(8, t('auth.register.passwordMin')).required(t('auth.register.passwordRequired')),
     password_confirmation: yup.string()
-      .oneOf([yup.ref('password'), null], t('auth.register.passwordMismatch'))
-      .required(t('auth.register.confirmRequired')),
+      .oneOf([yup.ref('password'), null], t('auth.register.passwordMatch'))
+      .required(t('auth.register.confirmPasswordRequired')),
     academic_level: yup.string().required(t('auth.register.levelRequired')),
   });
 
@@ -37,7 +37,7 @@ const Register = () => {
     setLoading(false);
 
     if (result.success) {
-      toast.success(t('auth.register.success'));
+      toast.success(t('auth.register.successMsg'));
       navigate('/dashboard');
     } else {
       toast.error(result.error);
@@ -119,7 +119,7 @@ const Register = () => {
                   type="text"
                   {...register('full_name')}
                   className="w-full pl-11 pr-4 py-3 rounded-xl bg-gray-100 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white border border-transparent transition placeholder-gray-400"
-                  placeholder={t('auth.register.namePlaceholder')}
+                  placeholder={t('auth.register.fullNamePlaceholder')}
                 />
               </div>
               {errors.full_name && <p className="text-sm text-red-500 font-medium">{errors.full_name.message}</p>}

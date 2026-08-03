@@ -552,6 +552,9 @@ const translations = {
       register: {
         title: 'Crear cuenta',
         subtitle: 'Comienza a dominar las matemáticas hoy',
+        orContinueWith: 'O CONTINÚA CON',
+        welcomeGoogle: '¡Bienvenido a SIM!',
+        googleError: 'Error al iniciar sesión con Google',
         brandingTitle: 'Tu camino al dominio matemático comienza aquí.',
         brandingDesc: 'Únete a miles de estudiantes que transforman su relación con los números a través de aprendizaje interactivo y datos en tiempo real.',
         mentorName: 'Sofía Martínez',
@@ -1402,6 +1405,9 @@ const translations = {
       register: {
         title: 'Create account',
         subtitle: 'Start mastering math today',
+        orContinueWith: 'OR CONTINUE WITH',
+        welcomeGoogle: 'Welcome to SIM!',
+        googleError: 'Error signing in with Google',
         brandingTitle: 'Your path to math mastery starts here.',
         brandingDesc: 'Join thousands of students transforming their relationship with numbers through interactive learning and real-time data.',
         mentorName: 'Sofía Martínez',
@@ -2269,6 +2275,9 @@ const translations = {
       register: {
         title: 'Cuenta ruray',
         subtitle: 'Kunan yachay matematicata',
+        orContinueWith: 'O RURAY',
+        welcomeGoogle: 'SIM kamachiyninchik!',
+        googleError: 'Error Google yupaychashpa',
         brandingTitle: 'Yachay matematicata hamuq.',
         brandingDesc: 'Runakuna yachaykuna tukuyta.',
         mentorName: 'Sofía Martínez',
