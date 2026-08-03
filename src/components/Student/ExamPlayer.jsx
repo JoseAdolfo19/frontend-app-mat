@@ -29,6 +29,10 @@ const ExamPlayer = () => {
   const [result, setResult] = useState(null);
   const timerRef = useRef(null);
   const isSubmittingRef = useRef(false);
+  const answersRef = useRef({});
+  const questionsRef = useRef([]);
+  answersRef.current = answers;
+  questionsRef.current = questions;
 
   const { tabSwitchCount } = useAntiCheat(attempt?.id, !!attempt && !result);
 
@@ -45,7 +49,27 @@ const ExamPlayer = () => {
     isSubmittingRef.current = true;
     setSubmitting(true);
     try {
-      const response = await api.post(`/exams/attempts/${attempt.id}/submit`);
+      const latestQuestions = questionsRef.current;
+      const latestAnswers = answersRef.current;
+      const questionById = (latestQuestions || []).reduce((map, q) => {
+        map[q.id] = q;
+        return map;
+      }, {});
+
+      const body = {
+        answers: Object.entries(latestAnswers).map(([questionId, answer]) => {
+          const q = questionById[questionId];
+          const normalized =
+            q && q.type === 'drag_drop' && Array.isArray(answer)
+              ? JSON.stringify(answer)
+              : Array.isArray(answer)
+                ? JSON.stringify(answer)
+                : String(answer ?? '');
+          return { question_id: String(questionId), answer: normalized };
+        }),
+      };
+
+      const response = await api.post(`/exams/attempts/${attempt.id}/submit`, body);
       setResult(response.data.data || response.data);
       if (timerRef.current) clearInterval(timerRef.current);
     } catch (err) {

@@ -8,6 +8,12 @@ describe('normalizeTrueFalse', () => {
     expect(normalizeTrueFalse(false)).toBe('false');
     expect(normalizeTrueFalse('false')).toBe('false');
   });
+
+  it('normaliza labels legacy en español (Verdadero/Falso)', () => {
+    expect(normalizeTrueFalse('Verdadero')).toBe('true');
+    expect(normalizeTrueFalse('Falso')).toBe('false');
+    expect(normalizeTrueFalse('  verdadero  ')).toBe('true');
+  });
 });
 
 describe('isAnswerCorrect', () => {
@@ -16,6 +22,12 @@ describe('isAnswerCorrect', () => {
     expect(isAnswerCorrect({ ...question, userAnswer: true })).toBe(true);
     expect(isAnswerCorrect({ ...question, userAnswer: 'true' })).toBe(true);
     expect(isAnswerCorrect({ ...question, userAnswer: 'false' })).toBe(false);
+  });
+
+  it('true/false: una respuesta legacy "Falso" se compara igual (sin bug del primer opción)', () => {
+    const question = { type: 'true_false', correctAnswer: 'Falso' };
+    expect(isAnswerCorrect({ ...question, userAnswer: 'false' })).toBe(true);
+    expect(isAnswerCorrect({ ...question, userAnswer: 'true' })).toBe(false);
   });
 
   it('multiple_choice: compara strings exactos', () => {

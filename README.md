@@ -50,6 +50,21 @@ npm run dev            # http://localhost:5173
 
 > 🔒 Las variables de entorno se **validan al arranque** (`src/config/env.js`): si faltan `VITE_API_URL` o `VITE_GOOGLE_CLIENT_ID`, la app falla con un mensaje claro en lugar de fallar silenciosamente en runtime.
 
+### Despliegue (producción)
+
+La app se publica en **Vercel** (https://frontend-app-mat.vercel.app). El proyecto está vinculado en `.vercel/`; para desplegar manualmente:
+
+```bash
+npm run build
+npx vercel --prod
+```
+
+El push a GitHub **no dispara el deploy automáticamente**: el despliegue en producción se hace de forma manual con `npx vercel --prod`. En Vercel se configuran las variables `VITE_API_URL` (backend en producción) y `VITE_GOOGLE_CLIENT_ID`.
+
+### Backend (API)
+
+El frontend depende de `VITE_API_URL` (API REST en Laravel). El backend es un repositorio separado: **`JoseAdolfo19/backend-app-mat`** (Laravel, `GET/POST/PUT/DELETE` bajo `/api/v1`). El backend califica las respuestas de exámenes/evaluaciones normalizando `Verdadero`/`Falso`/`true`/`false` a los valores canónicos `'true'`/`'false'`, en sintonía con `src/utils/grading.js`.
+
 ### Scripts
 
 ```bash
@@ -190,7 +205,7 @@ frontend-app-mat/
 |---------|----------|
 | `src/utils/constants.js` | Constantes: `ROLES` (incluye `PARENT`), `DIFFICULTY_LEVELS`, `EVALUATION_TYPES`, `QUESTION_TYPES` (incluye `drag_drop`), `TRUE_FALSE_OPTIONS`, `NOTIFICATION_TYPES`, `API_URL` y `APP_NAME`. |
 | `src/utils/helpers.js` | Funciones auxiliares: `formatDate`/`formatDateTime` (con locale por idioma), `getInitials`, `truncateText`, colores por dificultad/rol/estado (`getDifficultyColor`, `getRoleColor`, `getStatusColor`), `calculateProgress`, iconos/nombres de insignias (`getBadgeIcon`, `getBadgeName`), etiquetas de dificultad (trilingües), `getLetterGrade` (AD/A/B/C), y `toArray` (normaliza respuestas API). |
-| `src/utils/grading.js` | **Lógica de calificación** de exámenes: `normalizeTrueFalse` (normaliza valores booleanos a strings canónicos `'true'`/`'false'`), `isAnswerCorrect` y `gradeExam`. Tiene **tests** en `grading.test.js`. |
+| `src/utils/grading.js` | **Lógica de calificación** de exámenes: `normalizeTrueFalse` (normaliza booleanos, strings canónicos `'true'`/`'false'` y labels legacy `Verdadero`/`Falso`), `isAnswerCorrect` y `gradeExam`. Tiene **tests** en `grading.test.js`. |
 | `src/utils/roles.js` | Helpers de roles: `canAccess` y `isTeacherLike` (permite admin cuando el rol exige teacher). Con **tests** en `roles.test.js`. |
 | `src/utils/i18n.js` | Servicio de i18n: `getTranslation`, `getSavedLanguage` y `saveLanguage`. Lo usan los contexts (Auth/Theme/Notifications) sin depender de `LanguageContext`. |
 | `src/utils/logger.js` | Logger de desarrollo: en producción se silencia; sustituye `console.error`/`console.warn` directos en `useAntiCheat.js` y `ErrorBoundary.jsx`. |
@@ -262,7 +277,7 @@ frontend-app-mat/
 | `EvaluationList.jsx` | Lista de **evaluaciones** con filtros (búsqueda, tipo, dificultad) y estados (completado con nota, vencida, pendiente). |
 | `EvaluationResult.jsx` | **Resultado de evaluación**: anillo de puntaje /20, respuestas correctas/incorrectas con retroalimentación pregunta por pregunta, tiempo, intento, descarga de PDF y acciones sugeridas. |
 | `ExamList.jsx` | Lista de **exámenes disponibles** con dificultad, tiempo límite, intentos restantes y botón para iniciar (crea el intento vía `POST /exams/{id}/start`). |
-| `ExamPlayer.jsx` | **Reproductor de examen**: navegación por preguntas (opción múltiple / verdadero-falso / **drag & drop**), contador de tiempo con autoenvío al agotarse, panel de respuestas, **aviso anti-trampa**, confirmación de envío y pantalla de resultado. Los valores verdadero/falso se normalizan a strings canónicos (`'true'`/`'false'`) y sus labels se traducen con `t('exam.true')`/`t('exam.false')`. Las preguntas drag & drop se mezclan con `useMemo`. |
+| `ExamPlayer.jsx` | **Reproductor de examen**: navegación por preguntas (opción múltiple / verdadero-falso / **drag & drop**), contador de tiempo con autoenvío al agotarse, panel de respuestas, **aviso anti-trampa**, confirmación de envío y pantalla de resultado. Envía las respuestas en el submit (`answers` con `question_id` + `answer`; drag & drop como JSON). Los valores verdadero/falso se normalizan a strings canónicos (`'true'`/`'false'`) y sus labels se traducen con `t('exam.true')`/`t('exam.false')`. Las preguntas drag & drop se mezclan con `useMemo`. |
 | `StudentWorkBoard.jsx` | **Tablero de trabajos** del estudiante: estadísticas (asignados, enviados, calificados, pendientes, promedio), filtros por tipo/estado/área y lista de trabajos con feedback y nota. |
 | `StudentRanking.jsx` | **Ranking** de estudiantes por promedio (con filtro por curso), trofeos para top 3 y resaltado de mi posición. |
 
@@ -338,7 +353,18 @@ frontend-app-mat/
 - **Reportes** con gráficos (Recharts) y exportación PDF/Excel.
 - **Páginas legales** de Términos y Condiciones y Política de Privacidad (rutas `/terms` y `/privacy`), trilingües y enlazadas desde el login y el registro.
 - **PWA instalable**: manifest + Service Worker generados por `vite-plugin-pwa` con `autoUpdate`, estrategia *NetworkFirst* para el API y caché de imágenes → **soporte offline**.
-- **Tests automatizados** con Vitest + React Testing Library (calificación, roles, constantes) y **CI** en GitHub Actions.
+- **Tests automatizados** con Vitest + React Testing Library (calificación con true/false legacy, roles, constantes) y **CI** en GitHub Actions. La cobertura es parcial: falta cubrir ExamEditor, useAntiCheat y los guards de rutas.
 - **Validación de entorno fail-fast** (`src/config/env.js`): errores claros al arranque si faltan variables.
 - **TypeScript incremental**: configuración de `tsc` con `allowJs` para migrar módulo por módulo.
 - **Seguridad de credenciales**: API keys secretas excluidas del frontend; `.env` en `.gitignore` con `.env.example` como plantilla documentada.
+- **Logging seguro**: todo `console.*` está centralizado en `src/utils/logger.js`, que se **silencia en producción** (con placeholder para Sentry/monitoreo); los únicos `console.error` restantes están en `env.js` (fail-fast al arranque). `useAntiCheat.js` y `ErrorBoundary.jsx` usan el logger.
+- **Sin dependencias circulares**: verificado con `npx madge --circular src/`.
+
+---
+
+## Contribución, seguridad y licencia
+
+- **Contribución:** el proyecto aún no tiene `CONTRIBUTING.md`; se recomienda seguir el flujo de branching de GitHub (PR a `main`) y ejecutar `npm run typecheck`, `npm test` y `npm run build` antes de cada PR.
+- **Seguridad:** no hay `SECURITY.md` todavía. Para reportar una vulnerabilidad, abre un issue en el repositorio (o contacta al mantenedor); evita exponer credenciales en issues públicos.
+- **Licencia:** aún no hay archivo `LICENSE` definido; pendiente de decisión.
+- **Capturas/demo:** pendiente añadir capturas de pantalla de las páginas principales.

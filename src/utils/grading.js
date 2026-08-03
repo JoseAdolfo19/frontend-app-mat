@@ -3,7 +3,12 @@ import { TRUE_FALSE_OPTIONS } from './constants';
 export const normalizeTrueFalse = (answer) => {
   if (answer === true || answer === 'true') return 'true';
   if (answer === false || answer === 'false') return 'false';
-  const matched = TRUE_FALSE_OPTIONS.find((opt) => opt.labelKey && opt.value);
+  if (typeof answer === 'string') {
+    const normalized = answer.trim().toLowerCase();
+    if (normalized === 'verdadero') return 'true';
+    if (normalized === 'falso') return 'false';
+  }
+  const matched = TRUE_FALSE_OPTIONS.find((opt) => opt.labelKey === answer);
   return matched ? matched.value : answer;
 };
 

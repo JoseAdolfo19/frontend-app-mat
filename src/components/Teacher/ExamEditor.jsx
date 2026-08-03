@@ -6,6 +6,7 @@ import Loading from '../Common/Loading';
 import toast from 'react-hot-toast';
 import * as yup from 'yup';
 import { FaPlus, FaTrash, FaArrowUp, FaArrowDown } from 'react-icons/fa';
+import { normalizeTrueFalse } from '../../utils/grading';
 
 const examSchema = yup.object().shape({
   title: yup.string().min(3).required(),
@@ -100,6 +101,7 @@ const ExamEditor = () => {
             ...q,
             id: q.id || Date.now() + Math.random(),
             options: q.options || ['', '', '', ''],
+            correct_answer: q.type === 'true_false' ? normalizeTrueFalse(q.correct_answer) : q.correct_answer,
           })));
         }
       } catch (err) {
@@ -190,7 +192,7 @@ const ExamEditor = () => {
         questions: questions.map((q, i) => {
           const isTrueFalse = q.type === 'true_false';
           const isDragDrop = q.type === 'drag_drop';
-          const options = isTrueFalse ? ['Verdadero', 'Falso'] : q.options.filter((o) => o.trim());
+          const options = isTrueFalse ? ['true', 'false'] : q.options.filter((o) => o.trim());
           const correctAnswer = isDragDrop
             ? JSON.stringify(options)
             : q.correct_answer;
@@ -447,8 +449,8 @@ const ExamEditor = () => {
                     className="w-full p-3 bg-[var(--surface-container-low)] border border-[var(--outline-variant)] rounded-xl text-[var(--on-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
                   >
                     <option value="">--</option>
-                    <option value="Verdadero">{t('exam.true')}</option>
-                    <option value="Falso">{t('exam.false')}</option>
+                    <option value="true">{t('exam.true')}</option>
+                    <option value="false">{t('exam.false')}</option>
                   </select>
                 ) : q.type === 'drag_drop' ? (
                   <div className="w-full p-3 bg-[var(--surface-container-low)] border border-[var(--outline-variant)] rounded-xl text-sm text-[var(--on-surface-variant)]">
