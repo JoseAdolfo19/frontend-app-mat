@@ -21,6 +21,7 @@ import MainLayout from './components/Layout/MainLayout';
 import Login from './components/Auth/Login';
 import Register from './components/Auth/Register';
 import ForgotPassword from './components/Auth/ForgotPassword';
+const LegalPage = React.lazy(() => import('./components/Auth/LegalPage'));
 
 // Common (páginas compartidas por todos los roles)
 import Profile from './components/Common/Profile';
@@ -100,6 +101,8 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/terms" element={<LegalPage kind="terms" />} />
+                  <Route path="/privacy" element={<LegalPage kind="privacy" />} />
                   
                   {/* Protected Routes */}
                   <Route element={<ProtectedRoute />}>

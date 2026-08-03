@@ -161,7 +161,7 @@ const Login = () => {
           </p>
 
           <p className="text-center mt-6 text-xs text-gray-400">
-            {t('auth.login.termsText')} <a href="#" className="underline hover:text-purple-600">{t('auth.login.terms')}</a> {t('auth.login.and')} <a href="#" className="underline hover:text-purple-600">{t('auth.login.privacy')}</a>
+            {t('auth.login.termsText')}{' '}<Link to="/terms" className="underline hover:text-purple-600">{t('auth.login.terms')}</Link>{' '}{t('auth.login.and')}{' '}<Link to="/privacy" className="underline hover:text-purple-600">{t('auth.login.privacy')}</Link>
           </p>
         </div>
       </div>
