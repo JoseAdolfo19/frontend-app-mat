@@ -2,19 +2,9 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { usersApi } from '../api/users';
 import toast from 'react-hot-toast';
 import { useAuth } from './AuthContext';
-import translations from './LanguageContext';
+import { getTranslation, getSavedLanguage } from '../utils/i18n';
 
-const getT = () => {
-  const lang = localStorage.getItem('mathflow_language') || 'es';
-  return (key) => {
-    const keys = key.split('.');
-    let value = translations[lang];
-    for (const k of keys) {
-      value = value?.[k];
-    }
-    return value || key;
-  };
-};
+const translate = (key) => getTranslation(getSavedLanguage(), key);
 
 const NotificationContext = createContext();
 
@@ -34,7 +24,7 @@ export const NotificationProvider = ({ children }) => {
       const unread = response.data.data?.filter(n => !n.is_read) || [];
       setUnreadCount(unread.length);
     } catch {
-      toast.error(getT()('notifications.loadedError'));
+      toast.error(translate('notifications.loadedError'));
     } finally {
       setLoading(false);
     }
@@ -45,7 +35,7 @@ export const NotificationProvider = ({ children }) => {
       const response = await usersApi.getUnreadCount();
       setUnreadCount(response.data.unread_count || 0);
     } catch {
-      toast.error(getT()('notifications.loadedError'));
+      toast.error(translate('notifications.loadedError'));
     }
   };
 
@@ -57,7 +47,7 @@ export const NotificationProvider = ({ children }) => {
       );
       setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (error) {
-      toast.error(getT()('notifications.markReadError'));
+      toast.error(translate('notifications.markReadError'));
     }
   };
 
@@ -68,9 +58,9 @@ export const NotificationProvider = ({ children }) => {
         prev.map(n => ({ ...n, is_read: true }))
       );
       setUnreadCount(0);
-      toast.success(getT()('notifications.markAllRead'));
+      toast.success(translate('notifications.markAllRead'));
     } catch (error) {
-      toast.error(getT()('notifications.markAllReadError'));
+      toast.error(translate('notifications.markAllReadError'));
     }
   };
 
@@ -82,7 +72,7 @@ export const NotificationProvider = ({ children }) => {
         setUnreadCount(prev => Math.max(0, prev - 1));
       }
     } catch (error) {
-      toast.error(getT()('notifications.deleteError'));
+      toast.error(translate('notifications.deleteError'));
     }
   };
 

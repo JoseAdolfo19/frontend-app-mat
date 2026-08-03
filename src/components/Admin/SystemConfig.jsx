@@ -216,7 +216,7 @@ const SystemConfig = () => {
             placeholder={cp('periodName')}
             className="px-4 py-3 rounded-xl border-2 border-[var(--surface-container-high)] focus:border-[var(--primary)] focus:outline-none bg-[var(--surface-container-low)]"
           />
-          <label htmlFor="period-start" className="sr-only">Fecha de inicio</label>
+          <label htmlFor="period-start" className="sr-only">{cp('periodStart')}</label>
           <input
             id="period-start"
             type="date"
@@ -225,7 +225,7 @@ const SystemConfig = () => {
             onChange={handlePeriodChange}
             className="px-4 py-3 rounded-xl border-2 border-[var(--surface-container-high)] focus:border-[var(--primary)] focus:outline-none bg-[var(--surface-container-low)]"
           />
-          <label htmlFor="period-end" className="sr-only">Fecha de fin</label>
+          <label htmlFor="period-end" className="sr-only">{cp('periodEnd')}</label>
           <input
             id="period-end"
             type="date"

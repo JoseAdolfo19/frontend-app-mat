@@ -1,6 +1,6 @@
 # MathFlow Frontend
 
-Plataforma educativa de matemáticas — **frontend en React + Vite**. Interfaz para **estudiantes**, **docentes**, **padres de familia** y **administradores**, con soporte **trilingüe** (español, inglés y quechua), temas dinámicos, chat IA (Profesor Euler), exámenes con anti-trampa, rankings, tablero de trabajos y reportes exportables.
+Plataforma educativa de matemáticas — **frontend en React + Vite**. Interfaz para **estudiantes**, **docentes**, **padres de familia** y **administradores**, con soporte **trilingüe** (español, inglés y quechua), temas dinámicos, chat IA (Profesor Euler), exámenes con anti-trampa, rankings, tablero de trabajos y reportes exportables. Incluye **PWA con soporte offline**, **tests automatizados** y configuración incremental de **TypeScript**.
 
 ---
 
@@ -14,6 +14,9 @@ Plataforma educativa de matemáticas — **frontend en React + Vite**. Interfaz 
 | React Router v6 | Navegación |
 | Axios | Cliente HTTP con interceptores (refresh de token) |
 | React Hook Form + Yup | Formularios y validación |
+| Vitest + React Testing Library | Tests unitarios y de componentes |
+| vite-plugin-pwa | PWA / Service Worker / offline |
+| @dnd-kit | Preguntas de arrastrar y soltar (drag & drop) |
 | React Hot Toast | Notificaciones toast |
 | React Icons (Font Awesome) | Iconografía |
 | Framer Motion | Animaciones |
@@ -43,14 +46,19 @@ npm run dev            # http://localhost:5173
 | `VITE_GOOGLE_CLIENT_ID` | Client ID de Google OAuth | — |
 | `VITE_AI_SERVICE` | Proveedor IA (`groq`/`gemini`) | `groq` |
 
-> ⚠️ El archivo `.env` contiene credenciales reales. **No debe compartirse ni subirse al repositorio** (está en `.gitignore`). Para producción se usa `.env.production` con `VITE_API_URL` apuntando al backend desplegado.
+> ⚠️ **Seguridad:** el `.env` NO debe subirse al repositorio (está en `.gitignore`). El `VITE_GOOGLE_CLIENT_ID` es público por diseño; pero **las API keys secretas** (ej. NVIDIA) **nunca** deben vivir en el frontend ni llevar prefijo `VITE_` — van solo en el backend/proxy. Usa `.env.example` como plantilla (sin valores reales) y `.env.production` para el build de producción.
+
+> 🔒 Las variables de entorno se **validan al arranque** (`src/config/env.js`): si faltan `VITE_API_URL` o `VITE_GOOGLE_CLIENT_ID`, la app falla con un mensaje claro en lugar de fallar silenciosamente en runtime.
 
 ### Scripts
 
 ```bash
-npm run dev       # Servidor de desarrollo (Vite)
-npm run build     # Build de producción
-npm run preview   # Previsualizar build
+npm run dev           # Servidor de desarrollo (Vite)
+npm run build         # Build de producción (incluye PWA + service worker)
+npm run preview       # Previsualizar build
+npm test              # Ejecuta los tests (Vitest) una vez
+npm run test:watch    # Tests en modo watch
+npm run typecheck     # Type check incremental (tsc, permite .js)
 ```
 
 ---
@@ -59,27 +67,34 @@ npm run preview   # Previsualizar build
 
 ```
 frontend-app-mat/
-├── .env                     # Variables de entorno (secretos, no versionar)
+├── .env                     # Variables de entorno de desarrollo (no versionar)
+├── .env.example             # Plantilla de variables (sin valores reales)
 ├── .env.production          # Variables para el build de producción
-├── .gitignore               # Excluye node_modules, dist, .env, etc.
+├── .github/workflows/ci.yml # CI: tests + build + typecheck en cada push/PR
+├── .gitignore               # Excluye node_modules, dist, .env*, etc.
+├── CREDITS.md               # Créditos de imágenes y recursos externos
 ├── index.html               # HTML raíz (raíz real de Vite)
-├── index.css                # CSS global (importa Tailwind v4 + fuentes)
+├── index.css                # CSS global raíz (importa fuentes + Tailwind v4)
 ├── package.json             # Dependencias y scripts
 ├── postcss.config.js        # PostCSS (Tailwind + Autoprefixer)
 ├── tailwind.config.js       # Configuración de Tailwind
-├── vite.config.js           # Configuración de Vite (build, chunks)
-├── public/                  # Assets estáticos (favicons, manifest, logo)
+├── tsconfig.json            # TypeScript incremental (permite .js, noEmit)
+├── tsconfig.node.json       # TS para archivos de configuración de Vite
+├── vite.config.js           # Vite (React, PWA, tests, code-splitting)
+├── public/                  # Assets estáticos (favicons, logos, imágenes)
 └── src/
-    ├── main.jsx             # Punto de entrada de React
+    ├── main.jsx             # Punto de entrada de React (+ registro Service Worker)
     ├── App.jsx              # Providers, rutas y layout global
     ├── App.css              # Estilos globales de la app
     ├── index.css            # Tailwind directives + design tokens
     ├── api/                 # Cliente Axios y endpoints por dominio
     ├── components/          # Componentes agrupados por rol
+    ├── config/env.js        # Validación de variables de entorno (fail-fast)
     ├── contexts/            # Contextos globales (Auth, Idioma, Tema, Notifs)
     ├── hooks/               # Hooks personalizados
     ├── styles/              # Tema base CSS
-    └── utils/               # Constantes y helpers
+    ├── test/setup.js        # Setup de Vitest (jest-dom, polyfills)
+    └── utils/               # Constantes, validadores y helpers (+ tests)
 ```
 
 ---
@@ -90,26 +105,33 @@ frontend-app-mat/
 
 | Archivo | Qué hace |
 |---------|----------|
-| `index.html` | HTML de entrada. Carga fuentes (Plus Jakarta Sans / Hanken Grotesk), meta tags SEO/OG, manifest PWA y el punto de montaje `#root` donde Vite inyecta `/src/main.jsx`. |
+| `index.html` | HTML de entrada. Carga fuentes (Plus Jakarta Sans / Hanken Grotesk), meta tags SEO/OG, **script inline anti-flash de dark mode** (aplica la clase `.dark` antes del render para evitar parpadeo), enlace al manifest PWA generado y el punto de montaje `#root` donde Vite inyecta `/src/main.jsx`. |
 | `index.css` | CSS global raíz: importa fuentes de Google y **Tailwind v4** (`@import "tailwindcss"`), define `@theme` (fuentes y animaciones) y scrollbars personalizados. |
-| `package.json` | Manifiesto del proyecto (`mathflow-frontend`). Lista dependencias (React, Router, Axios, Recharts, Quill, etc.) y scripts `dev`, `build`, `preview`. |
+| `package.json` | Manifiesto del proyecto (`mathflow-frontend`). Lista dependencias (React, Router, Axios, Recharts, Quill, @dnd-kit, vite-plugin-pwa, Vitest, etc.) y scripts `dev`, `build`, `preview`, `test`, `test:watch` y `typecheck`. |
 | `postcss.config.js` | Configura PostCSS: procesa Tailwind CSS y Autoprefixer. |
 | `tailwind.config.js` | Extiende Tailwind: mapea clases utilitarias (`.primary`, `.surface`, `.error`, etc.) a **CSS variables** del tema, define fuentes, bordes, sombras y animaciones. |
-| `vite.config.js` | Configuración de **Vite**: plugin de React, puerto de dev (5173) y build de producción con `sourcemap: false` y **code-splitting** en chunks (`vendor`, `charts`, `editor`). |
-| `.env` | Variables de entorno de desarrollo (URL del API, Google Client ID). ⚠️ Contiene secretos, está en `.gitignore`. |
+| `vite.config.js` | Configuración de **Vite**: plugin de React, **vite-plugin-pwa** (genera Service Worker + manifest al build), bloque `test` de **Vitest**, puerto de dev (5173) y build con `sourcemap: false` y **code-splitting** en chunks (`vendor`, `charts`, `editor`). |
+| `.env` | Variables de entorno de desarrollo (URL del API, Google Client ID). ⚠️ Está en `.gitignore` y solo debe contener valores públicos; las API keys secretas no van aquí. |
+| `.env.example` | **Plantilla** de variables de entorno documentadas (sin valores reales), para que un nuevo colaborador sepa qué configurar. Protegido con `!.env.example` en `.gitignore`. |
 | `.env.production` | Variables de entorno para el **build de producción** (`VITE_API_URL` → URL del backend desplegado). |
-| `.gitignore` | Excluye del repositorio `node_modules/`, `dist/`, `.vite/`, `.env*` y archivos de editor. |
+| `.gitignore` | Excluye del repositorio `node_modules/`, `dist/`, `.vite/`, `.env` (pero **no** `.env.example`) y archivos de editor. |
 | `.gitattributes` | Reglas de normalización de fin de línea / diff de git. |
+| `tsconfig.json` | **TypeScript incremental**: `allowJs: true`, `checkJs: false`, `noEmit: true` — permite migrar a TS gradualmente sin romper el `.js` actual. |
+| `tsconfig.node.json` | Configuración TS para `vite.config.js` (dominio de Node). |
+| `.github/workflows/ci.yml` | **CI**: en cada push/PR instala dependencias, corre los tests (Vitest), el typecheck y el build. Inyecta `VITE_API_URL` y `VITE_GOOGLE_CLIENT_ID` (públicas) para que la validación de env no falle. |
+| `CREDITS.md` | Créditos de las imágenes y recursos de terceros utilizados (ej. fotos de Unsplash). |
 | `.vite/` | Caché interna de Vite (generada, no versionar). |
 
 ### `public/` — Assets estáticos
 
+> El manifest de PWA (`manifest.webmanifest`) y el Service Worker ya no se mantienen a mano: los **genera `vite-plugin-pwa`** durante el build.
+
 | Archivo | Qué hace |
 |---------|----------|
-| `index.html` | Copia de respaldo del HTML raíz (no usado por Vite; el real está en la raíz del proyecto). |
 | `favicon.ico` / `favicon.svg` | Ícono de la pestaña del navegador. |
 | `logo192.png` / `logo512.png` | Logos usados para favicon en alta resolución, PWA y Open Graph. |
-| `manifest.json` | Manifest de PWA (nombre, iconos, theme color). |
+| `images/` | Imágenes locales del landing (`classroom.jpg`, `students.jpg`, `education.jpg`) — cargadas con `loading="lazy"`. |
+| `mathflow_login.jpg` / `mathflow_register.jpg` / `ejemplo_login.png` | Capturas/imágenes de las páginas de login y registro. |
 
 ---
 
@@ -119,7 +141,7 @@ frontend-app-mat/
 
 | Archivo | Qué hace |
 |---------|----------|
-| `src/main.jsx` | Punto de entrada de React. Monta `<App />` en `#root` dentro de `<React.StrictMode>`. |
+| `src/main.jsx` | Punto de entrada de React. Monta `<App />` en `#root` dentro de `<React.StrictMode>` y registra el **Service Worker** de la PWA (`registerSW({ immediate: true })`) con actualización automática. |
 | `src/App.jsx` | **Corazón de la app.** Envuelve todo con providers anidados: `GoogleOAuthProvider` → `Router` → `LanguageProvider` → `ThemeProvider` → `AuthProvider` → `NotificationProvider` → `ErrorBoundary`. Define **todas las rutas** de la app con `React.lazy()` (carga diferida) y `Suspense`, usa `ProtectedRoute` con roles (student/teacher/admin/parent) y un `Toaster` de react-hot-toast con los colores del tema. |
 | `src/App.css` | Estilos globales de la aplicación (layout general). |
 | `src/index.css` | `@tailwind` base/components/utilities + **design tokens** en `:root` (colores Material: `--primary`, `--surface`, `--error`, etc.). Define clases reutilizables `.card`, `.btn-primary`, `.badge`, `.avatar`, `.progress-bar`, `.table`, skeleton, glass, animaciones y sombras. Incluye estilos para React Quill, Google Login, Recharts, hot toast y el modo oscuro. |
@@ -138,13 +160,19 @@ frontend-app-mat/
 | `src/api/reports.js` | Reportes: `getPerformanceReport` (gráfico), `getGradesReport` (tabla), `getStudentReport` (individual) y **exportación PDF/Excel** (`responseType: 'blob'`). |
 | `src/api/gemini.js` | Cliente del **chat IA** ("Profesor Euler"). `sendMessage` hace POST a `/ai/chat` con historial de conversación y procesa respuesta **SSE en streaming** (parsea líneas `data:`), y `resetChat` limpia el historial en memoria. |
 
+#### `src/config/` — Configuración y validación
+
+| Archivo | Qué hace |
+|---------|----------|
+| `src/config/env.js` | **Validación de variables de entorno** con Yup (fail-fast): lanza un error claro al arranque si faltan `VITE_API_URL` o `VITE_GOOGLE_CLIENT_ID`. Incluye un test personalizado de URL (`new URL()`) porque la validación `.url()` de Yup rechaza `localhost`. Consumido por `axios.js`, `gemini.js`, `constants.js`, `App.jsx` y `LandingPage.jsx`. |
+
 #### `src/contexts/` — Estado global
 
 | Archivo | Qué hace |
 |---------|----------|
 | `src/contexts/AuthContext.jsx` | **Estado de autenticación global.** Almacena `user`, `token` y `loading`. Expone `login`, `loginWithGoogle`, `register`, `logout` y helpers de rol (`hasRole`, `isAdmin`, `isTeacher`, `isStudent`, `isParent`). Al cargar, si hay token, obtiene el perfil; ante 401 cierra sesión. |
-| `src/contexts/LanguageContext.jsx` | **i18n trilingüe** (es/en/qu). Guarda el idioma en `localStorage`, detecta el del navegador y expone `t('clave.ruta')` para traducir. Contiene el **diccionario de traducciones** completo (~2500 líneas) con textos de navegación, auth, dashboards, exámenes, etc. |
-| `src/contexts/ThemeContext.jsx` | **Temas dinámicos.** Paletas `light`, `dark` y `grayscale` (filtro CSS). Carga colores institucionales desde `/config` y los aplica como CSS variables; expone `setTheme` y `updateColors` (guarda en `/admin/config`). Incluye utilidades `lightenColor`/`darkenColor`. |
+| `src/contexts/LanguageContext.jsx` | **i18n trilingüe** (es/en/qu). Guarda el idioma en `localStorage`, detecta el del navegador y expone `t('clave.ruta')` para traducir. Contiene el **diccionario de traducciones** completo (~2500 líneas) con textos de navegación, auth, dashboards, exámenes, etc. La lectura/guardado del idioma se delega en `src/utils/i18n.js`. |
+| `src/contexts/ThemeContext.jsx` | **Temas dinámicos.** Paletas `light`, `dark` y `grayscale` (filtro CSS). El modo oscuro aplica la clase `.dark` en `<html>` (con **script anti-flash** en `index.html`) y una paleta dark completa en CSS; en dark mode `applyColors` no pisa los colores de fondo/superficie. Carga colores institucionales desde `/config` y los aplica como CSS variables; expone `setTheme` y `updateColors` (guarda en `/admin/config`). Incluye utilidades `lightenColor`/`darkenColor`. |
 | `src/contexts/NotificationContext.jsx` | Estado de **notificaciones** global: lista, `unreadCount` y `loading`. Expone marcar leídas/todas, eliminar y refetch. Consulta el conteo no leído cada 30 s cuando hay usuario logueado. |
 
 #### `src/hooks/` — Hooks personalizados
@@ -154,14 +182,24 @@ frontend-app-mat/
 | `src/hooks/useAuth.js` | Re-exporta `useAuth` del contexto con guarda de error si se usa fuera del provider. |
 | `src/hooks/useTheme.js` | Re-exporta `useTheme` del contexto con guarda de error. |
 | `src/hooks/useNotifications.js` | Re-exporta `useNotifications` del contexto con guarda de error. |
-| `src/hooks/useAntiCheat.js` | **Sistema anti-trampa para exámenes.** Detecta cambio de pestaña, blur/focus prolongado, copiar/cortar/pegar, clic derecho, atajos `Ctrl+C/V/X/U`, y apertura de DevTools (F12/Ctrl+Shift+I). Reporta cada evento al backend (`/exams/attempts/{id}/cheat`) con tipo, detalle y contador de cambios de pestaña. |
+| `src/hooks/useAntiCheat.js` | **Sistema anti-trampa para exámenes.** Detecta cambio de pestaña, blur/focus prolongado, copiar/cortar/pegar, clic derecho, atajos `Ctrl+C/V/X/U`, y apertura de DevTools (F12/Ctrl+Shift+I). Reporta cada evento al backend (`/exams/attempts/{id}/cheat`) con tipo, detalle y contador de cambios de pestaña. Los errores se registran con el logger (no `console.error`). |
 
 #### `src/utils/` — Utilidades
 
 | Archivo | Qué hace |
 |---------|----------|
-| `src/utils/constants.js` | Constantes: `ROLES`, `DIFFICULTY_LEVELS`, `EVALUATION_TYPES`, `QUESTION_TYPES`, `NOTIFICATION_TYPES`, `API_URL` y `APP_NAME`. |
+| `src/utils/constants.js` | Constantes: `ROLES` (incluye `PARENT`), `DIFFICULTY_LEVELS`, `EVALUATION_TYPES`, `QUESTION_TYPES` (incluye `drag_drop`), `TRUE_FALSE_OPTIONS`, `NOTIFICATION_TYPES`, `API_URL` y `APP_NAME`. |
 | `src/utils/helpers.js` | Funciones auxiliares: `formatDate`/`formatDateTime` (con locale por idioma), `getInitials`, `truncateText`, colores por dificultad/rol/estado (`getDifficultyColor`, `getRoleColor`, `getStatusColor`), `calculateProgress`, iconos/nombres de insignias (`getBadgeIcon`, `getBadgeName`), etiquetas de dificultad (trilingües), `getLetterGrade` (AD/A/B/C), y `toArray` (normaliza respuestas API). |
+| `src/utils/grading.js` | **Lógica de calificación** de exámenes: `normalizeTrueFalse` (normaliza valores booleanos a strings canónicos `'true'`/`'false'`), `isAnswerCorrect` y `gradeExam`. Tiene **tests** en `grading.test.js`. |
+| `src/utils/roles.js` | Helpers de roles: `canAccess` y `isTeacherLike` (permite admin cuando el rol exige teacher). Con **tests** en `roles.test.js`. |
+| `src/utils/i18n.js` | Servicio de i18n: `getTranslation`, `getSavedLanguage` y `saveLanguage`. Lo usan los contexts (Auth/Theme/Notifications) sin depender de `LanguageContext`. |
+| `src/utils/logger.js` | Logger de desarrollo: en producción se silencia; sustituye `console.error`/`console.warn` directos en `useAntiCheat.js` y `ErrorBoundary.jsx`. |
+
+#### `src/test/` — Tests
+
+| Archivo | Qué hace |
+|---------|----------|
+| `src/test/setup.js` | Setup global de **Vitest**: importa `@testing-library/jest-dom` y polyfills necesarios. Se incluye vía el bloque `test` de `vite.config.js`. |
 
 #### `src/styles/`
 
@@ -179,7 +217,7 @@ frontend-app-mat/
 |---------|----------|
 | `Loading.jsx` | Pantalla de carga full-screen con spinner animado y texto según idioma. |
 | `Skeletons.jsx` | Placeholders de carga (`SkeletonLine`, `CardSkeleton`, `ListSkeleton`, `TableSkeleton`, `DashboardSkeleton`) con animación `animate-pulse`. |
-| `ErrorBoundary.jsx` | Captura errores de renderizado en el árbol de React y muestra pantalla de error con botón "Reintentar". |
+| `ErrorBoundary.jsx` | Captura errores de renderizado en el árbol de React y muestra pantalla de error con botón "Reintentar". Registra los errores con el logger (`src/utils/logger.js`). |
 | `ProtectedRoute.jsx` | **Guarda de rutas.** Si no hay sesión redirige a `/login`; si el rol no está permitido (`roles`) muestra pantalla de "no autorizado". |
 | `Sidebar.jsx` | Menú lateral (desktop). Navegación según rol (dashboard, lecciones, evaluaciones, reportes, usuarios, config), botón "Nueva Lección" para docentes, y accesos a ajustes/ayuda. |
 | `TopBar.jsx` | Barra superior: menú móvil, búsqueda de lecciones, campana de notificaciones (punto rojo con `unreadCount`) y menú desplegable de usuario (perfil / cerrar sesión). |
@@ -191,6 +229,7 @@ frontend-app-mat/
 | `Help.jsx` | Página de ayuda con FAQ desplegable (acordeón), contacto por correo y consejos. |
 | `CheatingAlert.jsx` | Alerta visual temporal (10 s) cuando un estudiante es detectado abandonando un examen; muestra nombre, examen y tipo de evento. |
 | `CompetencyEvolution.jsx` | **Gráfico de líneas SVG** de evolución de competencias por asignatura a lo largo del tiempo (autoresponsivo vía `ResizeObserver`, escala 0–20). |
+| `DragDropQuestion.jsx` | Componente de pregunta **arrastrar y soltar** (drag & drop) con `@dnd-kit`: ordena ítems arrastrables, muestra retroalimentación y valida el orden enviado. Usado por el reproductor de exámenes. |
 
 #### `Layout/`
 
@@ -202,7 +241,7 @@ frontend-app-mat/
 
 | Archivo | Qué hace |
 |---------|----------|
-| `LandingPage.jsx` | **Página de aterrizaje pública** (ruta `/`). Hero con botones de login/registro, sección "Acerca de", características, y una **consulta de notas por DNI** (con captcha) que muestra el resumen académico de un estudiante (promedio, lecciones, racha, calificaciones por área). |
+| `LandingPage.jsx` | **Página de aterrizaje pública** (ruta `/`). Hero con botones de login/registro, sección "Acerca de", características, e imágenes locales (`/images/*.jpg` con `loading="lazy"`). Incluye una **consulta de notas por DNI** (con captcha) que muestra el resumen académico de un estudiante (promedio, lecciones, racha, calificaciones por área). |
 
 #### `Auth/`
 
@@ -218,11 +257,11 @@ frontend-app-mat/
 |---------|----------|
 | `StudentDashboard.jsx` | Dashboard del estudiante: bienvenida personalizada, estadísticas (lecciones completadas, evaluaciones, promedio, racha de días), lecciones en progreso con barra de avance, evaluaciones recientes y **insignias/logros**. |
 | `LessonList.jsx` | Lista de **lecciones** con búsqueda y filtros (dificultad, unidad), tarjetas con dificultad, tiempo estimado, tags, unidad y progreso. |
-| `LessonDetail.jsx` | Detalle de lección: contenido HTML **saneado** (elimina scripts/eventos peligrosos), recursos descargables, barra de progreso y botones para avanzar/marcar completada (envía `time_spent`). |
+| `LessonDetail.jsx` | Detalle de lección: contenido HTML **saneado** (elimina scripts/eventos peligrosos), recursos descargables, barra de progreso y botones para avanzar/marcar completada (envía `time_spent`). Incluye **navegación previo/siguiente** entre lecciones (`prevLesson`/`nextLesson`). |
 | `EvaluationList.jsx` | Lista de **evaluaciones** con filtros (búsqueda, tipo, dificultad) y estados (completado con nota, vencida, pendiente). |
 | `EvaluationResult.jsx` | **Resultado de evaluación**: anillo de puntaje /20, respuestas correctas/incorrectas con retroalimentación pregunta por pregunta, tiempo, intento, descarga de PDF y acciones sugeridas. |
 | `ExamList.jsx` | Lista de **exámenes disponibles** con dificultad, tiempo límite, intentos restantes y botón para iniciar (crea el intento vía `POST /exams/{id}/start`). |
-| `ExamPlayer.jsx` | **Reproductor de examen**: navegación por preguntas (opción múltiple / verdadero-falso), contador de tiempo con autoenvío al agotarse, panel de respuestas, **aviso anti-trampa**, confirmación de envío y pantalla de resultado. |
+| `ExamPlayer.jsx` | **Reproductor de examen**: navegación por preguntas (opción múltiple / verdadero-falso / **drag & drop**), contador de tiempo con autoenvío al agotarse, panel de respuestas, **aviso anti-trampa**, confirmación de envío y pantalla de resultado. Los valores verdadero/falso se normalizan a strings canónicos (`'true'`/`'false'`) y sus labels se traducen con `t('exam.true')`/`t('exam.false')`. Las preguntas drag & drop se mezclan con `useMemo`. |
 | `StudentWorkBoard.jsx` | **Tablero de trabajos** del estudiante: estadísticas (asignados, enviados, calificados, pendientes, promedio), filtros por tipo/estado/área y lista de trabajos con feedback y nota. |
 | `StudentRanking.jsx` | **Ranking** de estudiantes por promedio (con filtro por curso), trofeos para top 3 y resaltado de mi posición. |
 
@@ -234,7 +273,7 @@ frontend-app-mat/
 | `LessonEditor.jsx` | **Editor de lecciones** (crear/editar): datos básicos, dificultad, unidad/tema, tags, **contenido HTML con React Quill**, y lista dinámica de **recursos** (PDF/video/imagen/link) con `useFieldArray`. |
 | `EvaluationCreator.jsx` | **Creador/editor de evaluaciones**: configuración (tipo, dificultad, lección vinculada, límite de tiempo, fecha límite, intentos máximos) y **preguntas** (opción múltiple con opciones dinámicas, completar, fórmula) con duplicado y validación Yup. |
 | `ExamManager.jsx` | **Gestión de exámenes** (listar, filtrar por estado): crear, editar, activar/desactivar, ver estadísticas y eliminar. |
-| `ExamEditor.jsx` | **Editor de exámenes** (crear/editar): configuración (título, unidad, dificultad, tiempo, intentos, autocorrección, preguntas aleatorias) y preguntas de opción múltiple/verdadero-falso con reordenamiento y opciones dinámicas. Guarda como borrador o publicado/activo. |
+| `ExamEditor.jsx` | **Editor de exámenes** (crear/editar): configuración (título, unidad, dificultad, tiempo, intentos, autocorrección, preguntas aleatorias) y preguntas de opción múltiple/verdadero-falso/**drag & drop** con reordenamiento y opciones dinámicas. Valida el formulario con un **schema Yup** (`examSchema`) que muestra errores inline (`exam.titleRequired`, `exam.minQuestions`, etc.) y guarda como borrador o publicado/activo. |
 | `ExamStats.jsx` | **Estadísticas de examen**: total de intentos, promedio, tasa de aprobación, **distribución de puntajes** (gráfico de barras) y tabla de **incidentes anti-trampa**. |
 | `StudentProgress.jsx` | **Progreso individual de un estudiante**: tarjetas de estadísticas, gráfico de progreso por lección (Recharts) y evaluaciones recientes con notas. |
 | `Reports.jsx` | **Reportes de rendimiento**: exportación **PDF/Excel**, filtros por período, KPIs (evaluaciones, estudiantes, promedio, aprobación), gráfico de promedio por tipo de evaluación, top estudiantes y tabla de calificaciones con búsqueda. |
@@ -293,6 +332,10 @@ frontend-app-mat/
 - **i18n trilingüe** (español / inglés / quechua) persistido en `localStorage`.
 - **Temas dinámicos** (claro / oscuro / escala de grises) con colores institucionales configurables por el admin.
 - **Chat IA "Profesor Euler"** con streaming (SSE) y renderizado de markdown.
-- **Exámenes con anti-trampa** (detección y reporte de eventos) y estadísticas por examen.
+- **Exámenes con anti-trampa** (detección y reporte de eventos) y estadísticas por examen. Tipos de pregunta: opción múltiple, verdadero-falso y **arrastrar y soltar** (drag & drop con `@dnd-kit`).
 - **Reportes** con gráficos (Recharts) y exportación PDF/Excel.
-- **Manifest PWA** con iconos y meta tags (sin Service Worker; `sw.js` no está implementado).
+- **PWA instalable**: manifest + Service Worker generados por `vite-plugin-pwa` con `autoUpdate`, estrategia *NetworkFirst* para el API y caché de imágenes → **soporte offline**.
+- **Tests automatizados** con Vitest + React Testing Library (calificación, roles, constantes) y **CI** en GitHub Actions.
+- **Validación de entorno fail-fast** (`src/config/env.js`): errores claros al arranque si faltan variables.
+- **TypeScript incremental**: configuración de `tsc` con `allowJs` para migrar módulo por módulo.
+- **Seguridad de credenciales**: API keys secretas excluidas del frontend; `.env` en `.gitignore` con `.env.example` como plantilla documentada.

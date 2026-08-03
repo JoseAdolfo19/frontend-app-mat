@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { env } from '../../config/env';
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = env.VITE_API_URL;
 
 const LandingPage = () => {
   const { t } = useLanguage();
@@ -139,13 +140,13 @@ const LandingPage = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2 rounded-xl overflow-hidden shadow-md">
-                <img src="https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=600&h=400&fit=crop" alt="School classroom" className="w-full h-52 object-cover" />
+                <img src="/images/classroom.jpg" alt="School classroom" loading="lazy" className="w-full h-52 object-cover" />
               </div>
               <div className="rounded-xl overflow-hidden shadow-md">
-                <img src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=600&h=400&fit=crop" alt="Students learning" className="w-full h-40 object-cover" />
+                <img src="/images/students.jpg" alt="Students learning" loading="lazy" className="w-full h-40 object-cover" />
               </div>
               <div className="rounded-xl overflow-hidden shadow-md">
-                <img src="https://images.unsplash.com/photo-1509062522246-3755977927d7?w=600&h=400&fit=crop" alt="Education" className="w-full h-40 object-cover" />
+                <img src="/images/education.jpg" alt="Education" loading="lazy" className="w-full h-40 object-cover" />
               </div>
             </div>
           </div>

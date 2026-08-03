@@ -63,8 +63,8 @@ const Register = () => {
   const inputClass = "w-full pl-11 pr-11 py-3 rounded-xl bg-gray-100 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white border border-transparent transition placeholder-gray-400";
 
   return (
-    <div className="min-h-screen flex bg-white">
-      {/* Panel izquierdo - Formulario */}
+    <div className="min-h-screen flex bg-white flex-row-reverse">
+      {/* Panel derecho - Formulario */}
       <div className="w-full lg:w-1/2 flex flex-col px-6 sm:px-12 py-8">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-black text-gray-900 tracking-tight">
@@ -223,7 +223,7 @@ const Register = () => {
         </div>
       </div>
 
-      {/* Panel derecho - Ilustración */}
+      {/* Panel izquierdo - Ilustración */}
       <div className="hidden lg:flex lg:w-1/2 relative flex-col overflow-hidden bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900">
         <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-purple-500/20 blur-3xl"></div>
         <div className="absolute bottom-0 -left-20 w-80 h-80 rounded-full bg-fuchsia-500/20 blur-3xl"></div>
@@ -250,7 +250,7 @@ const Register = () => {
           <img
             src="/mathflow_register.jpg"
             alt="MathFlow Community"
-            className="w-full max-w-md mx-auto object-contain drop-shadow-[0_10px_30px_rgba(168,85,247,0.4)]"
+            className="w-full max-w-md mx-auto object-contain mix-blend-screen"
           />
           <h3 className="text-white text-2xl font-bold mt-6">¡Aprende matemáticas jugando!</h3>
           <p className="text-purple-200/80 mt-2 text-center max-w-sm">

@@ -181,14 +181,14 @@ const TeacherStudentRanking = () => {
                             <p className="text-lg font-bold text-[var(--on-surface)]">{submittedWorks}/{totalWorks}</p>
                           </div>
                           <div>
-                            <p className="text-xs text-[var(--on-surface-variant)]">Tendencia</p>
+                            <p className="text-xs text-[var(--on-surface-variant)]">{t('ranking.trend')}</p>
                             <div className="flex items-center gap-1 mt-1">
                               {getTrendIcon(student.trend)}
                               <span className="text-sm text-[var(--on-surface-variant)] capitalize">{student.trend || '—'}</span>
                             </div>
                           </div>
                           <div>
-                            <p className="text-xs text-[var(--on-surface-variant)]">Tasa de entrega</p>
+                            <p className="text-xs text-[var(--on-surface-variant)]">{t('ranking.deliveryRate')}</p>
                             <p className="text-lg font-bold text-[var(--on-surface)]">
                               {totalWorks > 0 ? ((submittedWorks / totalWorks) * 100).toFixed(0) : 0}%
                             </p>

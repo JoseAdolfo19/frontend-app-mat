@@ -9,6 +9,7 @@ import { LanguageProvider } from './contexts/LanguageContext';
 import ProtectedRoute from './components/Common/ProtectedRoute';
 import ErrorBoundary from './components/Common/ErrorBoundary';
 import Loading from './components/Common/Loading';
+import { env } from './config/env';
 
 // Landing
 const LandingPage = React.lazy(() => import('./components/Landing/LandingPage'));
@@ -67,7 +68,7 @@ const ColorSettings = React.lazy(() => import('./components/Admin/ColorSettings'
 
 import './App.css';
 
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+const GOOGLE_CLIENT_ID = env.VITE_GOOGLE_CLIENT_ID;
 
 function App() {
   return (

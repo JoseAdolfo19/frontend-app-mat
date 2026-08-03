@@ -193,7 +193,7 @@ const Login = () => {
           <img
             src="/mathflow_login.jpg"
             alt="MathFlow Community"
-            className="w-full max-w-md mx-auto object-contain drop-shadow-[0_10px_30px_rgba(168,85,247,0.4)]"
+            className="w-full max-w-md mx-auto object-contain mix-blend-screen"
           />
           <h3 className="text-white text-2xl font-bold mt-6">¡Aprende matemáticas jugando!</h3>
           <p className="text-purple-200/80 mt-2 text-center max-w-sm">

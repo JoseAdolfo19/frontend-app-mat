@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback } from 'react';
 import api from '../api/axios';
+import { logger } from '../utils/logger';
 
 const useAntiCheat = (attemptId, isActive = true) => {
   const tabSwitchCount = useRef(0);
@@ -24,7 +25,7 @@ const useAntiCheat = (attemptId, isActive = true) => {
         detail,
       });
     } catch (err) {
-      console.error('Failed to report cheat event:', err);
+      logger.error('Failed to report cheat event:', err);
     }
   }, [attemptId, isActive]);
 

@@ -1,4 +1,6 @@
-const API_URL = import.meta.env.VITE_API_URL;
+import { env } from '../config/env';
+
+const API_URL = env.VITE_API_URL;
 
 let conversationHistory = [];
 

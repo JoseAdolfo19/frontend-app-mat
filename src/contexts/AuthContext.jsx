@@ -1,22 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import axios from '../api/axios';
-import translations from './LanguageContext';
+import { getTranslation, getSavedLanguage } from '../utils/i18n';
+import { canAccess } from '../utils/roles';
 
 const AuthContext = createContext();
 
 export const useAuth = () => useContext(AuthContext);
 
-const getT = () => {
-  const lang = localStorage.getItem('mathflow_language') || 'es';
-  return (key) => {
-    const keys = key.split('.');
-    let value = translations[lang];
-    for (const k of keys) {
-      value = value?.[k];
-    }
-    return value || key;
-  };
-};
+const translate = (key) => getTranslation(getSavedLanguage(), key);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -57,7 +48,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       return {
         success: false,
-        error: error.response?.data?.message || getT()('auth.login.error')
+        error: error.response?.data?.message || translate('auth.login.error')
       };
     }
   };
@@ -77,7 +68,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       return {
         success: false,
-        error: error.response?.data?.message || getT()('auth.login.googleError')
+        error: error.response?.data?.message || translate('auth.login.googleError')
       };
     }
   };
@@ -95,7 +86,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       return {
         success: false,
-        error: error.response?.data?.message || getT()('auth.register.error')
+        error: error.response?.data?.message || translate('auth.register.error')
       };
     }
   };
@@ -112,10 +103,7 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   }, []);
 
-  const hasRole = (roles) => {
-    if (!user?.role) return false;
-    return roles.includes(user.role.name);
-  };
+  const hasRole = (roles) => canAccess(user?.role?.name, roles);
 
   const isAdmin = () => hasRole(['admin']);
   const isTeacher = () => hasRole(['teacher', 'admin']);

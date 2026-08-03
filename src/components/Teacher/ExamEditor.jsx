@@ -4,7 +4,18 @@ import api from '../../api/axios';
 import { useLanguage } from '../../contexts/LanguageContext';
 import Loading from '../Common/Loading';
 import toast from 'react-hot-toast';
+import * as yup from 'yup';
 import { FaPlus, FaTrash, FaArrowUp, FaArrowDown } from 'react-icons/fa';
+
+const examSchema = yup.object().shape({
+  title: yup.string().min(3).required(),
+  questions: yup.array().of(
+    yup.object().shape({
+      question_text: yup.string().min(1).required(),
+      points: yup.number().min(1),
+    })
+  ).min(1),
+});
 
 const emptyQuestion = () => ({
   id: Date.now(),
@@ -35,6 +46,38 @@ const ExamEditor = () => {
     randomize_questions: false,
   });
   const [questions, setQuestions] = useState([emptyQuestion()]);
+  const [fieldErrors, setFieldErrors] = useState({});
+
+  const validateForm = () => {
+    const errors = {};
+    try {
+      examSchema.validateSync(
+        { title: form.title, questions },
+        { abortEarly: false }
+      );
+    } catch (err) {
+      const inner = err.inner || [];
+      const has = (path) => inner.some((e) => e.path === path);
+      if (has('title')) {
+        errors.title = form.title.trim().length < 3
+          ? t('exam.titleMinLength') || 'Mínimo 3 caracteres'
+          : t('exam.titleRequired') || 'El título es obligatorio';
+      }
+      if (has('questions')) {
+        errors.questions = t('exam.minQuestions') || 'El examen necesita al menos una pregunta';
+      }
+      questions.forEach((_, i) => {
+        if (has(`questions[${i}].question_text`)) {
+          errors[`question_${i}`] = t('exam.questionTextRequired') || 'La pregunta no puede estar vacía';
+        }
+        if (has(`questions[${i}].points`)) {
+          errors[`points_${i}`] = t('exam.pointsMin') || 'Mínimo 1 punto';
+        }
+      });
+    }
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   useEffect(() => {
     if (!isEdit) return;
@@ -71,6 +114,7 @@ const ExamEditor = () => {
 
   const handleFormChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
+    setFieldErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
   const addQuestion = () => {
@@ -92,6 +136,7 @@ const ExamEditor = () => {
 
   const updateQuestion = (index, field, value) => {
     setQuestions((prev) => prev.map((q, i) => i === index ? { ...q, [field]: value } : q));
+    setFieldErrors((prev) => ({ ...prev, [`question_${index}`]: undefined, [`points_${index}`]: undefined }));
   };
 
   const updateOption = (qIndex, oIndex, value) => {
@@ -118,13 +163,20 @@ const ExamEditor = () => {
     }));
   };
 
+  const moveOption = (qIndex, oIndex, direction) => {
+    setQuestions((prev) => prev.map((q, i) => {
+      if (i !== qIndex) return q;
+      const newOpts = [...(q.options || [])];
+      const swap = oIndex + direction;
+      if (swap < 0 || swap >= newOpts.length) return q;
+      [newOpts[oIndex], newOpts[swap]] = [newOpts[swap], newOpts[oIndex]];
+      return { ...q, options: newOpts };
+    }));
+  };
+
   const handleSave = async (activate = false) => {
-    if (!form.title.trim()) {
-      toast.error(t('exam.titleRequired') || 'Title is required');
-      return;
-    }
-    if (questions.some((q) => !q.question_text.trim())) {
-      toast.error(t('exam.questionTextRequired') || 'All questions need text');
+    if (!validateForm()) {
+      toast.error(t('exam.validationError') || 'Revisa los campos marcados');
       return;
     }
 
@@ -135,15 +187,23 @@ const ExamEditor = () => {
         time_limit: form.time_limit ? Number(form.time_limit) : null,
         max_attempts: Number(form.max_attempts) || 1,
         status: activate ? 'active' : 'draft',
-        questions: questions.map((q, i) => ({
-          type: q.type,
-          question_text: q.question_text,
-          options: q.type === 'true_false' ? ['Verdadero', 'Falso'] : q.options.filter((o) => o.trim()),
-          correct_answer: q.correct_answer,
-          points: Number(q.points) || 1,
-          explanation: q.explanation || '',
-          order: i + 1,
-        })),
+        questions: questions.map((q, i) => {
+          const isTrueFalse = q.type === 'true_false';
+          const isDragDrop = q.type === 'drag_drop';
+          const options = isTrueFalse ? ['Verdadero', 'Falso'] : q.options.filter((o) => o.trim());
+          const correctAnswer = isDragDrop
+            ? JSON.stringify(options)
+            : q.correct_answer;
+          return {
+            type: q.type,
+            question_text: q.question_text,
+            options,
+            correct_answer: correctAnswer,
+            points: Number(q.points) || 1,
+            explanation: q.explanation || '',
+            order: i + 1,
+          };
+        }),
       };
 
       if (isEdit) {
@@ -177,8 +237,13 @@ const ExamEditor = () => {
               type="text"
               value={form.title}
               onChange={(e) => handleFormChange('title', e.target.value)}
-              className="w-full p-3 bg-[var(--surface-container-low)] border border-[var(--outline-variant)] rounded-xl text-[var(--on-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+              className={`w-full p-3 bg-[var(--surface-container-low)] border rounded-xl text-[var(--on-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] ${
+                fieldErrors.title ? 'border-[var(--error)]' : 'border-[var(--outline-variant)]'
+              }`}
             />
+            {fieldErrors.title && (
+              <p className="text-xs text-[var(--error)] mt-1">{fieldErrors.title}</p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-bold text-[var(--on-surface-variant)] mb-1">{t('exam.unit')}</label>
@@ -288,6 +353,7 @@ const ExamEditor = () => {
                 >
                   <option value="multiple_choice">{t('exam.multipleChoice')}</option>
                   <option value="true_false">{t('exam.trueFalse')}</option>
+                  <option value="drag_drop">{t('exam.dragDrop')}</option>
                 </select>
               </div>
               <div>
@@ -308,8 +374,13 @@ const ExamEditor = () => {
                 type="text"
                 value={q.question_text}
                 onChange={(e) => updateQuestion(qIndex, 'question_text', e.target.value)}
-                className="w-full p-3 bg-[var(--surface-container-low)] border border-[var(--outline-variant)] rounded-xl text-[var(--on-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+                className={`w-full p-3 bg-[var(--surface-container-low)] border rounded-xl text-[var(--on-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] ${
+                  fieldErrors[`question_${qIndex}`] ? 'border-[var(--error)]' : 'border-[var(--outline-variant)]'
+                }`}
               />
+              {fieldErrors[`question_${qIndex}`] && (
+                <p className="text-xs text-[var(--error)] mt-1">{fieldErrors[`question_${qIndex}`]}</p>
+              )}
             </div>
 
             {q.type === 'multiple_choice' && (
@@ -338,6 +409,34 @@ const ExamEditor = () => {
               </div>
             )}
 
+            {q.type === 'drag_drop' && (
+              <div className="space-y-2">
+                <label className="block text-sm font-bold text-[var(--on-surface-variant)]">{t('exam.dragDropItems')}</label>
+                <p className="text-xs text-[var(--on-surface-variant)]">{t('exam.dragDropHint')}</p>
+                {(q.options || []).map((opt, oIndex) => (
+                  <div key={oIndex} className="flex items-center gap-2">
+                    <span className="font-bold text-[var(--primary)] w-6 text-center">{oIndex + 1}.</span>
+                    <input
+                      type="text"
+                      value={opt}
+                      onChange={(e) => updateOption(qIndex, oIndex, e.target.value)}
+                      placeholder={`${String.fromCharCode(65 + oIndex)}.`}
+                      className="flex-1 p-3 bg-[var(--surface-container-low)] border border-[var(--outline-variant)] rounded-xl text-[var(--on-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+                    />
+                    <button onClick={() => moveOption(qIndex, oIndex, -1)} disabled={oIndex === 0} className="p-2 text-[var(--on-surface-variant)] hover:text-[var(--primary)] disabled:opacity-30"><FaArrowUp className="w-3 h-3" /></button>
+                    <button onClick={() => moveOption(qIndex, oIndex, 1)} disabled={oIndex === (q.options || []).length - 1} className="p-2 text-[var(--on-surface-variant)] hover:text-[var(--primary)] disabled:opacity-30"><FaArrowDown className="w-3 h-3" /></button>
+                    <button onClick={() => removeOption(qIndex, oIndex)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg"><FaTrash className="w-3 h-3" /></button>
+                  </div>
+                ))}
+                <button
+                  onClick={() => addOption(qIndex)}
+                  className="text-sm text-[var(--primary)] font-bold hover:underline"
+                >
+                  + {t('teacher.evaluationCreator.addOption')}
+                </button>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-bold text-[var(--on-surface-variant)] mb-1">{t('exam.correctAnswer')}</label>
@@ -348,9 +447,13 @@ const ExamEditor = () => {
                     className="w-full p-3 bg-[var(--surface-container-low)] border border-[var(--outline-variant)] rounded-xl text-[var(--on-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
                   >
                     <option value="">--</option>
-                    <option value="Verdadero">Verdadero</option>
-                    <option value="Falso">Falso</option>
+                    <option value="Verdadero">{t('exam.true')}</option>
+                    <option value="Falso">{t('exam.false')}</option>
                   </select>
+                ) : q.type === 'drag_drop' ? (
+                  <div className="w-full p-3 bg-[var(--surface-container-low)] border border-[var(--outline-variant)] rounded-xl text-sm text-[var(--on-surface-variant)]">
+                    {t('exam.dragDropAutoAnswer')}
+                  </div>
                 ) : (
                   <select
                     value={q.correct_answer}

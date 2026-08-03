@@ -1,7 +1,10 @@
+import { env } from '../config/env';
+
 export const ROLES = {
   ADMIN: 'admin',
   TEACHER: 'teacher',
-  STUDENT: 'student'
+  STUDENT: 'student',
+  PARENT: 'parent'
 };
 
 export const DIFFICULTY_LEVELS = {
@@ -24,6 +27,11 @@ export const QUESTION_TYPES = {
   FORMULA: 'formula'
 };
 
+export const TRUE_FALSE_OPTIONS = [
+  { value: 'true', labelKey: 'exam.true' },
+  { value: 'false', labelKey: 'exam.false' }
+];
+
 export const NOTIFICATION_TYPES = {
   INFO: 'info',
   WARNING: 'warning',
@@ -31,5 +39,5 @@ export const NOTIFICATION_TYPES = {
   ERROR: 'error'
 };
 
-export const API_URL = import.meta.env.VITE_API_URL;
+export const API_URL = env.VITE_API_URL;
 export const APP_NAME = 'MathFlow';

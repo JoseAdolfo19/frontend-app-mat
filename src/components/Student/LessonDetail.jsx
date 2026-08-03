@@ -15,6 +15,7 @@ const LessonDetail = () => {
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [lessons, setLessons] = useState([]);
   const startTimeRef = useRef(Date.now());
 
   useEffect(() => {
@@ -22,6 +23,19 @@ const LessonDetail = () => {
     startTimeRef.current = Date.now();
     return () => {};
   }, [id]);
+
+  useEffect(() => {
+    fetchLessons();
+  }, []);
+
+  const fetchLessons = async () => {
+    try {
+      const response = await lessonsApi.getLessons();
+      setLessons(response.data?.data || response.data || []);
+    } catch (error) {
+      setLessons([]);
+    }
+  };
 
   const fetchLesson = async () => {
     try {
@@ -78,6 +92,10 @@ const LessonDetail = () => {
     });
     return doc.body.innerHTML;
   };
+
+  const currentIndex = lessons.findIndex(l => String(l.id) === String(id));
+  const prevLesson = currentIndex > 0 ? lessons[currentIndex - 1] : null;
+  const nextLesson = currentIndex >= 0 && currentIndex < lessons.length - 1 ? lessons[currentIndex + 1] : null;
 
   if (loading) return <Loading />;
   if (!lesson) return (
@@ -178,10 +196,25 @@ const LessonDetail = () => {
       )}
 
       <div className="flex justify-between items-center pt-4 border-t border-[var(--surface-container)]">
-        <button className="px-6 py-3 text-[var(--on-surface-variant)] font-bold hover:bg-[var(--surface-container)] rounded-xl transition-all" aria-label={t('lessonDetail.previousLesson') || 'Lección anterior'}>
+        <button
+          onClick={() => prevLesson && navigate(`/lessons/${prevLesson.id}`)}
+          disabled={!prevLesson}
+          className="px-6 py-3 text-[var(--on-surface-variant)] font-bold hover:bg-[var(--surface-container)] rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+          aria-label={t('lessonDetail.previousLesson') || 'Lección anterior'}
+        >
           {t('lessonDetail.previousLesson')}
         </button>
         <div className="flex gap-3">
+          {nextLesson && (
+            <button
+              onClick={() => navigate(`/lessons/${nextLesson.id}`)}
+              className="px-6 py-3 text-[var(--on-surface-variant)] font-bold hover:bg-[var(--surface-container)] rounded-xl transition-all flex items-center gap-2"
+              aria-label={t('lessonDetail.nextLesson') || 'Siguiente lección'}
+            >
+              {t('lessonDetail.nextLesson')}
+              <FaArrowRight className="w-4 h-4" />
+            </button>
+          )}
           {progress < 100 && (
             <button
               onClick={() => updateProgress(Math.min(progress + 20, 100))}

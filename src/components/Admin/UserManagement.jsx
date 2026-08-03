@@ -108,6 +108,7 @@ const UserManagement = () => {
       case 'admin': return 'bg-red-500';
       case 'teacher': return 'bg-blue-500';
       case 'student': return 'bg-green-500';
+      case 'parent': return 'bg-purple-500';
       default: return 'bg-gray-500';
     }
   };

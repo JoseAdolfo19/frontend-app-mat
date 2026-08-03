@@ -1,19 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import axios from '../api/axios';
 import toast from 'react-hot-toast';
-import translations from './LanguageContext';
+import { getTranslation, getSavedLanguage } from '../utils/i18n';
 
-const getT = () => {
-  const lang = localStorage.getItem('mathflow_language') || 'es';
-  return (key) => {
-    const keys = key.split('.');
-    let value = translations[lang];
-    for (const k of keys) {
-      value = value?.[k];
-    }
-    return value || key;
-  };
-};
+const translate = (key) => getTranslation(getSavedLanguage(), key);
 
 const THEMES = {
   light: {
@@ -38,18 +28,37 @@ const THEMES = {
   },
   dark: {
     '--primary': '#4a90d9',
+    '--primary-dark': '#2f6cb0',
+    '--primary-light': '#1a3a6e',
     '--primary-container': '#1a3a6e',
     '--secondary': '#4caf7e',
+    '--secondary-container': '#005236',
     '--tertiary': '#d4a030',
-    '--background': '#121212',
-    '--surface': '#1e1e1e',
-    '--surface-variant': '#2d2d2d',
-    '--on-background': '#e0e0e0',
-    '--on-surface': '#e0e0e0',
+    '--tertiary-container': '#6b4200',
+    '--background': '#0b1c30',
+    '--surface': '#1a2d44',
+    '--surface-dim': '#0f1f33',
+    '--surface-bright': '#2a3f58',
+    '--surface-container-lowest': '#0b1c30',
+    '--surface-container-low': '#1a2d44',
+    '--surface-container': '#213145',
+    '--surface-container-high': '#2a3f58',
+    '--surface-container-highest': '#3a4f68',
+    '--surface-variant': '#2a3f58',
+    '--on-background': '#eaf1ff',
+    '--on-surface': '#eaf1ff',
+    '--on-surface-variant': '#a8b8d0',
+    '--inverse-surface': '#eaf1ff',
+    '--inverse-on-surface': '#0b1c30',
     '--on-primary': '#000000',
-    '--outline': '#666666',
-    '--outline-variant': '#444444',
+    '--on-primary-container': '#dbe1ff',
+    '--on-secondary-container': '#6cf8bb',
+    '--on-tertiary-container': '#ffddb8',
+    '--outline': '#8a9bb0',
+    '--outline-variant': '#4a5f78',
     '--error': '#cf6679',
+    '--error-container': '#93000a',
+    '--on-error-container': '#ffdad6',
     '--success': '#4caf7e',
     '--warning': '#d4a030',
     '--info': '#4a90d9',
@@ -94,6 +103,7 @@ export const ThemeProvider = ({ children }) => {
 
   useEffect(() => {
     const root = document.documentElement;
+    root.classList.toggle('dark', theme === 'dark');
     if (theme === 'grayscale') {
       document.body.style.filter = 'grayscale(1)';
       root.classList.add('grayscale-mode');
@@ -146,8 +156,11 @@ export const ThemeProvider = ({ children }) => {
     root.style.setProperty('--primary', colors.primary);
     root.style.setProperty('--secondary', colors.secondary);
     root.style.setProperty('--tertiary', colors.tertiary);
-    root.style.setProperty('--background', colors.background);
-    root.style.setProperty('--surface', colors.surface);
+
+    if (theme !== 'dark') {
+      root.style.setProperty('--background', colors.background);
+      root.style.setProperty('--surface', colors.surface);
+    }
 
     root.style.setProperty('--primary-light', lightenColor(colors.primary, 40));
     root.style.setProperty('--primary-dark', darkenColor(colors.primary, 20));
@@ -186,7 +199,7 @@ export const ThemeProvider = ({ children }) => {
   const updateColors = async (newColors) => {
     try {
       const token = localStorage.getItem('access_token');
-      if (!token) return { success: false, error: getT()('theme.notAuthenticated') };
+      if (!token) return { success: false, error: translate('theme.notAuthenticated') };
 
       await axios.put('/admin/config', newColors, {
         headers: { Authorization: `Bearer ${token}` }

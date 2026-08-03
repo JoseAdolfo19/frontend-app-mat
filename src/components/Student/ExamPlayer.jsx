@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../hooks/useAuth';
 import useAntiCheat from '../../hooks/useAntiCheat';
+import { TRUE_FALSE_OPTIONS } from '../../utils/constants';
+import { DragDropQuestion } from '../Common/DragDropQuestion';
 import Loading from '../Common/Loading';
 import toast from 'react-hot-toast';
 import { FaChevronLeft, FaChevronRight, FaExclamationTriangle, FaCheck, FaTimes } from 'react-icons/fa';
@@ -110,6 +112,26 @@ const ExamPlayer = () => {
 
   const handleAnswer = (questionId, answer) => {
     setAnswers((prev) => ({ ...prev, [questionId]: answer }));
+  };
+
+  const buildDragItems = (question) => {
+    const opts = question.options || [];
+    const items = opts.map((label, i) => ({ id: `${question.id}_item_${i}`, label }));
+    for (let i = items.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [items[i], items[j]] = [items[j], items[i]];
+    }
+    return items;
+  };
+
+  const dragItems = useMemo(() => {
+    if (!currentQuestion || currentQuestion.type !== 'drag_drop') return [];
+    return buildDragItems(currentQuestion);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentQuestion?.id, currentQuestion?.type]);
+
+  const handleDragOrderChange = (questionId, ordered) => {
+    setAnswers((prev) => ({ ...prev, [questionId]: ordered.map((i) => i.id) }));
   };
 
   const currentQuestion = questions[currentIndex];
@@ -271,7 +293,8 @@ const ExamPlayer = () => {
               {currentQuestion.points} pts
             </span>
             <span className="text-sm text-[var(--on-surface-variant)] capitalize">
-              {currentQuestion.type === 'true_false' ? t('exam.trueFalse') : t('exam.multipleChoice')}
+              {currentQuestion.type === 'true_false' ? t('exam.trueFalse') :
+               currentQuestion.type === 'drag_drop' ? t('exam.dragDrop') : t('exam.multipleChoice')}
             </span>
           </div>
           <p className="text-lg font-medium text-[var(--on-surface)] mb-6">
@@ -280,20 +303,26 @@ const ExamPlayer = () => {
 
           {currentQuestion.type === 'true_false' ? (
             <div className="space-y-3">
-              {[t('exam.trueFalse').includes('Verdadero') ? 'true' : 'true', 'false'].map((val) => (
+              {TRUE_FALSE_OPTIONS.map((opt) => (
                 <button
-                  key={val}
-                  onClick={() => handleAnswer(currentQuestion.id, val)}
+                  key={opt.value}
+                  onClick={() => handleAnswer(currentQuestion.id, opt.value)}
                   className={`w-full text-left p-4 rounded-xl border-2 transition-all font-medium ${
-                    answers[currentQuestion.id] === val
+                    answers[currentQuestion.id] === opt.value
                       ? 'border-[var(--primary)] bg-[var(--primary)]/10 text-[var(--primary)]'
                       : 'border-[var(--outline-variant)] hover:border-[var(--primary)]/50 text-[var(--on-surface)]'
                   }`}
                 >
-                  {val === 'true' ? 'Verdadero / Ritiy' : 'Falso /Mana riti'}
+                  {t(opt.labelKey)}
                 </button>
               ))}
             </div>
+          ) : currentQuestion.type === 'drag_drop' ? (
+            <DragDropQuestion
+              items={dragItems}
+              value={answers[currentQuestion.id]}
+              onChange={(ordered) => handleDragOrderChange(currentQuestion.id, ordered)}
+            />
           ) : (
             <div className="space-y-3">
               {(currentQuestion.options || []).map((opt, i) => (

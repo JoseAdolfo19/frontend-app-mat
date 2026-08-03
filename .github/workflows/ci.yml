@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  # Variables públicas necesarias para build/test. En Vercel/despliegue se
+  # reemplazan por los valores reales via variables de entorno.
+  VITE_API_URL: http://localhost:8000/api/v1
+  VITE_GOOGLE_CLIENT_ID: ci-client-id.apps.googleusercontent.com
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build
+        run: npm run build

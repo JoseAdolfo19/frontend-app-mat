@@ -1,6 +1,7 @@
 import React from 'react';
 import { FaExclamationTriangle } from 'react-icons/fa';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { logger } from '../../utils/logger';
 
 class ErrorBoundaryInner extends React.Component {
   constructor(props) {
@@ -13,7 +14,7 @@ class ErrorBoundaryInner extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error('ErrorBoundary caught:', error, errorInfo);
+    logger.error('ErrorBoundary caught:', error, errorInfo);
   }
 
   handleRetry = () => {
