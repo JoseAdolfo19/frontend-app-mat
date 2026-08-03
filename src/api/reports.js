@@ -21,4 +21,24 @@ export const reportsApi = {
     params,
     responseType: 'blob',
   }),
+
+  // Exportar reporte de rendimiento (Promedio por tipo + Mejores estudiantes)
+  exportPerformancePDF: (params) => api.get('/reports/export/performance/pdf', {
+    params,
+    responseType: 'blob',
+  }),
+  exportPerformanceExcel: (params) => api.get('/reports/export/performance/excel', {
+    params,
+    responseType: 'blob',
+  }),
+
+  // Exportar reporte de calificaciones
+  exportGradesPDF: (params) => api.get('/reports/export/grades/pdf', {
+    params,
+    responseType: 'blob',
+  }),
+  exportGradesExcel: (params) => api.get('/reports/export/grades/excel', {
+    params,
+    responseType: 'blob',
+  }),
 };

@@ -29,7 +29,7 @@ const ForgotPassword = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50 p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-5xl font-black text-blue-600 mb-2 tracking-tight">MathFlow</h1>
+          <h1 className="text-5xl font-black text-blue-600 mb-2 tracking-tight">SIM</h1>
         </div>
 
         <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
@@ -66,7 +66,7 @@ const ForgotPassword = () => {
                       onChange={(e) => setEmail(e.target.value)}
                       required
                       className="w-full pl-10 pr-4 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-600 focus:outline-none bg-white text-gray-900 transition-all"
-                      placeholder="estudiante@mathflow.edu"
+                      placeholder="estudiante@sim.edu"
                       aria-required="true"
                     />
                   </div>

@@ -7,9 +7,11 @@ import * as yup from 'yup';
 import toast from 'react-hot-toast';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import { FaSave, FaTimes, FaPlus, FaTrash, FaUpload } from 'react-icons/fa';
+import { FaSave, FaTimes, FaPlus, FaTrash, FaUpload, FaMagic, FaCloudUploadAlt } from 'react-icons/fa';
 import Loading from '../Common/Loading';
 import { useLanguage } from '../../contexts/LanguageContext';
+
+const MATH_UNITS = ['Aritmética', 'Álgebra', 'Geometría', 'Trigonometría'];
 
 const LessonEditor = () => {
   const { t } = useLanguage();
@@ -18,6 +20,8 @@ const LessonEditor = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [tagInput, setTagInput] = useState('');
+  const [generating, setGenerating] = useState(false);
+  const [uploadingIdx, setUploadingIdx] = useState(null);
 
   const schema = yup.object().shape({
     title: yup.string().required(t('teacher.lessonEditor.title') + ' *'),
@@ -81,7 +85,6 @@ const LessonEditor = () => {
       setValue('description', lesson.description || '');
       setValue('content', lesson.content);
       setValue('unit', lesson.unit || '');
-      setValue('topic', lesson.topic || '');
       setValue('difficulty', lesson.difficulty);
       setValue('tags', Array.isArray(lesson.tags) ? lesson.tags : []);
       setValue('estimated_time', lesson.estimated_time || 45);
@@ -96,6 +99,8 @@ const LessonEditor = () => {
   const onSubmit = async (data) => {
     try {
       setSaving(true);
+      // Título y tema son lo mismo: el tema avanza lo que indica el título
+      data.topic = data.title;
       if (id) {
         await lessonsApi.updateLesson(id, data);
         toast.success(t('teacher.lessonEditor.saveSuccess'));
@@ -120,6 +125,60 @@ const LessonEditor = () => {
 
   const removeTag = (tagToRemove) => {
     setValue('tags', tags.filter(tag => tag !== tagToRemove));
+  };
+
+  const handleAiGenerate = async () => {
+    const title = watch('title');
+    if (!title || !title.trim()) {
+      toast.error(t('teacher.lessonEditor.aiNeedTitle'));
+      return;
+    }
+
+    setGenerating(true);
+    try {
+      const response = await lessonsApi.generateLesson({
+        title: title.trim(),
+        unit: watch('unit') || undefined,
+        difficulty: watch('difficulty'),
+      });
+      const data = response.data?.data;
+      if (!data) throw new Error('empty');
+
+      if (!watch('unit') && data.unit) setValue('unit', data.unit);
+      if (data.description) setValue('description', data.description);
+      if (data.content) setValue('content', data.content);
+      if (Array.isArray(data.tags)) setValue('tags', data.tags.slice(0, 8));
+
+      toast.success(t('teacher.lessonEditor.aiSuccess'));
+    } catch (error) {
+      toast.error(
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        t('teacher.lessonEditor.aiError')
+      );
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const handleFileUpload = async (index, event) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    setUploadingIdx(index);
+    try {
+      const response = await lessonsApi.uploadResource(file);
+      const data = response.data;
+      setValue(`resources.${index}.url`, data.url);
+      setValue(`resources.${index}.type`, data.type);
+      setValue(`resources.${index}.title`, watch(`resources.${index}.title`) || data.original_name || file.name);
+      toast.success(t('teacher.lessonEditor.uploadSuccess'));
+    } catch (error) {
+      toast.error(error.response?.data?.message || t('teacher.lessonEditor.uploadError'));
+    } finally {
+      setUploadingIdx(null);
+    }
   };
 
   if (loading) return <Loading />;
@@ -179,26 +238,16 @@ const LessonEditor = () => {
               <label htmlFor="lesson-unit" className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
                 {t('teacher.lessonEditor.unit')}
               </label>
-              <input
+              <select
                 id="lesson-unit"
-                type="text"
                 {...register('unit')}
                 className="w-full px-4 py-3 rounded-xl border-2 border-[var(--surface-container-high)] focus:border-[var(--primary)] focus:outline-none bg-[var(--surface-container-low)]"
-                placeholder={t('teacher.lessonEditor.unitPlaceholder')}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="lesson-topic" className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
-                {t('teacher.lessonEditor.topic')}
-              </label>
-              <input
-                id="lesson-topic"
-                type="text"
-                {...register('topic')}
-                className="w-full px-4 py-3 rounded-xl border-2 border-[var(--surface-container-high)] focus:border-[var(--primary)] focus:outline-none bg-[var(--surface-container-low)]"
-                placeholder={t('teacher.lessonEditor.topicPlaceholder')}
-              />
+              >
+                <option value="">{t('teacher.lessonEditor.selectUnit')}</option>
+                {MATH_UNITS.map((unit) => (
+                  <option key={unit} value={unit}>{unit}</option>
+                ))}
+              </select>
             </div>
 
             <div>
@@ -215,17 +264,29 @@ const LessonEditor = () => {
             </div>
           </div>
 
-          <div className="mt-4">
-            <label htmlFor="lesson-description" className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
-              {t('teacher.lessonEditor.description')}
-            </label>
-            <textarea
-              id="lesson-description"
-              {...register('description')}
-              rows="3"
-              className="w-full px-4 py-3 rounded-xl border-2 border-[var(--surface-container-high)] focus:border-[var(--primary)] focus:outline-none bg-[var(--surface-container-low)] resize-none"
-              placeholder={t('teacher.lessonEditor.descriptionPlaceholder')}
-            />
+          <div className="mt-4 flex flex-col md:flex-row gap-3 items-start md:items-center">
+            <div className="flex-1 w-full">
+              <label htmlFor="lesson-description" className="block text-sm font-medium text-[var(--on-surface-variant)] mb-1">
+                {t('teacher.lessonEditor.description')}
+              </label>
+              <textarea
+                id="lesson-description"
+                {...register('description')}
+                rows="3"
+                className="w-full px-4 py-3 rounded-xl border-2 border-[var(--surface-container-high)] focus:border-[var(--primary)] focus:outline-none bg-[var(--surface-container-low)] resize-none"
+                placeholder={t('teacher.lessonEditor.descriptionPlaceholder')}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={handleAiGenerate}
+              disabled={generating}
+              className="px-5 py-3 bg-[var(--tertiary)] text-white font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-2 whitespace-nowrap"
+              title={t('teacher.lessonEditor.aiFillTitle') || 'Autorellenar descripción, contenido y etiquetas con IA'}
+            >
+              <FaMagic />
+              {generating ? t('teacher.lessonEditor.aiGenerating') : t('teacher.lessonEditor.aiFill')}
+            </button>
           </div>
         </div>
 
@@ -306,6 +367,7 @@ const LessonEditor = () => {
                   <option value="pdf">PDF</option>
                   <option value="video">Video</option>
                   <option value="image">{t('teacher.evaluationCreator.formula')}</option>
+                  <option value="audio">{t('teacher.lessonEditor.audio')}</option>
                   <option value="link">Link</option>
                 </select>
                 <input
@@ -319,20 +381,38 @@ const LessonEditor = () => {
                   className="px-4 py-2 rounded-xl border-2 border-[var(--surface-container-high)] focus:border-[var(--primary)] focus:outline-none bg-white"
                 />
               </div>
+              <div className="flex flex-col gap-2">
+                <input
+                  type="file"
+                  id={`resource-file-${field.id}`}
+                  className="hidden"
+                  accept=".pdf,.doc,.docx,.ppt,.pptx,.png,.jpg,.jpeg,.gif,.webp,.svg,.mp4,.webm,.mov,.avi,.mp3,.wav,.ogg,.m4a"
+                  onChange={(e) => handleFileUpload(index, e)}
+                />
+                <button
+                  type="button"
+                  onClick={() => document.getElementById(`resource-file-${field.id}`)?.click()}
+                  disabled={uploadingIdx !== null}
+                  className="px-3 py-2 bg-[var(--surface-container)] text-[var(--on-surface)] rounded-xl hover:bg-[var(--surface-container-high)] transition-colors disabled:opacity-50 flex items-center gap-2 text-sm"
+                >
+                  <FaCloudUploadAlt />
+                  {uploadingIdx === index ? t('teacher.lessonEditor.uploading') : t('teacher.lessonEditor.uploadFile')}
+                </button>
                 <button
                   type="button"
                   onClick={() => remove(index)}
                   className="text-[var(--error)] hover:bg-[var(--error)]/10 p-2 rounded-xl transition-colors"
                   aria-label={`Eliminar recurso ${index + 1}`}
                 >
-                <FaTrash />
-              </button>
+                  <FaTrash />
+                </button>
+              </div>
             </div>
           ))}
 
           <button
             type="button"
-            onClick={() => append({ type: 'pdf', title: '', url: '' })}
+            onClick={() => append({ type: 'link', title: '', url: '' })}
             className="w-full py-3 border-2 border-dashed border-[var(--outline-variant)] rounded-xl text-[var(--outline)] hover:border-[var(--primary)] hover:text-[var(--primary)] transition-all flex items-center justify-center gap-2"
           >
             <FaUpload />

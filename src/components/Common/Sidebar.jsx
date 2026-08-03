@@ -18,7 +18,11 @@ const Sidebar = () => {
   const navItems = [
     { path: '/dashboard', label: t('nav.dashboard'), icon: FaHome },
     { path: '/lessons', label: t('nav.lessons'), icon: FaBook },
-    { path: '/evaluations', label: t('nav.evaluations'), icon: FaClipboardList },
+    {
+      path: isTeacher() ? '/teacher/exams' : '/evaluations',
+      label: t('nav.evaluations'),
+      icon: FaClipboardList,
+    },
   ];
 
   if (isParent()) {
@@ -41,7 +45,7 @@ const Sidebar = () => {
           <span className="text-2xl font-bold">∑</span>
         </div>
         <div>
-          <h1 className="text-xl font-bold text-[var(--primary)]">MathFlow</h1>
+          <h1 className="text-xl font-bold text-[var(--primary)]">SIM</h1>
           <p className="text-[10px] uppercase tracking-widest text-[var(--on-surface-variant)]">
             {t(`topbar.role.${user?.role?.name}`) || t('nav.dashboard')}
           </p>

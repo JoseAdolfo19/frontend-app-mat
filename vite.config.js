@@ -8,9 +8,9 @@ export default defineConfig({
     VitePWA({      registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'favicon.ico', 'robots.txt'],
       manifest: {
-        name: 'MathFlow',
-        short_name: 'MathFlow',
-        description: 'Plataforma interactiva de aprendizaje de matemáticas',
+        name: 'Sistema Interactivo Matemático',
+        short_name: 'SIM',
+        description: 'Plataforma web para el aprendizaje de matemáticas',
         start_url: '/',
         display: 'standalone',
         theme_color: '#3B82F6',

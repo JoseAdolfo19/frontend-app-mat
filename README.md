@@ -1,4 +1,4 @@
-# MathFlow Frontend
+# SIM Frontend — Sistema Interactivo Matemático
 
 Plataforma educativa de matemáticas — **frontend en React + Vite**. Interfaz para **estudiantes**, **docentes**, **padres de familia** y **administradores**, con soporte **trilingüe** (español, inglés y quechua), temas dinámicos, chat IA (Profesor Euler), exámenes con anti-trampa, rankings, tablero de trabajos y reportes exportables. Incluye **PWA con soporte offline**, **tests automatizados** y configuración incremental de **TypeScript**.
 
@@ -107,7 +107,7 @@ frontend-app-mat/
 |---------|----------|
 | `index.html` | HTML de entrada. Carga fuentes (Plus Jakarta Sans / Hanken Grotesk), meta tags SEO/OG, **script inline anti-flash de dark mode** (aplica la clase `.dark` antes del render para evitar parpadeo), enlace al manifest PWA generado y el punto de montaje `#root` donde Vite inyecta `/src/main.jsx`. |
 | `index.css` | CSS global raíz: importa fuentes de Google y **Tailwind v4** (`@import "tailwindcss"`), define `@theme` (fuentes y animaciones) y scrollbars personalizados. |
-| `package.json` | Manifiesto del proyecto (`mathflow-frontend`). Lista dependencias (React, Router, Axios, Recharts, Quill, @dnd-kit, vite-plugin-pwa, Vitest, etc.) y scripts `dev`, `build`, `preview`, `test`, `test:watch` y `typecheck`. |
+| `package.json` | Manifiesto del proyecto (`sim-frontend`). Lista dependencias (React, Router, Axios, Recharts, Quill, @dnd-kit, vite-plugin-pwa, Vitest, etc.) y scripts `dev`, `build`, `preview`, `test`, `test:watch` y `typecheck`. |
 | `postcss.config.js` | Configura PostCSS: procesa Tailwind CSS y Autoprefixer. |
 | `tailwind.config.js` | Extiende Tailwind: mapea clases utilitarias (`.primary`, `.surface`, `.error`, etc.) a **CSS variables** del tema, define fuentes, bordes, sombras y animaciones. |
 | `vite.config.js` | Configuración de **Vite**: plugin de React, **vite-plugin-pwa** (genera Service Worker + manifest al build), bloque `test` de **Vitest**, puerto de dev (5173) y build con `sourcemap: false` y **code-splitting** en chunks (`vendor`, `charts`, `editor`). |

@@ -93,7 +93,7 @@ export const useTheme = () => useContext(ThemeContext);
 
 export const ThemeProvider = ({ children }) => {
   const [theme, setThemeState] = useState(() => {
-    return localStorage.getItem('mathflow_theme') || 'light';
+    return localStorage.getItem('sim_theme') || 'light';
   });
   const [primaryColor, setPrimaryColor] = useState('#004AC6');
   const [secondaryColor, setSecondaryColor] = useState('#006C49');
@@ -119,7 +119,7 @@ export const ThemeProvider = ({ children }) => {
 
   const setTheme = useCallback((newTheme) => {
     setThemeState(newTheme);
-    localStorage.setItem('mathflow_theme', newTheme);
+    localStorage.setItem('sim_theme', newTheme);
   }, []);
 
   useEffect(() => {

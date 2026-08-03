@@ -1,6 +1,6 @@
 import translations from '../contexts/LanguageContext';
 
-const STORAGE_KEY = 'mathflow_language';
+const STORAGE_KEY = 'sim_language';
 
 export const getSavedLanguage = () => localStorage.getItem(STORAGE_KEY) || 'es';
 export const saveLanguage = (lang) => localStorage.setItem(STORAGE_KEY, lang);

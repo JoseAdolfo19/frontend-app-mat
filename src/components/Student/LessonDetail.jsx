@@ -6,11 +6,14 @@ import { formatDate, getDifficultyColor } from '../../utils/helpers';
 import Loading from '../Common/Loading';
 import toast from 'react-hot-toast';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useAuth } from '../../hooks/useAuth';
 
 const LessonDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { isTeacher, isAdmin } = useAuth();
+  const isStaff = isTeacher() || isAdmin();
   const [lesson, setLesson] = useState(null);
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
@@ -143,22 +146,24 @@ const LessonDetail = () => {
           )}
         </div>
 
-        <div className="mt-6 space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-[var(--on-surface-variant)]">{t('lessonDetail.progress')}</span>
-            <span className="font-bold text-[var(--on-surface)]">{progress}%</span>
+        {!isStaff && (
+          <div className="mt-6 space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-[var(--on-surface-variant)]">{t('lessonDetail.progress')}</span>
+              <span className="font-bold text-[var(--on-surface)]">{progress}%</span>
+            </div>
+            <div className="w-full bg-[var(--surface-container)] rounded-full h-3 overflow-hidden">
+              <div
+                className="bg-[var(--primary)] h-full rounded-full transition-all duration-1000"
+                style={{ width: `${progress}%` }}
+              ></div>
+            </div>
+            <div className="flex justify-between text-xs text-[var(--on-surface-variant)]">
+              <span>{t('lessonDetail.notStarted')}</span>
+              <span>{t('lessonDetail.completedLabel')}</span>
+            </div>
           </div>
-          <div className="w-full bg-[var(--surface-container)] rounded-full h-3 overflow-hidden">
-            <div
-              className="bg-[var(--primary)] h-full rounded-full transition-all duration-1000"
-              style={{ width: `${progress}%` }}
-            ></div>
-          </div>
-          <div className="flex justify-between text-xs text-[var(--on-surface-variant)]">
-            <span>{t('lessonDetail.notStarted')}</span>
-            <span>{t('lessonDetail.completedLabel')}</span>
-          </div>
-        </div>
+        )}
       </div>
 
       <div className="bg-[var(--surface)] rounded-2xl p-8 shadow-sm border border-[var(--surface-container)] prose prose-sm max-w-none">
@@ -215,7 +220,7 @@ const LessonDetail = () => {
               <FaArrowRight className="w-4 h-4" />
             </button>
           )}
-          {progress < 100 && (
+          {!isStaff && progress < 100 && (
             <button
               onClick={() => updateProgress(Math.min(progress + 20, 100))}
               disabled={isUpdating}
@@ -225,7 +230,7 @@ const LessonDetail = () => {
               <FaArrowRight className="w-4 h-4" />
             </button>
           )}
-          {progress >= 100 && (
+          {!isStaff && progress >= 100 && (
             <Link
               to="/evaluations"
               className="px-8 py-3 bg-[var(--secondary)] text-white font-bold rounded-xl hover:opacity-90 transition-all flex items-center gap-2"

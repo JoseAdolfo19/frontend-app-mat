@@ -6,10 +6,13 @@ import Loading from '../Common/Loading';
 import { getDifficultyLabel } from '../../utils/helpers';
 import toast from 'react-hot-toast';
 import { FaPlay, FaClock, FaRedo, FaBan, FaClipboardList } from 'react-icons/fa';
+import { useAuth } from '../../hooks/useAuth';
 
 const ExamList = () => {
   const { t, lang } = useLanguage();
   const navigate = useNavigate();
+  const { isTeacher, isAdmin } = useAuth();
+  const isStaff = isTeacher() || isAdmin();
   const [exams, setExams] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -99,7 +102,12 @@ const ExamList = () => {
               )}
             </div>
 
-            {(exam.attempts_remaining !== undefined && exam.attempts_remaining <= 0) || exam.no_attempts ? (
+            {isStaff ? (
+              <div className="w-full py-3 bg-[var(--surface-container)] text-[var(--on-surface-variant)] font-bold rounded-xl flex items-center justify-center gap-2">
+                <FaBan className="w-4 h-4" />
+                {t('exam.teacherPreview')}
+              </div>
+            ) : (exam.attempts_remaining !== undefined && exam.attempts_remaining <= 0) || exam.no_attempts ? (
               <button
                 disabled
                 className="w-full py-3 bg-[var(--surface-container)] text-[var(--on-surface-variant)] font-bold rounded-xl flex items-center justify-center gap-2 cursor-not-allowed"

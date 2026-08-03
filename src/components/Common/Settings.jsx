@@ -6,7 +6,7 @@ import { useTheme } from '../../contexts/ThemeContext';
 import toast from 'react-hot-toast';
 import { FaBell, FaUser, FaGlobe, FaSignOutAlt, FaInfoCircle, FaPalette } from 'react-icons/fa';
 
-const STORAGE_KEY = 'mathflow_preferences';
+const STORAGE_KEY = 'sim_preferences';
 
 const defaultPreferences = {
   email_notifications: true,

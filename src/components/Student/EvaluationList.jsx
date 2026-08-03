@@ -6,9 +6,12 @@ import { FaClock, FaCheckCircle, FaHourglassHalf, FaFilter, FaSearch } from 'rea
 import { formatDate, toArray } from '../../utils/helpers';
 import Loading from '../Common/Loading';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useAuth } from '../../hooks/useAuth';
 
 const EvaluationList = () => {
   const { t } = useLanguage();
+  const { isTeacher, isAdmin } = useAuth();
+  const isStaff = isTeacher() || isAdmin();
   const [evaluations, setEvaluations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
@@ -168,23 +171,29 @@ const EvaluationList = () => {
                 )}
               </div>
 
-              <Link
-                to={`/evaluations/${evaluation.id}/result`}
-                aria-label={evaluation.user_result?.status === 'completed' 
-                  ? `${t('evaluations.list.viewResults')} - ${evaluation.title}`
-                  : `${t('evaluations.list.startEvaluation')} - ${evaluation.title}`}
-                className={`w-full py-3 rounded-xl font-bold text-center transition-all block ${
-                  evaluation.user_result?.status === 'completed'
-                    ? 'bg-[var(--surface-container)] text-[var(--on-surface)] hover:bg-[var(--surface-container-high)]'
-                    : 'bg-[var(--primary)] text-white hover:opacity-90'
-                }`}
-              >
-                {evaluation.user_result?.status === 'completed' 
-                  ? t('evaluations.list.viewResults')
-                  : evaluation.due_date && new Date(evaluation.due_date) < new Date()
-                  ? t('evaluations.list.expired') 
-                  : t('evaluations.list.startEvaluation')}
-              </Link>
+              {isStaff ? (
+                <div className="w-full py-3 rounded-xl font-bold text-center bg-[var(--surface-container)] text-[var(--on-surface-variant)]">
+                  {t('evaluations.list.teacherPreview')}
+                </div>
+              ) : (
+                <Link
+                  to={`/evaluations/${evaluation.id}/result`}
+                  aria-label={evaluation.user_result?.status === 'completed'
+                    ? `${t('evaluations.list.viewResults')} - ${evaluation.title}`
+                    : `${t('evaluations.list.startEvaluation')} - ${evaluation.title}`}
+                  className={`w-full py-3 rounded-xl font-bold text-center transition-all block ${
+                    evaluation.user_result?.status === 'completed'
+                      ? 'bg-[var(--surface-container)] text-[var(--on-surface)] hover:bg-[var(--surface-container-high)]'
+                      : 'bg-[var(--primary)] text-white hover:opacity-90'
+                  }`}
+                >
+                  {evaluation.user_result?.status === 'completed'
+                    ? t('evaluations.list.viewResults')
+                    : evaluation.due_date && new Date(evaluation.due_date) < new Date()
+                    ? t('evaluations.list.expired')
+                    : t('evaluations.list.startEvaluation')}
+                </Link>
+              )}
             </div>
           );
         })}

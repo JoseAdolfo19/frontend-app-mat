@@ -17,6 +17,16 @@ export const lessonsApi = {
   getResources: (id) => api.get(`/lessons/${id}/resources`),
   addResource: (id, data) => api.post(`/lessons/${id}/resources`, data),
   removeResource: (id, resourceId) => api.delete(`/lessons/${id}/resources/${resourceId}`),
+  uploadResource: (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post('/lessons/resources/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  
+  // ===== IA (generar contenido de lección) =====
+  generateLesson: (data) => api.post('/ai/generate-lesson', data),
   
   // ===== PROGRESO =====
   getProgress: (lessonId) => api.get(`/lessons/${lessonId}/progress`),

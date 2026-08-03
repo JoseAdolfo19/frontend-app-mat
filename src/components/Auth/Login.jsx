@@ -112,7 +112,7 @@ const Login = () => {
                   type="email"
                   {...register('email')}
                   className={inputClass}
-                  placeholder="estudiante@mathflow.edu"
+                  placeholder="estudiante@sim.edu"
                   aria-required="true"
                 />
               </div>
@@ -174,7 +174,7 @@ const Login = () => {
         <div className="relative z-10 flex items-center justify-between px-10 py-8">
           <div className="flex items-center gap-2 text-white font-semibold">
             <FaUsers className="text-purple-300" />
-            <span>MathFlow Community</span>
+            <span>SIM Community</span>
           </div>
           <div className="flex items-center gap-3">
             <Link to="/register" className="text-white/80 hover:text-white font-medium transition">
@@ -192,7 +192,7 @@ const Login = () => {
         <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-10 pb-12">
           <img
             src="/mathflow_login.jpg"
-            alt="MathFlow Community"
+            alt="SIM Community"
             className="w-full max-w-md mx-auto object-contain mix-blend-screen"
           />
           <h3 className="text-white text-2xl font-bold mt-6">¡Aprende matemáticas jugando!</h3>
@@ -204,7 +204,7 @@ const Login = () => {
         <div className="absolute bottom-8 left-10 z-10 text-white/40 text-xs font-mono">
           <span className="inline-flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-            MathFlow v1.0
+            SIM v1.0
           </span>
         </div>
       </div>

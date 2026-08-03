@@ -18,9 +18,9 @@ const Register = () => {
   const [showConfirm, setShowConfirm] = useState(false);
 
   const validationSchema = yup.object().shape({
-    name: yup.string().required(t('auth.register.nameRequired')),
+    full_name: yup.string().required(t('auth.register.nameRequired')),
     email: yup.string().email(t('auth.register.emailInvalid')).required(t('auth.register.emailRequired')),
-    password: yup.string().min(6, t('auth.register.passwordMin')).required(t('auth.register.passwordRequired')),
+    password: yup.string().min(8, t('auth.register.passwordMin')).required(t('auth.register.passwordRequired')),
     password_confirmation: yup.string()
       .oneOf([yup.ref('password'), null], t('auth.register.passwordMismatch'))
       .required(t('auth.register.confirmRequired')),
@@ -117,12 +117,12 @@ const Register = () => {
                 <input
                   id="reg-name"
                   type="text"
-                  {...register('name')}
+                  {...register('full_name')}
                   className="w-full pl-11 pr-4 py-3 rounded-xl bg-gray-100 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white border border-transparent transition placeholder-gray-400"
                   placeholder={t('auth.register.namePlaceholder')}
                 />
               </div>
-              {errors.name && <p className="text-sm text-red-500 font-medium">{errors.name.message}</p>}
+              {errors.full_name && <p className="text-sm text-red-500 font-medium">{errors.full_name.message}</p>}
             </div>
 
             <div className="space-y-2">
@@ -134,7 +134,7 @@ const Register = () => {
                   type="email"
                   {...register('email')}
                   className={inputClass}
-                  placeholder="estudiante@mathflow.edu"
+                  placeholder="estudiante@sim.edu"
                 />
               </div>
               {errors.email && <p className="text-sm text-red-500 font-medium">{errors.email.message}</p>}
@@ -150,9 +150,9 @@ const Register = () => {
                   className="w-full pl-11 pr-10 py-3 rounded-xl bg-gray-100 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white border border-transparent transition appearance-none cursor-pointer"
                 >
                   <option value="">{t('auth.register.levelPlaceholder')}</option>
-                  <option value="primaria">{t('auth.register.levelPrimary')}</option>
-                  <option value="secundaria">{t('auth.register.levelSecondary')}</option>
-                  <option value="universidad">{t('auth.register.levelUniversity')}</option>
+                  <option value="basic">{t('auth.register.levelPrimary')}</option>
+                  <option value="intermediate">{t('auth.register.levelSecondary')}</option>
+                  <option value="advanced">{t('auth.register.levelUniversity')}</option>
                 </select>
                 <FaChevronDown className="absolute right-4 top-3.5 text-gray-400 text-xs pointer-events-none" />
               </div>
@@ -231,7 +231,7 @@ const Register = () => {
         <div className="relative z-10 flex items-center justify-between px-10 py-8">
           <div className="flex items-center gap-2 text-white font-semibold">
             <FaUsers className="text-purple-300" />
-            <span>MathFlow Community</span>
+            <span>SIM Community</span>
           </div>
           <div className="flex items-center gap-3">
             <Link to="/login" className="text-white/80 hover:text-white font-medium transition">
@@ -249,7 +249,7 @@ const Register = () => {
         <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-10 pb-12">
           <img
             src="/mathflow_register.jpg"
-            alt="MathFlow Community"
+            alt="SIM Community"
             className="w-full max-w-md mx-auto object-contain mix-blend-screen"
           />
           <h3 className="text-white text-2xl font-bold mt-6">¡Aprende matemáticas jugando!</h3>
@@ -261,7 +261,7 @@ const Register = () => {
         <div className="absolute bottom-8 left-10 z-10 text-white/40 text-xs font-mono">
           <span className="inline-flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-            MathFlow v1.0
+            SIM v1.0
           </span>
         </div>
       </div>
