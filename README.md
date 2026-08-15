@@ -362,6 +362,23 @@ frontend-app-mat/
 
 ---
 
+## Auditoría QA (2026-08)
+
+Auditoría realizada siguiendo el rol de **QA Engineer** sobre el frontend. Hallazgos y correcciones aplicadas:
+
+| Severidad | Hallazgo | Archivo | Corrección |
+|-----------|----------|---------|------------|
+| High | Crash si `data.attempt` es null/`started_at` falta → timer `NaN` | `src/components/Student/ExamPlayer.jsx` | Guard de `started_at` (usa `Date.now()` como fallback) y `formatTime` robusto ante `NaN`. |
+| Medium | Contador anti-trampa con `useRef` no re-renderizaba → el aviso "actividad sospechosa" nunca aparecía en pantalla | `src/hooks/useAntiCheat.js` | Convertido a `useState` (mantiene un ref interno para el envío al backend). |
+| Medium | Respuestas de API asumidas como array sin validar → `TypeError` si el backend devuelve un objeto | `ExamList.jsx`, `ExamManager.jsx`, `LessonDetail.jsx` | Normalización con `Array.isArray(...) ? ... : []`. |
+| Medium | `score.toFixed(1)` / `Math.floor(time_taken/60)` sin guard → crash o "NaN" en pantalla | `EvaluationList.jsx`, `EvaluationResult.jsx` | Score derivado seguro (`safeScore`) y tiempo con fallback `--:--`. |
+| Medium | Claves de traducción inexistentes se mostraban crudas (aria-labels y textos rotos) | `LanguageContext.jsx`, `ChatWidget.jsx`, `Sidebar.jsx` | Añadidas las claves `chat.*` y `nav.sidebar` en es/en/qu; guard de `user.role.name` en `Sidebar`. |
+| Low | Captcha mostrado como texto plano en el landing (ahora es imagen SVG desde el backend) | `LandingPage.jsx` | Renderiza `captcha_image` y envía `captcha_token`. |
+
+**Estado:** 47 tests ✓ · typecheck ✓ · build PWA ✓. Ver también la auditoría del **backend** en `README` de `backend-app-mat`.
+
+---
+
 ## Contribución, seguridad y licencia
 
 - **Contribución:** consulta [`CONTRIBUTING.md`](CONTRIBUTING.md). Flujo: rama desde `main`, ejecutar `npm run typecheck`, `npm test` y `npm run build` antes de cada PR a `main`.
