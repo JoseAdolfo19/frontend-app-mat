@@ -34,7 +34,8 @@ const LessonDetail = () => {
   const fetchLessons = async () => {
     try {
       const response = await lessonsApi.getLessons();
-      setLessons(response.data?.data || response.data || []);
+      const data = response.data?.data ?? response.data;
+      setLessons(Array.isArray(data) ? data : []);
     } catch (error) {
       setLessons([]);
     }

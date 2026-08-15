@@ -79,6 +79,9 @@ const EvaluationResult = () => {
   if (loading) return <Loading />;
   if (!result || !evaluation) return null;
 
+  const safeScore = Number.isFinite(Number(result.score)) ? Number(result.score) : 0;
+  const scoreLabel = safeScore.toFixed(1);
+
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       {/* Back button */}
@@ -120,8 +123,8 @@ const EvaluationResult = () => {
           {/* Score Circle */}
           <div className="relative w-40 h-40">
             <div className="w-full h-full rounded-full border-8 border-[var(--surface-container)] flex items-center justify-center">
-              <div className={`text-4xl font-bold ${getScoreColor(result.score)}`}>
-                {result.score.toFixed(1)}
+              <div className={`text-4xl font-bold ${getScoreColor(safeScore)}`}>
+                {scoreLabel}
                 <span className="text-base text-[var(--on-surface-variant)]">/20</span>
               </div>
             </div>
@@ -139,10 +142,10 @@ const EvaluationResult = () => {
                 cy="80"
                 r="72"
                 fill="none"
-                stroke={result.score >= 16 ? '#22c55e' : result.score >= 12 ? '#eab308' : '#ef4444'}
+                stroke={safeScore >= 16 ? '#22c55e' : safeScore >= 12 ? '#eab308' : '#ef4444'}
                 strokeWidth="8"
                 strokeDasharray="452.16"
-                strokeDashoffset={452.16 - (result.score / 20) * 452.16}
+                strokeDashoffset={452.16 - (safeScore / 20) * 452.16}
                 className="transition-all duration-1000"
               />
             </svg>
@@ -151,7 +154,7 @@ const EvaluationResult = () => {
           {/* Stats */}
           <div className="flex-1 text-center md:text-left">
             <h3 className="text-2xl font-bold text-[var(--on-surface)] mb-2">
-              {getScoreMessage(result.score)}
+              {getScoreMessage(safeScore)}
             </h3>
             <div className="grid grid-cols-3 gap-4">
               <div className="p-4 bg-[var(--surface-container-low)] rounded-xl">
@@ -163,7 +166,7 @@ const EvaluationResult = () => {
               <div className="p-4 bg-[var(--surface-container-low)] rounded-xl">
                 <p className="text-sm text-[var(--on-surface-variant)]">{t('evaluations.result.time')}</p>
                 <p className="text-xl font-bold text-[var(--tertiary)]">
-                  {Math.floor(result.time_taken / 60)}:{String(result.time_taken % 60).padStart(2, '0')}
+                  {Number.isFinite(Number(result.time_taken)) ? `${Math.floor(result.time_taken / 60)}:${String(result.time_taken % 60).padStart(2, '0')}` : '--:--'}
                 </p>
               </div>
               <div className="p-4 bg-[var(--surface-container-low)] rounded-xl">

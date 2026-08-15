@@ -50,6 +50,7 @@ export const LanguageProvider = ({ children }) => {
 const translations = {
   es: {
     nav: {
+      sidebar: 'Menú de navegación',
       dashboard: 'Dashboard',
       lessons: 'Lecciones',
       evaluations: 'Evaluaciones',
@@ -617,6 +618,11 @@ const translations = {
       resetMessage: 'Chat reiniciado! En que puedo ayudarte?',
       error: 'Error de conexión',
       errorDetail: 'Verifica tu API key en el archivo .env.',
+      openChat: 'Abrir chat con profesor Euler',
+      title: 'Chat con profesor Euler',
+      closeChat: 'Cerrar chat',
+      inputLabel: 'Escribe tu mensaje',
+      sendMessage: 'Enviar mensaje',
       welcome: 'Hola! Soy el **Profesor Euler**, tu asistente de matematicas.\n\nMi objetivo es ensenarte a resolver problemas paso a paso, para que **tu** aprendas y te conviertas en un experto.\n\nPuedo ayudarte con:\n- Ejercicios de algebra, geometria y numeros\n- Explicar conceptos con ejemplos\n- Guiarte paso a paso en problemas\n\n**Que necesitas hoy?**',
     },
     notifications: {
@@ -970,6 +976,7 @@ const translations = {
   },
   en: {
     nav: {
+      sidebar: 'Navigation menu',
       dashboard: 'Dashboard',
       lessons: 'Lessons',
       evaluations: 'Evaluations',
@@ -1537,6 +1544,11 @@ const translations = {
       resetMessage: 'Chat reset! How can I help you?',
       error: 'Connection error',
       errorDetail: 'Check your API key in the .env file.',
+      openChat: 'Open chat with Professor Euler',
+      title: 'Chat with Professor Euler',
+      closeChat: 'Close chat',
+      inputLabel: 'Type your message',
+      sendMessage: 'Send message',
       welcome: 'Hi! I\'m **Professor Euler**, your math assistant.\n\nMy goal is to teach you to solve problems step by step, so that **you** learn and become an expert.\n\nI can help you with:\n- Algebra, geometry and number exercises\n- Explain concepts with examples\n- Guide you step by step in problems\n\n**What do you need today?**',
     },
     notifications: {
@@ -1890,6 +1902,7 @@ const translations = {
   },
   qu: {
     nav: {
+      sidebar: 'Yachaykuna menu',
       dashboard: 'Panel',
       lessons: 'Yachaykuna',
       evaluations: 'Sutiykuna',
@@ -2449,14 +2462,19 @@ const translations = {
         sendError: 'Error tarqashpa',
       },
     },
-    chat: {
+chat: {
       professorName: 'Yachachiq Euler',
-      tutorSubtitle: 'Yachay matematicata',
-      clearChat: 'Chat chinkachiy',
-      placeholder: 'Tapukuy matematicapi...',
-      resetMessage: 'Chat tutapuk! Yanapaymi?',
-      error: 'Error rurashpa',
-      errorDetail: '.env archivo pi API keyta rikuchiy.',
+      tutorSubtitle: 'Matematica yanapaq',
+      clearChat: 'Chatta limpiay',
+      placeholder: 'Matematicamanta tapukuy...',
+      resetMessage: 'Chattam ruraykunin! Imapi yanapayman?',
+      error: 'Tinkuy pantasqa',
+      errorDetail: '.env archivopi API keyta qhawariy.',
+      openChat: 'Yachachiq Eulerwan chat kichariy',
+      title: 'Yachachiq Eulerwan chat',
+      closeChat: 'Chatta wisqay',
+      inputLabel: 'Willaykita qillqay',
+      sendMessage: 'Apachiy',
       welcome: 'Kamachiyninchik! **Yachachiq Euler** mi, matematica yanapay.\n\nYuyayta yachachiy paso paso, **ninchik** yachayta ruraypaq.\n\nYanapaymi:\n- Algebra, geometria y numeros\n- Ejemplokunalla tutay\n- Paso paso ruraypaq\n\n**Nininchik?**',
     },
     notifications: {

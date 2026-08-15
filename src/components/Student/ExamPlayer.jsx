@@ -181,8 +181,9 @@ const ExamPlayer = () => {
         setQuestions(data.questions || []);
         setAnswers({});
         if (data.attempt?.time_limit || data.exam?.time_limit) {
-          const limit = data.attempt?.time_limit || data.exam.time_limit;
-          const endAt = new Date(data.attempt.started_at).getTime() + limit * 60 * 1000;
+          const limit = data.attempt?.time_limit || data.exam?.time_limit;
+          const startedAt = data.attempt?.started_at ? new Date(data.attempt.started_at).getTime() : Date.now();
+          const endAt = startedAt + limit * 60 * 1000;
           endAtRef.current = endAt;
           setTimeLeft(Math.max(0, Math.floor((endAt - Date.now()) / 1000)));
         }
@@ -226,9 +227,10 @@ const ExamPlayer = () => {
   }, [timeLeft !== null && !result && !submitPending, submitExam, result, submitPending]);
 
   const formatTime = (seconds) => {
-    if (seconds === null) return '--:--';
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
+    if (seconds === null || Number.isNaN(seconds) || !Number.isFinite(seconds)) return '--:--';
+    const safe = Math.max(0, Math.floor(seconds));
+    const m = Math.floor(safe / 60);
+    const s = safe % 60;
     return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
 

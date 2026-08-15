@@ -21,7 +21,8 @@ const ExamList = () => {
       setLoading(true);
       try {
         const response = await api.get('/exams/', { params: { is_active: true } });
-        setExams(response.data.data || response.data || []);
+        const data = response.data.data ?? response.data;
+        setExams(Array.isArray(data) ? data : []);
       } catch (err) {
         toast.error(err.response?.data?.message || t('common.error'));
       } finally {

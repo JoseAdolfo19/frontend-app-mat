@@ -43,8 +43,10 @@ const EvaluationList = () => {
 
   const getStatusBadge = (evaluation) => {
     if (evaluation.user_result?.status === 'completed') {
+      const score = Number(evaluation.user_result.score);
+      const scoreLabel = Number.isFinite(score) ? score.toFixed(1) : '--';
       return {
-        label: `${t('evaluations.list.completed')} (${evaluation.user_result.score.toFixed(1)}/20)`,
+        label: `${t('evaluations.list.completed')} (${scoreLabel}/20)`,
         className: 'bg-green-100 text-green-700'
       };
     }

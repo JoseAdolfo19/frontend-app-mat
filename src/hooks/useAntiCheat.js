@@ -1,21 +1,23 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import api from '../api/axios';
 import { logger } from '../utils/logger';
 
 const useAntiCheat = (attemptId, isActive = true) => {
-  const tabSwitchCount = useRef(0);
+  const [tabSwitchCount, setTabSwitchCount] = useState(0);
+  const tabSwitchCountRef = useRef(0);
   const lastBlurTime = useRef(null);
   const cheatLog = useRef([]);
 
   const reportCheat = useCallback(async (eventType, detail = null) => {
     if (!attemptId || !isActive) return;
     
-    tabSwitchCount.current += 1;
+    tabSwitchCountRef.current += 1;
+    setTabSwitchCount(tabSwitchCountRef.current);
     const event = {
       event: eventType,
       timestamp: new Date().toISOString(),
       detail,
-      tabSwitchCount: tabSwitchCount.current,
+      tabSwitchCount: tabSwitchCountRef.current,
     };
     cheatLog.current.push(event);
 
@@ -105,7 +107,7 @@ const useAntiCheat = (attemptId, isActive = true) => {
     };
   }, [isActive, reportCheat]);
 
-  return { tabSwitchCount: tabSwitchCount.current, cheatLog: cheatLog.current };
+  return { tabSwitchCount, cheatLog: cheatLog.current };
 };
 
 export default useAntiCheat;

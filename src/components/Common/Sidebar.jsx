@@ -47,7 +47,7 @@ const Sidebar = () => {
         <div>
           <h1 className="text-xl font-bold text-[var(--primary)]">SIM</h1>
           <p className="text-[10px] uppercase tracking-widest text-[var(--on-surface-variant)]">
-            {t(`topbar.role.${user?.role?.name}`) || t('nav.dashboard')}
+            {user?.role?.name ? t(`topbar.role.${user.role.name}`) : t('nav.dashboard')}
           </p>
         </div>
       </div>

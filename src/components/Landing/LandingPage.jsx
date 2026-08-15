@@ -47,7 +47,7 @@ const LandingPage = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           dni,
-          captcha_token: captcha?.captcha_code || '',
+          captcha_token: captcha?.captcha_token || '',
           captcha_answer: captchaAnswer,
         }),
       });
@@ -208,17 +208,26 @@ const LandingPage = () => {
 
               {captcha && (
                 <div className="flex flex-col sm:flex-row gap-4 items-stretch">
-                  <div
-                    className="flex items-center justify-center px-6 py-3 rounded-xl text-xl font-mono font-bold tracking-widest select-none min-w-[140px]"
-                    style={{
-                      background: 'repeating-linear-gradient(45deg, var(--surface-container), var(--surface-container) 5px, var(--surface-container-low) 5px, var(--surface-container-low) 10px)',
-                      color: 'var(--primary)',
-                      letterSpacing: '0.25em',
-                      textShadow: '1px 1px 0 var(--outline-variant)',
-                    }}
-                  >
-                    {captcha.captcha_code}
-                  </div>
+                  {captcha.captcha_image ? (
+                    <img
+                      src={captcha.captcha_image}
+                      alt="Captcha"
+                      className="h-14 w-[160px] rounded-xl border border-[var(--outline-variant)] select-none"
+                      draggable="false"
+                    />
+                  ) : (
+                    <div
+                      className="flex items-center justify-center px-6 py-3 rounded-xl text-xl font-mono font-bold tracking-widest select-none min-w-[140px]"
+                      style={{
+                        background: 'repeating-linear-gradient(45deg, var(--surface-container), var(--surface-container) 5px, var(--surface-container-low) 5px, var(--surface-container-low) 10px)',
+                        color: 'var(--primary)',
+                        letterSpacing: '0.25em',
+                        textShadow: '1px 1px 0 var(--outline-variant)',
+                      }}
+                    >
+                      {captcha.captcha_code}
+                    </div>
+                  )}
                   <input
                     type="text"
                     value={captchaAnswer}
