@@ -44,7 +44,7 @@ npm run dev            # http://localhost:5173
 |----------|-------------|---------|
 | `VITE_API_URL` | URL base del backend API | `http://localhost:8000/api/v1` |
 | `VITE_GOOGLE_CLIENT_ID` | Client ID de Google OAuth | — |
-| `VITE_AI_SERVICE` | Proveedor IA (`groq`/`gemini`) | `groq` |
+| `VITE_SENTRY_DSN` | DSN de Sentry para monitoreo de errores (opcional) | — |
 
 > ⚠️ **Seguridad:** el `.env` NO debe subirse al repositorio (está en `.gitignore`). El `VITE_GOOGLE_CLIENT_ID` es público por diseño; pero **las API keys secretas** (ej. NVIDIA) **nunca** deben vivir en el frontend ni llevar prefijo `VITE_` — van solo en el backend/proxy. Usa `.env.example` como plantilla (sin valores reales) y `.env.production` para el build de producción.
 
@@ -59,7 +59,7 @@ npm run build
 npx vercel --prod
 ```
 
-El push a GitHub **no dispara el deploy automáticamente**: el despliegue en producción se hace de forma manual con `npx vercel --prod`. En Vercel se configuran las variables `VITE_API_URL` (backend en producción) y `VITE_GOOGLE_CLIENT_ID`.
+**Deploy automático (recomendado):** conecta el repositorio a Vercel (Vercel → Add New Project → importa `frontend-app-mat`). El CI de GitHub (`test` + `typecheck` + `build`) valida antes de cada push a `main`, y Vercel despliega automáticamente el último commit exitoso. Configura en el dashboard de Vercel las variables `VITE_API_URL` (backend de producción), `VITE_GOOGLE_CLIENT_ID` y `VITE_SENTRY_DSN`. No subas `.env.production` con valores reales al repo: defínelos en el dashboard.
 
 ### Backend (API)
 
@@ -173,13 +173,13 @@ frontend-app-mat/
 | `src/api/admin.js` | Panel admin: dashboard, CRUD de **usuarios** (incluye activar/desactivar e **importar CSV / exportar**), configuración del sistema (`getConfig`/`updateConfig`), **períodos académicos** (CRUD) y **backups** de base de datos (crear, consultar último, descargar como blob). |
 | `src/api/notifications.js` | Endpoints de notificaciones (listar con params, conteo no leído, marcar como leída/todas, eliminar una o las leídas). |
 | `src/api/reports.js` | Reportes: `getPerformanceReport` (gráfico), `getGradesReport` (tabla), `getStudentReport` (individual) y **exportación PDF/Excel** (`responseType: 'blob'`). |
-| `src/api/gemini.js` | Cliente del **chat IA** ("Profesor Euler"). `sendMessage` hace POST a `/ai/chat` con historial de conversación y procesa respuesta **SSE en streaming** (parsea líneas `data:`), y `resetChat` limpia el historial en memoria. |
+| `src/api/ai.js` | Cliente del **chat IA** ("Profesor Euler"). `sendMessage` hace POST a `/ai/chat` con historial de conversación y procesa respuesta **SSE en streaming** (parsea líneas `data:`), y `resetChat` limpia el historial en memoria. El proveedor lo resuelve el backend (Groq). |
 
 #### `src/config/` — Configuración y validación
 
 | Archivo | Qué hace |
 |---------|----------|
-| `src/config/env.js` | **Validación de variables de entorno** con Yup (fail-fast): lanza un error claro al arranque si faltan `VITE_API_URL` o `VITE_GOOGLE_CLIENT_ID`. Incluye un test personalizado de URL (`new URL()`) porque la validación `.url()` de Yup rechaza `localhost`. Consumido por `axios.js`, `gemini.js`, `constants.js`, `App.jsx` y `LandingPage.jsx`. |
+| `src/config/env.js` | **Validación de variables de entorno** con Yup (fail-fast): lanza un error claro al arranque si faltan `VITE_API_URL` o `VITE_GOOGLE_CLIENT_ID`. Incluye un test personalizado de URL (`new URL()`) porque la validación `.url()` de Yup rechaza `localhost`. Consumido por `axios.js`, `ai.js`, `constants.js`, `App.jsx` y `LandingPage.jsx`. |
 
 #### `src/contexts/` — Estado global
 
@@ -277,7 +277,7 @@ frontend-app-mat/
 | `EvaluationList.jsx` | Lista de **evaluaciones** con filtros (búsqueda, tipo, dificultad) y estados (completado con nota, vencida, pendiente). |
 | `EvaluationResult.jsx` | **Resultado de evaluación**: anillo de puntaje /20, respuestas correctas/incorrectas con retroalimentación pregunta por pregunta, tiempo, intento, descarga de PDF y acciones sugeridas. |
 | `ExamList.jsx` | Lista de **exámenes disponibles** con dificultad, tiempo límite, intentos restantes y botón para iniciar (crea el intento vía `POST /exams/{id}/start`). |
-| `ExamPlayer.jsx` | **Reproductor de examen**: navegación por preguntas (opción múltiple / verdadero-falso / **drag & drop**), contador de tiempo con autoenvío al agotarse, panel de respuestas, **aviso anti-trampa**, confirmación de envío y pantalla de resultado. Envía las respuestas en el submit (`answers` con `question_id` + `answer`; drag & drop como JSON). Los valores verdadero/falso se normalizan a strings canónicos (`'true'`/`'false'`) y sus labels se traducen con `t('exam.true')`/`t('exam.false')`. Las preguntas drag & drop se mezclan con `useMemo`. |
+| `ExamPlayer.jsx` | **Reproductor de examen**: navegación por preguntas (opción múltiple / verdadero-falso / **drag & drop**), contador de tiempo con autoenvío al agotarse, panel de respuestas, **aviso anti-trampa**, confirmación de envío y pantalla de resultado. Envía las respuestas en el submit (`answers` con `question_id` + `answer`; drag & drop como JSON). Los valores verdadero/falso se normalizan a strings canónicos (`'true'`/`'false'`) y sus labels se traducen con `t('exam.true')`/`t('exam.false')`. Las preguntas drag & drop se mezclan con `useMemo`. **Resiliente a la conexión**: las respuestas se persisten en `localStorage` por intento, se restauran al volver a cargar, y si el envío falla por falta de red se reintenta automáticamente al reconectar (con botón de reintento manual). |
 | `StudentWorkBoard.jsx` | **Tablero de trabajos** del estudiante: estadísticas (asignados, enviados, calificados, pendientes, promedio), filtros por tipo/estado/área y lista de trabajos con feedback y nota. |
 | `StudentRanking.jsx` | **Ranking** de estudiantes por promedio (con filtro por curso), trofeos para top 3 y resaltado de mi posición. |
 
@@ -352,8 +352,8 @@ frontend-app-mat/
 - **Exámenes con anti-trampa** (detección y reporte de eventos) y estadísticas por examen. Tipos de pregunta: opción múltiple, verdadero-falso y **arrastrar y soltar** (drag & drop con `@dnd-kit`).
 - **Reportes** con gráficos (Recharts) y exportación PDF/Excel.
 - **Páginas legales** de Términos y Condiciones y Política de Privacidad (rutas `/terms` y `/privacy`), trilingües y enlazadas desde el login y el registro.
-- **PWA instalable**: manifest + Service Worker generados por `vite-plugin-pwa` con `autoUpdate`, estrategia *NetworkFirst* para el API y caché de imágenes → **soporte offline**.
-- **Tests automatizados** con Vitest + React Testing Library (calificación con true/false legacy, roles, constantes) y **CI** en GitHub Actions. La cobertura es parcial: falta cubrir ExamEditor, useAntiCheat y los guards de rutas.
+- **PWA instalable**: manifest + Service Worker generados por `vite-plugin-pwa` con `autoUpdate`, estrategia *NetworkFirst* para el API y caché de imágenes → **soporte offline**. El envío de exámenes tolera caídas de red persistiendo las respuestas en `localStorage` y reintentando al reconectar.
+- **Tests automatizados** con Vitest + React Testing Library: calificación con true/false legacy, roles, constantes, paridad i18n es/en/qu, anti-trampa (`useAntiCheat`), guards de rutas (`ProtectedRoute`) y validación Yup del editor de exámenes (`examSchema`). **CI** en GitHub Actions.
 - **Validación de entorno fail-fast** (`src/config/env.js`): errores claros al arranque si faltan variables.
 - **TypeScript incremental**: configuración de `tsc` con `allowJs` para migrar módulo por módulo.
 - **Seguridad de credenciales**: API keys secretas excluidas del frontend; `.env` en `.gitignore` con `.env.example` como plantilla documentada.
@@ -364,7 +364,7 @@ frontend-app-mat/
 
 ## Contribución, seguridad y licencia
 
-- **Contribución:** el proyecto aún no tiene `CONTRIBUTING.md`; se recomienda seguir el flujo de branching de GitHub (PR a `main`) y ejecutar `npm run typecheck`, `npm test` y `npm run build` antes de cada PR.
-- **Seguridad:** no hay `SECURITY.md` todavía. Para reportar una vulnerabilidad, abre un issue en el repositorio (o contacta al mantenedor); evita exponer credenciales en issues públicos.
-- **Licencia:** aún no hay archivo `LICENSE` definido; pendiente de decisión.
+- **Contribución:** consulta [`CONTRIBUTING.md`](CONTRIBUTING.md). Flujo: rama desde `main`, ejecutar `npm run typecheck`, `npm test` y `npm run build` antes de cada PR a `main`.
+- **Seguridad:** consulta [`SECURITY.md`](SECURITY.md). Para reportar una vulnerabilidad, contacta al mantenedor por correo en lugar de abrir un issue público.
+- **Licencia:** este proyecto está bajo la **MIT License** — ver [`LICENSE`](LICENSE).
 - **Capturas/demo:** pendiente añadir capturas de pantalla de las páginas principales.

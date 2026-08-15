@@ -1,3 +1,5 @@
+import * as Sentry from '@sentry/react';
+
 const isDev = import.meta.env.DEV;
 
 export const logger = {
@@ -5,8 +7,12 @@ export const logger = {
     if (isDev) {
       console.error(...args);
     } else {
-      // En producción, enviar a un servicio de monitoreo (Sentry, LogRocket, backend de logs).
-      // Ejemplo: Sentry.captureException(args[0])
+      const err = args[0];
+      if (err instanceof Error) {
+        Sentry.captureException(err);
+      } else {
+        Sentry.captureMessage(args.map(String).join(' '));
+      }
     }
   },
   warn(...args) {

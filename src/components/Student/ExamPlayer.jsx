@@ -8,7 +8,18 @@ import { TRUE_FALSE_OPTIONS } from '../../utils/constants';
 import { DragDropQuestion } from '../Common/DragDropQuestion';
 import Loading from '../Common/Loading';
 import toast from 'react-hot-toast';
-import { FaChevronLeft, FaChevronRight, FaExclamationTriangle, FaCheck, FaTimes } from 'react-icons/fa';
+import { FaChevronLeft, FaChevronRight, FaExclamationTriangle, FaCheck, FaTimes, FaWifi } from 'react-icons/fa';
+
+const storageKey = (examId) => `sim_exam_${examId}`;
+
+const loadPersisted = (examId) => {
+  try {
+    const raw = localStorage.getItem(storageKey(examId));
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
 
 const ExamPlayer = () => {
   const { id } = useParams();
@@ -25,16 +36,45 @@ const ExamPlayer = () => {
   const [showWarning, setShowWarning] = useState(false);
   const [warningMessage, setWarningMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [submitPending, setSubmitPending] = useState(false);
+  const [online, setOnline] = useState(() => typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [showConfirmSubmit, setShowConfirmSubmit] = useState(false);
   const [result, setResult] = useState(null);
   const timerRef = useRef(null);
   const isSubmittingRef = useRef(false);
+  const endAtRef = useRef(null);
   const answersRef = useRef({});
   const questionsRef = useRef([]);
+  const attemptRef = useRef(null);
   answersRef.current = answers;
   questionsRef.current = questions;
+  attemptRef.current = attempt;
 
-  const { tabSwitchCount } = useAntiCheat(attempt?.id, !!attempt && !result);
+  const persist = useCallback(() => {
+    const attemptId = attemptRef.current?.id;
+    if (!id || !attemptId || result) return;
+    try {
+      localStorage.setItem(
+        storageKey(id),
+        JSON.stringify({
+          exam,
+          attemptId,
+          questions: questionsRef.current,
+          answers: answersRef.current,
+          submitPending,
+          endAt: endAtRef.current,
+        })
+      );
+    } catch {
+      // storage lleno o no disponible: ignorar
+    }
+  }, [id, exam, result, submitPending]);
+
+  const clearPersisted = useCallback(() => {
+    if (id) localStorage.removeItem(storageKey(id));
+  }, [id]);
+
+  const { tabSwitchCount } = useAntiCheat(attempt?.id, !!attempt && !result && !submitPending);
 
   useEffect(() => {
     if (tabSwitchCount > 0) {
@@ -46,6 +86,8 @@ const ExamPlayer = () => {
 
   const submitExam = useCallback(async () => {
     if (isSubmittingRef.current) return;
+    const currentAttempt = attemptRef.current;
+    if (!currentAttempt) return;
     isSubmittingRef.current = true;
     setSubmitting(true);
     try {
@@ -69,19 +111,67 @@ const ExamPlayer = () => {
         }),
       };
 
-      const response = await api.post(`/exams/attempts/${attempt.id}/submit`, body);
+      const response = await api.post(`/exams/attempts/${currentAttempt.id}/submit`, body);
       setResult(response.data.data || response.data);
+      setSubmitPending(false);
+      clearPersisted();
       if (timerRef.current) clearInterval(timerRef.current);
     } catch (err) {
-      toast.error(err.response?.data?.message || t('common.error'));
-      isSubmittingRef.current = false;
+      const offline = !navigator.onLine || err?.message === 'Network Error' || !err?.response;
+      if (offline) {
+        setSubmitPending(true);
+        toast.error(t('exam.submitPending'));
+      } else {
+        toast.error(err.response?.data?.message || t('common.error'));
+      }
     } finally {
+      isSubmittingRef.current = false;
       setSubmitting(false);
     }
-  }, [attempt, t]);
+  }, [t, clearPersisted]);
+
+  const retrySubmit = useCallback(() => {
+    if (submitPending && navigator.onLine) {
+      submitExam();
+    }
+  }, [submitPending, submitExam]);
+
+  useEffect(() => {
+    const handleOnline = () => {
+      setOnline(true);
+      if (submitPending) submitExam();
+    };
+    const handleOffline = () => setOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [submitPending, submitExam]);
+
+  useEffect(() => {
+    if (!attempt?.id || result) return;
+    persist();
+  }, [answers, questions, submitPending, persist, result, attempt?.id]);
 
   useEffect(() => {
     const startExam = async () => {
+      const persisted = loadPersisted(id);
+      if (persisted) {
+        setExam(persisted.exam || null);
+        setAttempt(persisted.attemptId ? { id: persisted.attemptId } : null);
+        setQuestions(persisted.questions || []);
+        setAnswers(persisted.answers || {});
+        if (persisted.submitPending) setSubmitPending(true);
+        if (persisted.endAt) {
+          endAtRef.current = persisted.endAt;
+          setTimeLeft(Math.max(0, Math.floor((persisted.endAt - Date.now()) / 1000)));
+        }
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       try {
         const response = await api.post(`/exams/${id}/start`);
@@ -93,8 +183,8 @@ const ExamPlayer = () => {
         if (data.attempt?.time_limit || data.exam?.time_limit) {
           const limit = data.attempt?.time_limit || data.exam.time_limit;
           const endAt = new Date(data.attempt.started_at).getTime() + limit * 60 * 1000;
-          const remaining = Math.max(0, Math.floor((endAt - Date.now()) / 1000));
-          setTimeLeft(remaining);
+          endAtRef.current = endAt;
+          setTimeLeft(Math.max(0, Math.floor((endAt - Date.now()) / 1000)));
         }
       } catch (err) {
         toast.error(err.response?.data?.message || t('common.error'));
@@ -106,8 +196,16 @@ const ExamPlayer = () => {
     startExam();
   }, [id, navigate, t]);
 
+  // Reintento automático al restaurar un envío pendiente si ya hay conexión
   useEffect(() => {
-    if (timeLeft === null || result) return;
+    if (submitPending && navigator.onLine && !submitting) {
+      submitExam();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [submitPending]);
+
+  useEffect(() => {
+    if (timeLeft === null || result || submitPending) return;
     if (timeLeft <= 0) {
       submitExam();
       return;
@@ -125,7 +223,7 @@ const ExamPlayer = () => {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [timeLeft !== null && !result, submitExam, result]);
+  }, [timeLeft !== null && !result && !submitPending, submitExam, result, submitPending]);
 
   const formatTime = (seconds) => {
     if (seconds === null) return '--:--';
@@ -247,6 +345,27 @@ const ExamPlayer = () => {
         </div>
       )}
 
+      {submitPending && (
+        <div className="bg-amber-100 text-amber-800 border border-amber-300 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <FaWifi className="text-xl flex-shrink-0" />
+            <div>
+              <p className="font-bold text-sm">{t('exam.submitPendingTitle')}</p>
+              <p className="text-xs">
+                {online ? t('exam.submitPendingRetry') : t('exam.submitPendingOffline')}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={retrySubmit}
+            disabled={submitting || !online}
+            className="px-4 py-2 bg-amber-600 text-white font-bold rounded-xl hover:bg-amber-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {submitting ? t('common.loading') : t('exam.submitPendingRetryBtn')}
+          </button>
+        </div>
+      )}
+
       {showConfirmSubmit && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-[var(--surface)] rounded-2xl p-8 max-w-md mx-4 shadow-xl border border-[var(--surface-container)]">
@@ -297,13 +416,14 @@ const ExamPlayer = () => {
           <button
             key={q.id || i}
             onClick={() => setCurrentIndex(i)}
+            disabled={submitPending}
             className={`min-w-[40px] h-10 rounded-lg text-sm font-bold transition-all ${
               i === currentIndex
                 ? 'bg-[var(--primary)] text-white'
                 : answers[q.id] !== undefined
                 ? 'bg-green-100 text-green-700'
                 : 'bg-[var(--surface-container)] text-[var(--on-surface-variant)] hover:bg-[var(--surface-container-high)]'
-            }`}
+            } disabled:opacity-60`}
           >
             {i + 1}
           </button>
@@ -331,11 +451,12 @@ const ExamPlayer = () => {
                 <button
                   key={opt.value}
                   onClick={() => handleAnswer(currentQuestion.id, opt.value)}
+                  disabled={submitPending}
                   className={`w-full text-left p-4 rounded-xl border-2 transition-all font-medium ${
                     answers[currentQuestion.id] === opt.value
                       ? 'border-[var(--primary)] bg-[var(--primary)]/10 text-[var(--primary)]'
                       : 'border-[var(--outline-variant)] hover:border-[var(--primary)]/50 text-[var(--on-surface)]'
-                  }`}
+                  } disabled:opacity-60`}
                 >
                   {t(opt.labelKey)}
                 </button>
@@ -353,11 +474,12 @@ const ExamPlayer = () => {
                 <button
                   key={i}
                   onClick={() => handleAnswer(currentQuestion.id, opt)}
+                  disabled={submitPending}
                   className={`w-full text-left p-4 rounded-xl border-2 transition-all font-medium ${
                     answers[currentQuestion.id] === opt
                       ? 'border-[var(--primary)] bg-[var(--primary)]/10 text-[var(--primary)]'
                       : 'border-[var(--outline-variant)] hover:border-[var(--primary)]/50 text-[var(--on-surface)]'
-                  }`}
+                  } disabled:opacity-60`}
                 >
                   <span className="font-bold mr-2">{String.fromCharCode(65 + i)}.</span>
                   {opt}
@@ -371,7 +493,7 @@ const ExamPlayer = () => {
       <div className="flex justify-between items-center">
         <button
           onClick={() => setCurrentIndex((i) => Math.max(0, i - 1))}
-          disabled={currentIndex === 0}
+          disabled={currentIndex === 0 || submitPending}
           className="flex items-center gap-2 px-4 py-3 bg-[var(--surface)] text-[var(--on-surface)] font-bold rounded-xl border border-[var(--surface-container)] hover:bg-[var(--surface-container)] transition-all disabled:opacity-40"
         >
           <FaChevronLeft /> {t('exam.previous')}
@@ -379,14 +501,16 @@ const ExamPlayer = () => {
         {currentIndex === totalQuestions - 1 ? (
           <button
             onClick={() => setShowConfirmSubmit(true)}
-            className="flex items-center gap-2 px-6 py-3 bg-[var(--primary)] text-white font-bold rounded-xl hover:opacity-90 transition-all"
+            disabled={submitPending}
+            className="flex items-center gap-2 px-6 py-3 bg-[var(--primary)] text-white font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-40"
           >
             {t('exam.submitExam')}
           </button>
         ) : (
           <button
             onClick={() => setCurrentIndex((i) => Math.min(totalQuestions - 1, i + 1))}
-            className="flex items-center gap-2 px-4 py-3 bg-[var(--primary)] text-white font-bold rounded-xl hover:opacity-90 transition-all"
+            disabled={submitPending}
+            className="flex items-center gap-2 px-4 py-3 bg-[var(--primary)] text-white font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-40"
           >
             {t('exam.next')} <FaChevronRight />
           </button>

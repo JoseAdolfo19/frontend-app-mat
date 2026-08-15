@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from '../../api/axios';
+import { adminApi } from '../../api/admin';
 import toast from 'react-hot-toast';
-import { FaEdit, FaTrash, FaUserPlus, FaCheck, FaTimes } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaUserPlus, FaCheck, FaTimes, FaUpload, FaDownload } from 'react-icons/fa';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -13,6 +14,7 @@ const UserManagement = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
+  const fileInputRef = useRef(null);
   const { t } = useLanguage();
 
   const up = (key) => t(`admin.usersPage.${key}`);
@@ -91,6 +93,41 @@ const UserManagement = () => {
     }
   };
 
+  const handleImportUsers = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+      await adminApi.importUsers(file);
+      toast.success(up('importSuccess'));
+      event.target.value = '';
+      fetchUsers();
+    } catch (error) {
+      toast.error(error.response?.data?.message || up('importError'));
+      event.target.value = '';
+    }
+  };
+
+  const handleExportUsers = async () => {
+    try {
+      const response = await adminApi.exportUsers('csv');
+      const blob =
+        response.data instanceof Blob
+          ? response.data
+          : new Blob([response.data ?? ''], { type: 'text/csv;charset=utf-8;' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `usuarios-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success(up('exportSuccess'));
+    } catch (error) {
+      toast.error(up('exportError'));
+    }
+  };
+
   const openEditModal = (user) => {
     setEditingUser(user);
     reset({
@@ -132,24 +169,47 @@ const UserManagement = () => {
             {up('subtitle')}
           </p>
         </div>
-        <button
-          onClick={() => {
-            setEditingUser(null);
-            reset({
-              full_name: '',
-              email: '',
-              password: '',
-              role: 'student',
-              institution: '',
-              grade: ''
-            });
-            setShowModal(true);
-          }}
-          className="px-6 py-3 bg-[var(--primary)] text-white font-bold rounded-xl hover:opacity-90 transition-all flex items-center gap-2"
-        >
-          <FaUserPlus />
-          {up('addUser')}
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv,text/csv"
+            className="hidden"
+            onChange={handleImportUsers}
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="px-5 py-3 bg-[var(--surface-container)] text-[var(--on-surface)] font-bold rounded-xl hover:bg-[var(--surface-container-high)] transition-all flex items-center gap-2"
+          >
+            <FaUpload />
+            {up('importUsers')}
+          </button>
+          <button
+            onClick={handleExportUsers}
+            className="px-5 py-3 bg-[var(--surface-container)] text-[var(--on-surface)] font-bold rounded-xl hover:bg-[var(--surface-container-high)] transition-all flex items-center gap-2"
+          >
+            <FaDownload />
+            {up('exportUsers')}
+          </button>
+          <button
+            onClick={() => {
+              setEditingUser(null);
+              reset({
+                full_name: '',
+                email: '',
+                password: '',
+                role: 'student',
+                institution: '',
+                grade: ''
+              });
+              setShowModal(true);
+            }}
+            className="px-6 py-3 bg-[var(--primary)] text-white font-bold rounded-xl hover:opacity-90 transition-all flex items-center gap-2"
+          >
+            <FaUserPlus />
+            {up('addUser')}
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">

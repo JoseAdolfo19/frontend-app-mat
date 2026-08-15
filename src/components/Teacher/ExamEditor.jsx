@@ -8,7 +8,7 @@ import * as yup from 'yup';
 import { FaPlus, FaTrash, FaArrowUp, FaArrowDown } from 'react-icons/fa';
 import { normalizeTrueFalse } from '../../utils/grading';
 
-const examSchema = yup.object().shape({
+export const examSchema = yup.object().shape({
   title: yup.string().min(3).required(),
   questions: yup.array().of(
     yup.object().shape({

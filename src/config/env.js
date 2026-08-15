@@ -13,6 +13,7 @@ const isUrl = (value) => {
 const envSchema = yup.object().shape({
   VITE_API_URL: yup.string().required().test('is-url', 'Debe ser una URL válida', isUrl),
   VITE_GOOGLE_CLIENT_ID: yup.string().min(1).required(),
+  VITE_SENTRY_DSN: yup.string().test('is-url', 'Debe ser una URL válida', (v) => !v || isUrl(v)).notRequired(),
 }).noUnknown(false);
 
 const parseResult = (() => {

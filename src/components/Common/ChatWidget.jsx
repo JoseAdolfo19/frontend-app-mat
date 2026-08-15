@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaTimes, FaPaperPlane, FaUser, FaTrash, FaGraduationCap } from 'react-icons/fa';
-import { sendMessage, resetChat } from '../../api/gemini';
+import { sendMessage, resetChat } from '../../api/ai';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 const EULER_SVG = () => (
