@@ -1,6 +1,6 @@
 import React, { useEffect, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { FaChevronLeft, FaChevronRight, FaTimes, FaFastForward } from 'react-icons/fa';
+import { FaChevronLeft, FaChevronRight, FaTimes, FaFastForward, FaHandPeace } from 'react-icons/fa';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { getOnboardingSteps, ONBOARDING_DONE_KEY } from '../../data/onboardingConfig';
