@@ -4,12 +4,16 @@ import Sidebar from '../Common/Sidebar';
 import TopBar from '../Common/TopBar';
 import BottomNav from '../Common/BottomNav';
 import ChatWidget from '../Common/ChatWidget';
+import OnboardingWizard from '../Common/OnboardingWizard';
 
 const MainLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-[var(--background)]">
+      {/* Onboarding de bienvenida para usuarios nuevos */}
+      <OnboardingWizard />
+
       {/* Sidebar Desktop */}
       <Sidebar />
 
