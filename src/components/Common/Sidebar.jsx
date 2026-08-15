@@ -15,8 +15,16 @@ const Sidebar = () => {
 
   const isActive = (path) => location.pathname === path;
 
+  const dashboardPath = isAdmin()
+    ? '/admin/dashboard'
+    : isTeacher()
+      ? '/teacher/dashboard'
+      : isParent()
+        ? '/parent'
+        : '/dashboard';
+
   const navItems = [
-    { path: '/dashboard', label: t('nav.dashboard'), icon: FaHome },
+    { path: dashboardPath, label: t('nav.dashboard'), icon: FaHome },
     { path: '/lessons', label: t('nav.lessons'), icon: FaBook },
     {
       path: isTeacher() ? '/teacher/exams' : '/evaluations',

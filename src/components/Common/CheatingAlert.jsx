@@ -21,9 +21,9 @@ const CheatingAlert = ({ alert, onDismiss }) => {
       <div className="flex items-start gap-3">
         <FaExclamationTriangle className="w-6 h-6 flex-shrink-0 mt-0.5" />
         <div className="flex-1">
-          <p className="font-bold text-sm mb-1">ALERTA DE TRAMPA</p>
+          <p className="font-bold text-sm mb-1">{t('exam.cheatingDetected')}</p>
           <p className="text-xs text-red-100">
-            {alert.student_name} esta siendo detectado abandonando el examen {alert.exam_title}
+            {alert.student_name} {t('exam.cheatingWarning')} - {alert.exam_title}
           </p>
           <p className="text-[10px] text-red-200 mt-1">{alert.event_type} - {alert.detail}</p>
         </div>

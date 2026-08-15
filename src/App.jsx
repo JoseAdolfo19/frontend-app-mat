@@ -31,6 +31,7 @@ import Help from './components/Common/Help';
 
 // Student
 const StudentDashboard = React.lazy(() => import('./components/Student/StudentDashboard'));
+const RoleDashboard = React.lazy(() => import('./components/Common/RoleDashboard'));
 const LessonList = React.lazy(() => import('./components/Student/LessonList'));
 const LessonDetail = React.lazy(() => import('./components/Student/LessonDetail'));
 const EvaluationList = React.lazy(() => import('./components/Student/EvaluationList'));
@@ -108,7 +109,7 @@ function App() {
                   <Route element={<ProtectedRoute />}>
                     <Route element={<MainLayout />}>
                       {/* Student */}
-                      <Route path="/dashboard" element={<StudentDashboard />} />
+                      <Route path="/dashboard" element={<RoleDashboard />} />
                       <Route path="/my-work" element={<StudentWorkBoard />} />
                       <Route path="/ranking" element={<StudentRanking />} />
                       <Route path="/lessons" element={<LessonList />} />

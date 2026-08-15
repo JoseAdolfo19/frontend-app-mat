@@ -11,8 +11,16 @@ const BottomNav = () => {
 
   const isActive = (path) => location.pathname.startsWith(path);
 
+  const dashboardPath = isAdmin()
+    ? '/admin/dashboard'
+    : isTeacher()
+      ? '/teacher/dashboard'
+      : isParent()
+        ? '/parent'
+        : '/dashboard';
+
   const baseItems = [
-    { path: '/dashboard', label: t('nav.dashboard'), icon: FaHome, alwaysShow: true },
+    { path: dashboardPath, label: t('nav.dashboard'), icon: FaHome, alwaysShow: true },
     { path: '/lessons', label: t('nav.lessons'), icon: FaBook, alwaysShow: true },
     { path: '/evaluations', label: t('nav.evaluations'), icon: FaClipboardList, alwaysShow: true },
     { path: '/my-work', label: t('workBoard.title'), icon: FaClipboardList, studentOnly: true },
