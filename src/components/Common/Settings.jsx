@@ -5,6 +5,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import toast from 'react-hot-toast';
 import { FaBell, FaUser, FaGlobe, FaSignOutAlt, FaInfoCircle, FaPalette } from 'react-icons/fa';
+import PushSettings from './PushSettings';
 
 const STORAGE_KEY = 'sim_preferences';
 
@@ -105,6 +106,15 @@ const Settings = () => {
             />
           </label>
         </div>
+      </div>
+
+      {/* Notificaciones push */}
+      <div className="bg-[var(--surface)] rounded-2xl p-8 shadow-sm border border-[var(--surface-container)]">
+        <h3 className="text-lg font-bold text-[var(--on-surface)] mb-6 flex items-center gap-2">
+          <FaBell className="text-[var(--primary)]" />
+          {t('settings.push.title')}
+        </h3>
+        <PushSettings />
       </div>
 
       {/* Idioma */}

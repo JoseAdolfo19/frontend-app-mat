@@ -4,13 +4,14 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { 
   FaHome, FaBook, FaClipboardList, FaChartBar, 
-  FaUsers, FaCog, FaQuestionCircle, FaPlus, FaChild 
+  FaUsers, FaCog, FaQuestionCircle, FaPlus, FaChild,
+  FaTrophy, FaChalkboardTeacher, FaLanguage, FaFlask
 } from 'react-icons/fa';
 
 const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, isAdmin, isTeacher, isParent } = useAuth();
+  const { user, isAdmin, isTeacher, isParent, isStudent } = useAuth();
   const { t } = useLanguage();
 
   const isActive = (path) => location.pathname === path;
@@ -39,11 +40,18 @@ const Sidebar = () => {
 
   if (isTeacher() || isAdmin()) {
     navItems.push({ path: '/reports', label: t('nav.reports'), icon: FaChartBar });
+    navItems.push({ path: '/teacher/calendar', label: t('nav.calendar'), icon: FaChalkboardTeacher });
   }
 
   if (isAdmin()) {
     navItems.push({ path: '/admin/users', label: t('nav.users'), icon: FaUsers });
     navItems.push({ path: '/admin/config', label: t('nav.config'), icon: FaCog });
+    navItems.push({ path: '/admin/translations', label: t('nav.translations'), icon: FaLanguage });
+  }
+
+  if (isStudent()) {
+    navItems.push({ path: '/gamification', label: t('nav.gamification'), icon: FaTrophy });
+    navItems.push({ path: '/simulations', label: t('nav.simulations'), icon: FaFlask });
   }
 
   return (

@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { FaHome, FaBook, FaClipboardList, FaUser, FaUsers, FaChartBar, FaChild, FaFileAlt, FaTrophy, FaClipboardCheck } from 'react-icons/fa';
+import { FaHome, FaBook, FaClipboardList, FaUser, FaUsers, FaChartBar, FaChild, FaFileAlt, FaTrophy, FaClipboardCheck, FaFlask } from 'react-icons/fa';
 
 const BottomNav = () => {
   const location = useLocation();
@@ -25,6 +25,8 @@ const BottomNav = () => {
     { path: '/evaluations', label: t('nav.evaluations'), icon: FaClipboardList, alwaysShow: true },
     { path: '/my-work', label: t('workBoard.title'), icon: FaClipboardList, studentOnly: true },
     { path: '/ranking', label: t('ranking.title'), icon: FaTrophy, studentOnly: true },
+    { path: '/gamification', label: t('nav.gamification'), icon: FaTrophy, studentOnly: true },
+    { path: '/simulations', label: t('nav.simulations'), icon: FaFlask, studentOnly: true },
     { path: '/exams', label: t('exam.title'), icon: FaFileAlt, studentOnly: true },
     { path: '/teacher/works', label: t('teacherWorkBoard.title'), icon: FaClipboardCheck, teacherOnly: true },
     { path: '/teacher/ranking', label: t('ranking.title'), icon: FaTrophy, teacherOnly: true },

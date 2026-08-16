@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import merge from 'lodash/merge';
+import { translationsApi } from '../api/translations';
 
 const LanguageContext = createContext();
 
@@ -21,10 +23,26 @@ export const LanguageProvider = ({ children }) => {
     const saved = localStorage.getItem(LANG_KEY);
     return saved || getBrowserLang();
   });
+  const [overrides, setOverrides] = useState(null);
 
   useEffect(() => {
     localStorage.setItem(LANG_KEY, lang);
     document.documentElement.lang = lang;
+  }, [lang]);
+
+  useEffect(() => {
+    let cancelled = false;
+    translationsApi
+      .getOverrides(lang)
+      .then((res) => {
+        if (!cancelled) setOverrides(res.data?.overrides || {});
+      })
+      .catch(() => {
+        if (!cancelled) setOverrides(null);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [lang]);
 
   const changeLanguage = (newLang) => {
@@ -37,11 +55,19 @@ export const LanguageProvider = ({ children }) => {
     for (const k of keys) {
       value = value?.[k];
     }
-    return value || key;
+    if (value) return value;
+    if (overrides) {
+      let ov = merge({}, translations[lang], overrides);
+      for (const k of keys) {
+        ov = ov?.[k];
+      }
+      if (ov) return ov;
+    }
+    return key;
   };
 
   return (
-    <LanguageContext.Provider value={{ lang, changeLanguage, t }}>
+    <LanguageContext.Provider value={{ lang, changeLanguage, t, overrides, refreshOverrides: () => setOverrides(null) }}>
       {children}
     </LanguageContext.Provider>
   );
@@ -61,6 +87,10 @@ const translations = {
       help: 'Ayuda',
       newLesson: 'Nueva Lección',
       children: 'Mis Hijos',
+      gamification: 'Logros y Niveles',
+      simulations: 'Simulaciones',
+      calendar: 'Calendario',
+      translations: 'Traducciones',
     },
     parent: {
       title: 'Mis Hijos',
@@ -117,6 +147,71 @@ const translations = {
       saved: 'Preferencia guardada',
       saveError: 'Error al guardar la preferencia',
       theme: 'Tema',
+      push: {
+        title: 'Notificaciones push',
+        description: 'Recibe notificaciones del sistema directamente en tu navegador, incluso con la pestaña cerrada.',
+        enable: 'Activar',
+        disable: 'Desactivar',
+        active: 'Notificaciones activadas',
+        inactive: 'Notificaciones desactivadas',
+        blocked: 'Bloqueadas en el navegador',
+        enableInBrowser: 'Habilita las notificaciones desde los ajustes del navegador',
+        subscribed: 'Notificaciones push activadas',
+        unsubscribed: 'Notificaciones push desactivadas',
+        notSupported: 'Tu navegador no soporta notificaciones push.',
+        error: 'No se pudieron activar las notificaciones push.',
+        testTitle: 'Enviar notificación de prueba',
+        testHint: 'Recibirás una notificación para verificar que todo funciona.',
+        sendTest: 'Enviar prueba',
+        testSent: 'Notificación de prueba enviada',
+        testError: 'No se pudo enviar la notificación de prueba',
+      },
+    },
+    gamification: {
+      level: 'Nivel',
+      levelTitle: 'Nivel',
+      totalXp: 'Puntos totales',
+      achievements: 'Logros',
+      badges: 'Insignias',
+      achievementsList: 'Logros',
+      unavailable: 'La gamificación no está disponible para tu cuenta.',
+      xpForLevel: 'XP para el siguiente nivel',
+    },
+    calendar: {
+      today: 'Hoy',
+      newEvent: 'Nuevo evento',
+      edit: 'Editar evento',
+      create: 'Crear',
+      save: 'Guardar',
+      cancel: 'Cancelar',
+      delete: 'Eliminar',
+      titlePlaceholder: 'Título del evento',
+      description: 'Descripción',
+      startDate: 'Fecha inicio',
+      endDate: 'Fecha fin',
+      allDay: 'Todo el día',
+      isPublic: 'Público',
+      confirmDelete: '¿Eliminar este evento?',
+      loadError: 'Error al cargar los eventos',
+      saveError: 'Error al guardar el evento',
+      deleteError: 'Error al eliminar el evento',
+      created: 'Evento creado',
+      updated: 'Evento actualizado',
+      deleted: 'Evento eliminado',
+      type: {
+        activity: 'Actividad',
+        exam: 'Examen',
+        holiday: 'Feriado',
+        meeting: 'Reunión',
+      },
+    },
+    simulations: {
+      title: 'Simulaciones matemáticas',
+      description: 'Explora funciones matemáticas de forma interactiva y observa cómo cambia su gráfica.',
+      min: 'Mín',
+      max: 'Máx',
+      animate: 'Animar barrido',
+      stop: 'Detener',
     },
     student: {
       welcome: '¡Hola de nuevo, {name}! 👋',
@@ -212,6 +307,27 @@ const translations = {
       export: 'Exportar',
       createBackup: 'Crear Copia',
       lastBackup: 'Última Copia',
+      translations: {
+        title: 'Panel de Traducciones',
+        newTranslation: 'Nueva traducción',
+        saveAll: 'Guardar todo',
+        search: 'Buscar por clave o valor',
+        allLocales: 'Todos los idiomas',
+        keyPlaceholder: 'clave.ejemplo.titulo',
+        valuePlaceholder: 'Texto de la traducción',
+        create: 'Crear',
+        colKey: 'Clave',
+        colLocale: 'Idioma',
+        colValue: 'Valor',
+        noResults: 'Sin resultados',
+        loadError: 'Error al cargar las traducciones',
+        saveError: 'Error al guardar las traducciones',
+        deleteError: 'Error al eliminar la traducción',
+        saved: '{count} traducciones guardadas',
+        created: 'Traducción creada',
+        deleted: 'Traducción eliminada',
+        confirmDelete: '¿Eliminar esta traducción?',
+      },
       dashboardPage: {
         title: 'Administración Global',
         subtitle: 'Panel de control principal del sistema',
@@ -987,6 +1103,10 @@ const translations = {
       help: 'Help',
       newLesson: 'New Lesson',
       children: 'My Children',
+      gamification: 'Achievements & Levels',
+      simulations: 'Simulations',
+      calendar: 'Calendar',
+      translations: 'Translations',
     },
     parent: {
       title: 'My Children',
@@ -1043,6 +1163,71 @@ const translations = {
       saved: 'Preference saved',
       saveError: 'Error saving preference',
       theme: 'Theme',
+      push: {
+        title: 'Push notifications',
+        description: 'Receive system notifications directly in your browser, even with the tab closed.',
+        enable: 'Enable',
+        disable: 'Disable',
+        active: 'Notifications enabled',
+        inactive: 'Notifications disabled',
+        blocked: 'Blocked in the browser',
+        enableInBrowser: 'Enable notifications in your browser settings',
+        subscribed: 'Push notifications enabled',
+        unsubscribed: 'Push notifications disabled',
+        notSupported: 'Your browser does not support push notifications.',
+        error: 'Could not enable push notifications.',
+        testTitle: 'Send test notification',
+        testHint: 'You will receive a notification to verify everything works.',
+        sendTest: 'Send test',
+        testSent: 'Test notification sent',
+        testError: 'Could not send the test notification',
+      },
+    },
+    gamification: {
+      level: 'Level',
+      levelTitle: 'Level',
+      totalXp: 'Total points',
+      achievements: 'Achievements',
+      badges: 'Badges',
+      achievementsList: 'Achievements',
+      unavailable: 'Gamification is not available for your account.',
+      xpForLevel: 'XP to next level',
+    },
+    calendar: {
+      today: 'Today',
+      newEvent: 'New event',
+      edit: 'Edit event',
+      create: 'Create',
+      save: 'Save',
+      cancel: 'Cancel',
+      delete: 'Delete',
+      titlePlaceholder: 'Event title',
+      description: 'Description',
+      startDate: 'Start date',
+      endDate: 'End date',
+      allDay: 'All day',
+      isPublic: 'Public',
+      confirmDelete: 'Delete this event?',
+      loadError: 'Error loading events',
+      saveError: 'Error saving event',
+      deleteError: 'Error deleting event',
+      created: 'Event created',
+      updated: 'Event updated',
+      deleted: 'Event deleted',
+      type: {
+        activity: 'Activity',
+        exam: 'Exam',
+        holiday: 'Holiday',
+        meeting: 'Meeting',
+      },
+    },
+    simulations: {
+      title: 'Math simulations',
+      description: 'Explore mathematical functions interactively and see how their graph changes.',
+      min: 'Min',
+      max: 'Max',
+      animate: 'Animate sweep',
+      stop: 'Stop',
     },
     student: {
       welcome: 'Welcome back, {name}! 👋',
@@ -1138,6 +1323,27 @@ const translations = {
       export: 'Export',
       createBackup: 'Create Backup',
       lastBackup: 'Last Backup',
+      translations: {
+        title: 'Translation Panel',
+        newTranslation: 'New translation',
+        saveAll: 'Save all',
+        search: 'Search by key or value',
+        allLocales: 'All languages',
+        keyPlaceholder: 'key.example.title',
+        valuePlaceholder: 'Translation text',
+        create: 'Create',
+        colKey: 'Key',
+        colLocale: 'Language',
+        colValue: 'Value',
+        noResults: 'No results',
+        loadError: 'Error loading translations',
+        saveError: 'Error saving translations',
+        deleteError: 'Error deleting translation',
+        saved: '{count} translations saved',
+        created: 'Translation created',
+        deleted: 'Translation deleted',
+        confirmDelete: 'Delete this translation?',
+      },
       dashboardPage: {
         title: 'Global Administration',
         subtitle: 'Main system control panel',
@@ -1913,6 +2119,10 @@ const translations = {
       help: 'Yanapay',
       newLesson: 'Mushuk Yachay',
       children: 'Wawakuna',
+      gamification: 'Logros & Niveles',
+      simulations: 'Simulaciónkuna',
+      calendar: 'Calendario',
+      translations: 'Tikraykuna',
     },
     parent: {
       title: 'Wawakuna',
@@ -1969,6 +2179,71 @@ const translations = {
       saved: 'Rurapukmi',
       saveError: 'Error rurashpa',
       theme: 'Ruray',
+      push: {
+        title: 'Push willakuykuna',
+        description: 'Chaskiy willakuykuna navegadorpi, pestaña wichqa kaspa.',
+        enable: 'Kichariy',
+        disable: 'Wichqay',
+        active: 'Willakuykuna kichaskam',
+        inactive: 'Willakuykuna wichqaskam',
+        blocked: 'Navegadorpi wichqaskam',
+        enableInBrowser: 'Kichariy willakuykuna navegador ruraymanta',
+        subscribed: 'Push willakuykuna kichaskam',
+        unsubscribed: 'Push willakuykuna wichqaskam',
+        notSupported: 'Navegador mana push notifichukuna chaskinchu.',
+        error: 'Mana atipanchu push notifichukuna kichariy.',
+        testTitle: 'Kachay pruebapa willakuyninta',
+        testHint: 'Chaskinkichu huk willakuy allin kananta qhaway.',
+        sendTest: 'Kachay prueba',
+        testSent: 'Prueba willakuy kachaskam',
+        testError: 'Mana atipanchu prueba willakuyninta kachay',
+      },
+    },
+    gamification: {
+      level: 'Nivel',
+      levelTitle: 'Nivel',
+      totalXp: 'Tukuy yupaykuna',
+      achievements: 'Logros',
+      badges: 'Insignias',
+      achievementsList: 'Logros',
+      unavailable: 'Gamificación mana kanchu cuenta yupaykipaq.',
+      xpForLevel: 'XP hamuq nivelpaq',
+    },
+    calendar: {
+      today: 'Kunan punchay',
+      newEvent: 'Mushuk ruray',
+      edit: 'Tikray ruray',
+      create: 'Ruray',
+      save: 'Waqaychay',
+      cancel: 'Saqiy',
+      delete: 'Qichuy',
+      titlePlaceholder: 'Ruraypa sutin',
+      description: 'Willakuy',
+      startDate: 'Qallariy punchay',
+      endDate: 'Tukuy punchay',
+      allDay: 'Tukuy punchay',
+      isPublic: 'Llapanpataq',
+      confirmDelete: 'Qichuychu kay ruray?',
+      loadError: 'Error ruraykunaqa chaskishpa',
+      saveError: 'Error rurashpa',
+      deleteError: 'Error qichushpa',
+      created: 'Ruray ruraskam',
+      updated: 'Ruray tikraskam',
+      deleted: 'Ruray qichuskam',
+      type: {
+        activity: 'Ruray',
+        exam: 'Suti',
+        holiday: 'Samay',
+        meeting: 'Tinkunakuy',
+      },
+    },
+    simulations: {
+      title: 'Yupay simulaciónkuna',
+      description: 'Maskhay funciones yupaypaqqa tukuy niraqta.',
+      min: 'Mín',
+      max: 'Máx',
+      animate: 'Kuyuchiy',
+      stop: 'Saqiy',
     },
     student: {
       welcome: 'Kamachiyninchik, {name}!',
@@ -2064,6 +2339,27 @@ const translations = {
       export: 'Aychay',
       createBackup: 'Respaldo Ruray',
       lastBackup: 'Ñawpaq Respaldo',
+      translations: {
+        title: 'Tikray Rimay Panel',
+        newTranslation: 'Mushuk tikray',
+        saveAll: 'Tukuy waqaychay',
+        search: 'Maskhay suti o chaninchay',
+        allLocales: 'Tukuy rimaykuna',
+        keyPlaceholder: 'clave.ejemplo.titulo',
+        valuePlaceholder: 'Tikraypa textu',
+        create: 'Ruray',
+        colKey: 'Suti',
+        colLocale: 'Rimay',
+        colValue: 'Chanin',
+        noResults: 'Mana rikusqakuna',
+        loadError: 'Error tikraykunaqa chaskishpa',
+        saveError: 'Error tikraykunaqa waqaychashpa',
+        deleteError: 'Error tikray qichushpa',
+        saved: '{count} tikraykuna waqaychaskam',
+        created: 'Tikray ruraskam',
+        deleted: 'Tikray qichuskam',
+        confirmDelete: 'Qichuychu kay tikray?',
+      },
       dashboardPage: {
         title: 'Kamachiy Ñawpaq',
         subtitle: 'Sistema ruray ñawpaq',

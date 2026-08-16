@@ -54,9 +54,9 @@ for (const [role, creds] of Object.entries(USERS)) {
     await page.waitForTimeout(2000);
 
     const routes = {
-      student: ['/dashboard', '/lessons', '/evaluations', '/exams', '/ranking', '/my-work', '/notifications'],
-      teacher: ['/dashboard', '/teacher/exams', '/teacher/works', '/reports', '/teacher/ranking', '/notifications'],
-      admin: ['/dashboard', '/admin/users', '/admin/config', '/admin/works', '/admin/colors', '/notifications'],
+      student: ['/dashboard', '/lessons', '/evaluations', '/exams', '/ranking', '/my-work', '/notifications', '/gamification', '/simulations', '/settings'],
+      teacher: ['/dashboard', '/teacher/exams', '/teacher/works', '/reports', '/teacher/ranking', '/notifications', '/teacher/calendar', '/settings'],
+      admin: ['/dashboard', '/admin/users', '/admin/config', '/admin/works', '/admin/colors', '/notifications', '/admin/translations', '/settings'],
     };
     for (const route of routes[role]) {
       await page.goto(`${BASE}${route}`, { waitUntil: 'load' });

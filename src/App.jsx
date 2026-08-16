@@ -40,6 +40,8 @@ const ExamList = React.lazy(() => import('./components/Student/ExamList'));
 const ExamPlayer = React.lazy(() => import('./components/Student/ExamPlayer'));
 const StudentWorkBoard = React.lazy(() => import('./components/Student/StudentWorkBoard'));
 const StudentRanking = React.lazy(() => import('./components/Student/StudentRanking'));
+const Gamification = React.lazy(() => import('./components/Student/Gamification'));
+const MathSimulations = React.lazy(() => import('./components/Student/MathSimulations'));
 
 // Teacher
 const TeacherDashboard = React.lazy(() => import('./components/Teacher/TeacherDashboard'));
@@ -52,6 +54,7 @@ const ExamEditor = React.lazy(() => import('./components/Teacher/ExamEditor'));
 const ExamStats = React.lazy(() => import('./components/Teacher/ExamStats'));
 const TeacherStudentRanking = React.lazy(() => import('./components/Teacher/TeacherStudentRanking'));
 const TeacherWorkBoard = React.lazy(() => import('./components/Teacher/TeacherWorkBoard'));
+const AcademicCalendar = React.lazy(() => import('./components/Teacher/AcademicCalendar'));
 
 // Admin - Work Board
 const AdminWorkBoard = React.lazy(() => import('./components/Admin/AdminWorkBoard'));
@@ -67,6 +70,7 @@ const AdminDashboard = React.lazy(() => import('./components/Admin/AdminDashboar
 const UserManagement = React.lazy(() => import('./components/Admin/UserManagement'));
 const SystemConfig = React.lazy(() => import('./components/Admin/SystemConfig'));
 const ColorSettings = React.lazy(() => import('./components/Admin/ColorSettings'));
+const TranslationPanel = React.lazy(() => import('./components/Admin/TranslationPanel'));
 
 import './App.css';
 
@@ -118,6 +122,8 @@ function App() {
                       <Route path="/evaluations/:id/result" element={<EvaluationResult />} />
                       <Route path="/exams" element={<ExamList />} />
                       <Route path="/exams/:id/take" element={<ExamPlayer />} />
+                      <Route path="/gamification" element={<Gamification />} />
+                      <Route path="/simulations" element={<MathSimulations />} />
                       
                       {/* Common */}
                       <Route path="/profile" element={<Profile />} />
@@ -143,6 +149,7 @@ function App() {
                       <Route path="/teacher/works" element={<TeacherWorkBoard />} />
                       <Route path="/teacher/students/:id/progress" element={<StudentProgress />} />
                       <Route path="/reports" element={<Reports />} />
+                      <Route path="/teacher/calendar" element={<AcademicCalendar />} />
                     </Route>
                   </Route>
 
@@ -154,6 +161,7 @@ function App() {
                       <Route path="/admin/config" element={<SystemConfig />} />
                       <Route path="/admin/colors" element={<ColorSettings />} />
                       <Route path="/admin/works" element={<AdminWorkBoard />} />
+                      <Route path="/admin/translations" element={<TranslationPanel />} />
                     </Route>
                   </Route>
 
