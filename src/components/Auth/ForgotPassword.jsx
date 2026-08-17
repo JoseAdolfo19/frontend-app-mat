@@ -29,7 +29,7 @@ const ForgotPassword = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50 p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-5xl font-black text-blue-600 mb-2 tracking-tight">SIM</h1>
+          <h1 className="text-5xl font-black text-blue-600 mb-2 tracking-tight">KawsayMath</h1>
         </div>
 
         <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">

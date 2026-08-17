@@ -375,7 +375,7 @@ const LandingPage = () => {
           {t('landing.schoolName')} &mdash; {t('landing.schoolLocation')}
         </p>
         <p className="text-xs mt-2" style={{ color: 'var(--outline)' }}>
-          SIM &copy; {new Date().getFullYear()}
+          KawsayMath &copy; {new Date().getFullYear()}
         </p>
       </footer>
     </div>

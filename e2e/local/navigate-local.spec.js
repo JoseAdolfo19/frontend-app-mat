@@ -28,7 +28,7 @@ test('Local: landing carga contra backend real', async ({ page }) => {
   const issues = attachDiagnostics(page);
   await page.goto(`${BASE}/`, { waitUntil: 'load' });
   await page.waitForTimeout(3000);
-  await expect(page).toHaveTitle(/SIM|Sistema Interactivo Matemático/i);
+  await expect(page).toHaveTitle(/KawsayMath|Sistema Interactivo Matemático/i);
   const fatal = issues.filter((i) => i.includes('pageerror') || i.includes('http 5') || i.includes('requestfailed'));
   expect(fatal).toEqual([]);
 });

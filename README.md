@@ -1,4 +1,4 @@
-# SIM Frontend — Sistema Interactivo Matemático
+# KawsayMath Frontend — Plataforma de aprendizaje de matemáticas
 
 Plataforma educativa de matemáticas — **frontend en React + Vite**. Interfaz para **estudiantes**, **docentes**, **padres de familia** y **administradores**, con soporte **trilingüe** (español, inglés y quechua), temas dinámicos, chat IA (Profesor Euler), exámenes con anti-trampa, rankings, tablero de trabajos y reportes exportables. Incluye **PWA con soporte offline**, **tests automatizados** y configuración incremental de **TypeScript**.
 
@@ -146,7 +146,7 @@ frontend-app-mat/
 | `favicon.ico` / `favicon.svg` | Ícono de la pestaña del navegador. |
 | `logo192.png` / `logo512.png` | Logos usados para favicon en alta resolución, PWA y Open Graph. |
 | `images/` | Imágenes locales del landing (`classroom.jpg`, `students.jpg`, `education.jpg`) — cargadas con `loading="lazy"`. |
-| `mathflow_login.jpg` / `mathflow_register.jpg` / `ejemplo_login.png` | Capturas/imágenes de las páginas de login y registro. |
+| `kawsaymath_login.jpg` / `kawsaymath_register.jpg` / `ejemplo_login.png` | Capturas/imágenes de las páginas de login y registro. |
 
 ---
 

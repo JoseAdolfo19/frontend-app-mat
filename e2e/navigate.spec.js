@@ -110,7 +110,7 @@ test('Recorre el landing sin errores fatales', async ({ page }) => {
   const issues = attachDiagnostics(page);
   await page.goto(`${BASE}/`, { waitUntil: 'load' });
   await page.waitForTimeout(2500);
-  await expect(page).toHaveTitle(/SIM|MathFlow|Sistema Interactivo/i);
+  await expect(page).toHaveTitle(/KawsayMath|MathFlow|Sistema Interactivo/i);
   const fatal = issues.filter((i) => i.includes('pageerror') || i.includes('http 5'));
   expect(fatal).toEqual([]);
 });

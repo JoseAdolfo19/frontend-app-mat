@@ -1,4 +1,4 @@
-# CHECKLIST DE FUNCIONALIDADES — SIM (Sistema Interactivo Matemático)
+# CHECKLIST DE FUNCIONALIDADES — KawsayMath
 
 Aplicación web interactiva para el aprendizaje de Matemática — I.E. "Nuestra Señora del Rosario", Yucay-Urubamba.
 Proyecto de titulación: Jose Adolfo Iberico Suña.
@@ -129,7 +129,7 @@ Proyecto de titulación: Jose Adolfo Iberico Suña.
 | I2 | Chat docente↔estudiante (mensajería 1-a-1) | ✅ | `MessageController` + `Conversation`/`Message`, `/conversations` (student/teacher), chat en UI. Tema opcional de evaluación; anti-IDOR por participación |
 | I3 | Roles "director" y "coordinador" | ✅ | `Role::DIRECTOR/COORDINATOR` + jerarquía director>coordinador>docente; `TeacherProfile`; scoping de reportes |
 | I4 | Exportar CSV por reporte individual + imprimir | ✅ | `exportGradesCSV`/`exportStudentReportCSV` + botones CSV/imprimir en `Reports`; cabeceras i18n |
-| I5 | Backup automático programado | ✅ | `mathflow:backup [--prune]` + schedule diario 03:00 en `routes/console.php` |
+| I5 | Backup automático programado | ✅ | `kawsaymath:backup [--prune]` + schedule diario 03:00 en `routes/console.php` |
 
 ---
 
@@ -162,7 +162,7 @@ Verificadas por **tests E2E reales** (Playwright) contra backend local + suite d
 | ✅ | Juegos didácticos (Quizizz/Kahoot) + comprobante de puntaje con XP | Test backend GamesApiTest (15): CRUD juego, asignación a curso, comprobante del estudiante, calificación docente, XP al aprobar, anti-IDOR |
 | ✅ | Roles director/coordinador | Verificado en vivo: director/coordinador 200, estudiante 403 |
 | ✅ | CSV por reporte + imprimir | Verificado en vivo: cabeceras traducidas + filas |
-| ✅ | Backup programado | `schedule:list` muestra `mathflow:backup` diario 03:00 |
+| ✅ | Backup programado | `schedule:list` muestra `kawsaymath:backup` diario 03:00 |
 
 ---
 
@@ -180,7 +180,7 @@ Requeridas o esperadas según el perfil/diagnóstico, **ausentes** en el código
 | C6 | ✅ **Calendario académico / planificación de actividades por docente** | Implementado: `AcademicCalendar` + `/teacher/calendar` |
 | C7 | ✅ **Foro / mensajería entre docentes y estudiantes** | Implementado: `conversations` (chat docente↔estudiante con anti-IDOR) + `forum` (hilos/comentarios) |
 | C8 | ✅ **Roles "director" o "coordinador"** adicionales | Implementado: `DIRECTOR`/`COORDINATOR` + jerarquía director>coordinador>docente |
-| C9 | ✅ **Backup automático programado** (cron/schedule) | Implementado: `mathflow:backup` + schedule diario 03:00 |
+| C9 | ✅ **Backup automático programado** (cron/schedule) | Implementado: `kawsaymath:backup` + schedule diario 03:00 |
 | C10 | ✅ **PWA push notifications reales (service worker push)** | Implementado: `sw.js` con handlers push/notificationclick + VAPID |
 
 ---
