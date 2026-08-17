@@ -41,4 +41,13 @@ export const reportsApi = {
     params,
     responseType: 'blob',
   }),
+
+  // Exportar a CSV individual (reporte por estudiante / calificaciones)
+  exportStudentCSV: (userId) => api.get(`/reports/export/student/${userId}/csv`, {
+    responseType: 'blob',
+  }),
+  exportGradesCSV: (params) => api.get('/reports/export/grades/csv', {
+    params,
+    responseType: 'blob',
+  }),
 };

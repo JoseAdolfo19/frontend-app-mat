@@ -109,6 +109,8 @@ export const AuthProvider = ({ children }) => {
   const isTeacher = () => hasRole(['teacher', 'admin']);
   const isStudent = () => hasRole(['student']);
   const isParent = () => hasRole(['parent']);
+  const isDirector = () => hasRole(['director']);
+  const isCoordinator = () => hasRole(['coordinador']);
 
   return (
     <AuthContext.Provider value={{
@@ -123,7 +125,9 @@ export const AuthProvider = ({ children }) => {
       isAdmin,
       isTeacher,
       isStudent,
-      isParent
+      isParent,
+      isDirector,
+      isCoordinator
     }}>
       {children}
     </AuthContext.Provider>

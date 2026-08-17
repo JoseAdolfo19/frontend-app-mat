@@ -122,11 +122,20 @@ Proyecto de titulación: Jose Adolfo Iberico Suña.
 | H5 | Calendario académico por docente | ✅ | Tabla `academic_events` + CRUD mensual `/teacher/calendar`, `/calendar` (teacher/admin) |
 | H6 | Web Push en notificaciones del sistema | ✅ | `NotificationController` envía también Web Push al crear notificaciones |
 
+### A.9 Funcionalidades nuevas (2026-08-17)
+| # | Funcionalidad | Estado | Nota |
+|---|---------------|--------|------|
+| I1 | Foro de clase (docentes crean hilos, estudiantes comentan) | ✅ | `ForumController` + `ForumThread`/`ForumPost`, `/forum` (student/teacher), `/messages` y `/forum` en UI. Anti-IDOR: solo docentes autor y estudiantes con relación académica |
+| I2 | Chat docente↔estudiante (mensajería 1-a-1) | ✅ | `MessageController` + `Conversation`/`Message`, `/conversations` (student/teacher), chat en UI. Tema opcional de evaluación; anti-IDOR por participación |
+| I3 | Roles "director" y "coordinador" | ✅ | `Role::DIRECTOR/COORDINATOR` + jerarquía director>coordinador>docente; `TeacherProfile`; scoping de reportes |
+| I4 | Exportar CSV por reporte individual + imprimir | ✅ | `exportGradesCSV`/`exportStudentReportCSV` + botones CSV/imprimir en `Reports`; cabeceras i18n |
+| I5 | Backup automático programado | ✅ | `mathflow:backup [--prune]` + schedule diario 03:00 en `routes/console.php` |
+
 ---
 
 ## B. FUNCIONALIDADES QUE FUNCIONAN (verificadas)
 
-Verificadas por **tests E2E reales** (Playwright) contra backend local + suite de tests (frontend 47, backend 84).
+Verificadas por **tests E2E reales** (Playwright) contra backend local + suite de tests (frontend 47, backend 92).
 
 | # | Funcionalidad | Verificación |
 |---|---------------|--------------|
@@ -148,6 +157,10 @@ Verificadas por **tests E2E reales** (Playwright) contra backend local + suite d
 | ✅ | Anti-trampa con feedback visible | Test unitario useAntiCheat (11) |
 | ✅ | Editor de exámenes | Test unitario ExamEditor (7) |
 | ✅ | Endpoints gamificación/calendario/traducciones/push | Test backend NewFeaturesApiTest (12) |
+| ✅ | Foro + mensajería (docente/estudiante + anti-IDOR) | Test backend ForumMessagingApiTest (8): creación, reply, 403 ajenos |
+| ✅ | Roles director/coordinador | Verificado en vivo: director/coordinador 200, estudiante 403 |
+| ✅ | CSV por reporte + imprimir | Verificado en vivo: cabeceras traducidas + filas |
+| ✅ | Backup programado | `schedule:list` muestra `mathflow:backup` diario 03:00 |
 
 ---
 
@@ -161,11 +174,11 @@ Requeridas o esperadas según el perfil/diagnóstico, **ausentes** en el código
 | C2 | ✅ **Juegos/gamificación** más allá del ranking y badges (niveles, logros visuales, recompensas) | Implementado: XP/niveles/logros + `/gamification` |
 | C3 | ✅ **Módulo de traducciones gestionable por Admin** (panel para traducir claves) | Implementado: `TranslationPanel` + `/admin/translations` |
 | C4 | ✅ **Push real al dispositivo sin abrir (PWA)** | Implementado: service worker push + VAPID + suscripción |
-| C5 | ❌ **Exportar informes en otros formatos** (CSV por reporte individual, impresión) | Solo PDF/Excel por reporte |
+| C5 | ✅ **Exportar informes en otros formatos** (CSV por reporte individual, impresión) | Implementado: `exportGradesCSV`/`exportStudentReportCSV` + botones CSV/imprimir en `Reports` |
 | C6 | ✅ **Calendario académico / planificación de actividades por docente** | Implementado: `AcademicCalendar` + `/teacher/calendar` |
-| C7 | ❌ **Foro / mensajería entre docentes y estudiantes** | No encontrado (solo notificaciones y chat IA) |
-| C8 | ❌ **Roles "director" o "coordinador"** adicionales | Solo admin/teacher/student/parent |
-| C9 | ❌ **Backup automático programado** (cron/schedule) | Backup manual vía Admin |
+| C7 | ✅ **Foro / mensajería entre docentes y estudiantes** | Implementado: `conversations` (chat docente↔estudiante con anti-IDOR) + `forum` (hilos/comentarios) |
+| C8 | ✅ **Roles "director" o "coordinador"** adicionales | Implementado: `DIRECTOR`/`COORDINATOR` + jerarquía director>coordinador>docente |
+| C9 | ✅ **Backup automático programado** (cron/schedule) | Implementado: `mathflow:backup` + schedule diario 03:00 |
 | C10 | ✅ **PWA push notifications reales (service worker push)** | Implementado: `sw.js` con handlers push/notificationclick + VAPID |
 
 ---
@@ -195,9 +208,9 @@ Implementadas pero **rotas o con fallos** detectados en auditoría/tests.
 
 | Categoría | Cantidad | Estado general |
 |-----------|----------|----------------|
-| Funcionalidades presentes | 65+ | ✅ Amplia cobertura del perfil |
-| Funcionalidades verificadas funcionando | 20+ | ✅ Tests E2E y unitarios |
-| Funcionalidades ausentes | 5 | ❌ CSV por reporte, foro, roles extra, backup programado |
+| Funcionalidades presentes | 70+ | ✅ Amplia cobertura del perfil |
+| Funcionalidades verificadas funcionando | 25+ | ✅ Tests E2E y unitarios |
+| Funcionalidades ausentes | 0 | ✅ CSV, foro, roles extra, backup programado implementados |
 | Funcionalidades con problemas | 11 | ✅ 10 corregidos · 1 pendiente de producción |
 
 ### Acción crítica pendiente

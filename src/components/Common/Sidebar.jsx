@@ -5,7 +5,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { 
   FaHome, FaBook, FaClipboardList, FaChartBar, 
   FaUsers, FaCog, FaQuestionCircle, FaPlus, FaChild,
-  FaTrophy, FaChalkboardTeacher, FaLanguage, FaFlask
+  FaTrophy, FaChalkboardTeacher, FaLanguage, FaFlask, FaComments, FaUserFriends
 } from 'react-icons/fa';
 
 const Sidebar = () => {
@@ -52,6 +52,11 @@ const Sidebar = () => {
   if (isStudent()) {
     navItems.push({ path: '/gamification', label: t('nav.gamification'), icon: FaTrophy });
     navItems.push({ path: '/simulations', label: t('nav.simulations'), icon: FaFlask });
+  }
+
+  if (isTeacher() || isStudent()) {
+    navItems.push({ path: '/messages', label: t('nav.messages'), icon: FaComments });
+    navItems.push({ path: '/forum', label: t('nav.forum'), icon: FaUserFriends });
   }
 
   return (

@@ -28,6 +28,8 @@ import Profile from './components/Common/Profile';
 import Notifications from './components/Common/Notifications';
 import Settings from './components/Common/Settings';
 import Help from './components/Common/Help';
+const Messaging = React.lazy(() => import('./components/Common/Messaging'));
+const Forum = React.lazy(() => import('./components/Common/Forum'));
 
 // Student
 const StudentDashboard = React.lazy(() => import('./components/Student/StudentDashboard'));
@@ -130,6 +132,8 @@ function App() {
                       <Route path="/notifications" element={<Notifications />} />
                       <Route path="/settings" element={<Settings />} />
                       <Route path="/help" element={<Help />} />
+                      <Route path="/messages" element={<Messaging />} />
+                      <Route path="/forum" element={<Forum />} />
                     </Route>
                   </Route>
 

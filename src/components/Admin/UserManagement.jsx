@@ -146,6 +146,8 @@ const UserManagement = () => {
       case 'teacher': return 'bg-blue-500';
       case 'student': return 'bg-green-500';
       case 'parent': return 'bg-purple-500';
+      case 'coordinador': return 'bg-teal-500';
+      case 'director': return 'bg-orange-500';
       default: return 'bg-gray-500';
     }
   };
@@ -384,6 +386,8 @@ const UserManagement = () => {
                 >
                   <option value="student">{up('roleStudent')}</option>
                   <option value="teacher">{up('roleTeacher')}</option>
+                  <option value="coordinador">{up('roleCoordinator')}</option>
+                  <option value="director">{up('roleDirector')}</option>
                   <option value="admin">{up('roleAdmin')}</option>
                 </select>
                 {errors.role && (

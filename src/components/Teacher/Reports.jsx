@@ -3,7 +3,7 @@ import { reportsApi } from '../../api/reports';
 import toast from 'react-hot-toast';
 import {
   FaFilePdf, FaFileExcel, FaChartLine, FaTable,
-  FaSearch, FaTrophy, FaUsers, FaCheckCircle
+  FaSearch, FaTrophy, FaUsers, FaCheckCircle, FaFileCsv, FaPrint
 } from 'react-icons/fa';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -18,6 +18,7 @@ const Reports = () => {
   const [loading, setLoading] = useState(true);
   const [exportingPDF, setExportingPDF] = useState(false);
   const [exportingExcel, setExportingExcel] = useState(false);
+  const [exportingCSV, setExportingCSV] = useState(false);
 
   const [grades, setGrades] = useState([]);
   const [stats, setStats] = useState(null);
@@ -173,6 +174,13 @@ const Reports = () => {
               <FaFileExcel />
               {exportingExcel ? t('teacher.reports.generating') : t('teacher.reports.exportPerformanceExcel')}
             </button>
+            <button
+              onClick={() => window.print()}
+              className="px-4 py-2.5 bg-[var(--surface-container)] text-[var(--on-surface)] font-bold rounded-xl hover:opacity-90 transition-all flex items-center gap-2 border border-[var(--outline)]"
+            >
+              <FaPrint />
+              {t('teacher.reports.print')}
+            </button>
           </div>
         </div>
 
@@ -321,6 +329,20 @@ const Reports = () => {
             >
               <FaFileExcel />
               {exportingExcel ? t('teacher.reports.generating') : t('teacher.reports.exportGradesExcel')}
+            </button>
+            <button
+              onClick={() => handleExport(
+                reportsApi.exportGradesCSV,
+                `calificaciones-${period}.csv`,
+                'teacher.reports.csvSuccess',
+                'teacher.reports.csvError',
+                setExportingCSV
+              )}
+              disabled={exportingCSV}
+              className="px-4 py-2.5 bg-[var(--primary)] text-white font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-2"
+            >
+              <FaFileCsv />
+              {exportingCSV ? t('teacher.reports.generating') : t('teacher.reports.exportGradesCsv')}
             </button>
           </div>
         </div>

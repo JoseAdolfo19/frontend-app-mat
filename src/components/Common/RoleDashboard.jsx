@@ -14,7 +14,7 @@ const RoleDashboard = () => {
 
   let Dashboard = StudentDashboard;
   if (role === 'admin') Dashboard = AdminDashboard;
-  else if (role === 'teacher') Dashboard = TeacherDashboard;
+  else if (role === 'teacher' || role === 'coordinador' || role === 'director') Dashboard = TeacherDashboard;
   else if (role === 'parent') Dashboard = ParentDashboard;
 
   return (
