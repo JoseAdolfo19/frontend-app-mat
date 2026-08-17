@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import {
   FaDoorOpen, FaPlus, FaTrash, FaEdit, FaArrowLeft, FaUsers, FaBook,
-  FaChalkboardTeacher, FaUserPlus, FaTimes,
+  FaChalkboardTeacher, FaUserPlus, FaTimes, FaUserGraduate, FaKey, FaFileImport,
 } from 'react-icons/fa';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { salonesApi } from '../../api/salones';
@@ -27,6 +27,12 @@ const CoordinatorSalones = () => {
   const [enrolledStudents, setEnrolledStudents] = useState([]);
   const [showEnroll, setShowEnroll] = useState(false);
   const [selectedEnroll, setSelectedEnroll] = useState([]);
+  const [salonStudents, setSalonStudents] = useState([]);
+  const [showStudents, setShowStudents] = useState(false);
+const [showAddStudent, setShowAddStudent] = useState(false);
+const [studentSearch, setStudentSearch] = useState('');
+const [importing, setImporting] = useState(false);
+  const [studentForm, setStudentForm] = useState({ dni: '', full_name: '', email: '', password: '', grade: '' });
 
   const loadTeachers = async () => {
     try {
@@ -160,6 +166,60 @@ const CoordinatorSalones = () => {
     }
   };
 
+  const loadSalonStudents = async () => {
+    try {
+      const res = await salonesApi.getSalonStudents(selectedSalon.id, studentSearch);
+      setSalonStudents(toArray(res.data));
+    } catch (e) {
+      toast.error(cp('loadError'));
+    }
+  };
+
+  useEffect(() => {
+    if (selectedSalon && showStudents) {
+      const timer = setTimeout(loadSalonStudents, 300);
+      return () => clearTimeout(timer);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [studentSearch, showStudents, selectedSalon]);
+
+  const registerStudent = async () => {
+    if (!studentForm.dni.trim() || !studentForm.full_name.trim() || !studentForm.email.trim() || !studentForm.password.trim()) return;
+    try {
+      await salonesApi.registerSalonStudent(selectedSalon.id, studentForm);
+      setShowAddStudent(false);
+      setStudentForm({ dni: '', full_name: '', email: '', password: '', grade: '' });
+      toast.success(cp('studentCreateSuccess'));
+      await loadSalonStudents();
+    } catch (e) {
+      toast.error(e.response?.data?.errors?.email?.[0] || e.response?.data?.errors?.dni?.[0] || cp('studentCreateError'));
+    }
+  };
+
+  const importStudents = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const allowed = ['text/csv', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
+    if (!allowed.includes(file.type) && !/\.(csv|xlsx|xls)$/i.test(file.name)) {
+      toast.error(cp('importInvalidFormat'));
+      return;
+    }
+    setImporting(true);
+    try {
+      const res = await salonesApi.importSalonStudents(selectedSalon.id, file);
+      toast.success(`${res.data.imported} ${cp('importedCount')}`);
+      if (res.data.errors?.length) {
+        res.data.errors.slice(0, 5).forEach((er) => toast.error(er));
+      }
+      await loadSalonStudents();
+    } catch (err) {
+      toast.error(err.response?.data?.message || cp('importError'));
+    } finally {
+      setImporting(false);
+      e.target.value = '';
+    }
+  };
+
   if (loading) return <Loading />;
 
   // ---- Panel de matrícula ----
@@ -241,6 +301,124 @@ const CoordinatorSalones = () => {
     );
   }
 
+  // ---- Panel de alumnos del salón ----
+  if (showStudents && selectedSalon) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowStudents(false)}
+            className="p-2 rounded-lg bg-[var(--surface-container-low)] hover:bg-[var(--surface-container-high)] text-[var(--on-surface-variant)]"
+            aria-label={cp('back')}
+          >
+            <FaArrowLeft />
+          </button>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-[var(--primary)] rounded-xl flex items-center justify-center text-white">
+              <FaUserGraduate />
+            </div>
+            <h2 className="text-2xl font-bold text-[var(--on-surface)]">
+              {cp('students')}: {selectedSalon.grade} "{selectedSalon.section}"
+            </h2>
+          </div>
+          <div className="flex items-center gap-2 ml-auto">
+            <label
+              className="px-4 py-2 bg-[var(--surface-container-high)] text-[var(--on-surface)] rounded-xl hover:opacity-90 flex items-center gap-2 font-bold cursor-pointer"
+            >
+              <FaFileImport /> {importing ? cp('importing') : cp('importStudents')}
+              <input type="file" accept=".csv,.xlsx,.xls" className="hidden" onChange={importStudents} disabled={importing} />
+            </label>
+            <button
+              onClick={() => setShowAddStudent((v) => !v)}
+              className="px-4 py-2 bg-[var(--primary)] text-white rounded-xl hover:opacity-90 flex items-center gap-2 font-bold"
+            >
+              <FaUserPlus /> {cp('addStudent')}
+            </button>
+          </div>
+        </div>
+
+        {showAddStudent && (
+          <div className="bg-[var(--surface)] rounded-2xl p-5 shadow-sm border border-[var(--surface-container)] space-y-3">
+            <h3 className="font-semibold text-[var(--on-surface)]">{cp('studentFormTitle')}</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <input
+                type="text"
+                value={studentForm.dni}
+                onChange={(e) => setStudentForm((f) => ({ ...f, dni: e.target.value }))}
+                placeholder={cp('dni')}
+                maxLength={8}
+                className="w-full px-4 py-3 rounded-xl border-2 border-[var(--surface-container-high)] focus:border-[var(--primary)] focus:outline-none bg-[var(--surface-container-low)]"
+              />
+              <input
+                type="text"
+                value={studentForm.full_name}
+                onChange={(e) => setStudentForm((f) => ({ ...f, full_name: e.target.value }))}
+                placeholder={cp('fullName')}
+                className="w-full px-4 py-3 rounded-xl border-2 border-[var(--surface-container-high)] focus:border-[var(--primary)] focus:outline-none bg-[var(--surface-container-low)]"
+              />
+              <input
+                type="email"
+                value={studentForm.email}
+                onChange={(e) => setStudentForm((f) => ({ ...f, email: e.target.value }))}
+                placeholder={cp('email')}
+                className="w-full px-4 py-3 rounded-xl border-2 border-[var(--surface-container-high)] focus:border-[var(--primary)] focus:outline-none bg-[var(--surface-container-low)]"
+              />
+              <input
+                type="text"
+                value={studentForm.password}
+                onChange={(e) => setStudentForm((f) => ({ ...f, password: e.target.value }))}
+                placeholder={cp('password')}
+                className="w-full px-4 py-3 rounded-xl border-2 border-[var(--surface-container-high)] focus:border-[var(--primary)] focus:outline-none bg-[var(--surface-container-low)]"
+              />
+            </div>
+            <button
+              onClick={registerStudent}
+              disabled={!studentForm.dni.trim() || !studentForm.full_name.trim() || !studentForm.email.trim() || !studentForm.password.trim()}
+              className="px-6 py-3 bg-[var(--primary)] text-white rounded-xl hover:opacity-90 disabled:opacity-50 font-bold"
+            >
+              {cp('addStudent')}
+            </button>
+          </div>
+        )}
+
+        <div className="bg-[var(--surface)] rounded-2xl p-5 shadow-sm border border-[var(--surface-container)]">
+          <input
+            type="text"
+            value={studentSearch}
+            onChange={(e) => setStudentSearch(e.target.value)}
+            placeholder={cp('searchStudents')}
+            className="w-full px-4 py-3 rounded-xl border-2 border-[var(--surface-container-high)] focus:border-[var(--primary)] focus:outline-none bg-[var(--surface-container-low)] mb-4"
+          />
+
+          {salonStudents.length === 0 ? (
+            <p className="text-sm text-[var(--on-surface-variant)]">{cp('noStudents')}</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-[var(--on-surface-variant)] border-b border-[var(--surface-container)]">
+                    <th className="py-2 pr-4">{cp('dni')}</th>
+                    <th className="py-2 pr-4">{cp('fullName')}</th>
+                    <th className="py-2">{cp('email')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {salonStudents.map((s) => (
+                    <tr key={s.id} className="border-b border-[var(--surface-container-low)]">
+                      <td className="py-3 pr-4 text-[var(--on-surface)]">{s.dni || '—'}</td>
+                      <td className="py-3 pr-4 text-[var(--on-surface)]">{s.full_name}</td>
+                      <td className="py-3 text-[var(--on-surface-variant)]">{s.email}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   // ---- Detalle de salón: cursos ----
   if (selectedSalon) {
     return (
@@ -261,12 +439,20 @@ const CoordinatorSalones = () => {
               {selectedSalon.grade} "{selectedSalon.section}"
             </h2>
           </div>
-          <button
-            onClick={() => setShowAddCourse((v) => !v)}
-            className="ml-auto px-4 py-2 bg-[var(--primary)] text-white rounded-xl hover:opacity-90 flex items-center gap-2 font-bold"
-          >
-            <FaPlus /> {cp('addCourse')}
-          </button>
+          <div className="ml-auto flex gap-2">
+            <button
+              onClick={() => setShowStudents(true)}
+              className="px-4 py-2 bg-[var(--surface-container-low)] text-[var(--primary)] rounded-xl hover:bg-[var(--surface-container-high)] flex items-center gap-2 font-bold"
+            >
+              <FaUserGraduate /> {cp('students')}
+            </button>
+            <button
+              onClick={() => setShowAddCourse((v) => !v)}
+              className="px-4 py-2 bg-[var(--primary)] text-white rounded-xl hover:opacity-90 flex items-center gap-2 font-bold"
+            >
+              <FaPlus /> {cp('addCourse')}
+            </button>
+          </div>
         </div>
 
         {showAddCourse && (
@@ -325,8 +511,16 @@ const CoordinatorSalones = () => {
                   <FaBook />
                 </div>
                 <h3 className="font-bold text-lg text-[var(--on-surface)]">{course.name}</h3>
+                {course.code && (
+                  <p className="text-xs text-[var(--on-surface-variant)] mt-1 flex items-center gap-1">
+                    <FaKey className="text-[var(--primary)]" /> {cp('courseCode')}: <span className="font-mono font-bold text-[var(--primary)]">{course.code}</span>
+                  </p>
+                )}
                 <p className="text-sm text-[var(--on-surface-variant)] mt-1 flex items-center gap-1">
                   <FaChalkboardTeacher className="text-xs" /> {course.teacher?.full_name || '—'}
+                </p>
+                <p className="text-xs text-[var(--on-surface-variant)] mt-0.5">
+                  {course.enrollments_count ?? 0} {cp('enrolledCount')}
                 </p>
                 <div className="flex gap-2 mt-4">
                   <button

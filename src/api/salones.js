@@ -22,6 +22,18 @@ export const salonesApi = {
   enrollStudents: (courseId, studentIds) => api.post(`/courses/${courseId}/enroll`, { student_ids: studentIds }),
   unenrollStudent: (courseId, studentId) => api.post(`/courses/${courseId}/unenroll`, { student_id: studentId }),
   getCourseStudents: (courseId) => api.get(`/courses/${courseId}/students`),
+  enrollByCode: (code) => api.post('/courses/enroll-by-code', { code }),
+
+  // Alumnos del salón
+  getSalonStudents: (salonId, search = '') => api.get(`/salones/${salonId}/students`, { params: { search } }),
+  registerSalonStudent: (salonId, data) => api.post(`/salones/${salonId}/students`, data),
+  importSalonStudents: (salonId, file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post(`/salones/${salonId}/students/import`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
 
   // Estudiante
   getStudentCourses: () => api.get('/salones'),

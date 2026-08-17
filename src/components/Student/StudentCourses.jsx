@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { FaBook, FaArrowLeft, FaDoorOpen, FaList } from 'react-icons/fa';
+import { FaBook, FaArrowLeft, FaDoorOpen, FaList, FaKey } from 'react-icons/fa';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { salonesApi } from '../../api/salones';
 import Loading from '../Common/Loading';
@@ -14,15 +14,35 @@ const StudentCourses = () => {
   const [selected, setSelected] = useState(null);
   const [lessons, setLessons] = useState([]);
   const [loadingLessons, setLoadingLessons] = useState(false);
+  const [code, setCode] = useState('');
+  const [joining, setJoining] = useState(false);
 
-  useEffect(() => {
+  const fetchCourses = () =>
     salonesApi
       .getStudentCourses()
       .then((res) => setCourses(toArray(res.data)))
-      .catch(() => toast.error(cp('loadError')))
-      .finally(() => setLoading(false));
+      .catch(() => toast.error(cp('loadError')));
+
+  useEffect(() => {
+    fetchCourses().finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const joinByCode = async () => {
+    if (!code.trim()) return;
+    setJoining(true);
+    try {
+      const res = await salonesApi.enrollByCode(code.trim());
+      const message = res.data?.message || cp('joinSuccess');
+      toast.success(message);
+      setCode('');
+      await fetchCourses();
+    } catch (e) {
+      toast.error(e.response?.data?.message || cp('joinError'));
+    } finally {
+      setJoining(false);
+    }
+  };
 
   const openCourse = async (course) => {
     setSelected(course);
@@ -94,6 +114,31 @@ const StudentCourses = () => {
       <div>
         <h2 className="text-2xl font-bold text-[var(--on-surface)]">{cp('title')}</h2>
         <p className="text-[var(--on-surface-variant)]">{cp('subtitle')}</p>
+      </div>
+
+      <div className="bg-[var(--surface)] rounded-2xl p-5 shadow-sm border border-[var(--surface-container)]">
+        <div className="flex items-center gap-2 mb-3">
+          <FaKey className="text-[var(--primary)]" />
+          <h3 className="font-bold text-[var(--on-surface)]">{cp('joinTitle')}</h3>
+        </div>
+        <div className="flex gap-2 flex-wrap">
+          <input
+            type="text"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && joinByCode()}
+            placeholder={cp('codePlaceholder')}
+            className="flex-1 min-w-[200px] px-4 py-3 rounded-xl border-2 border-[var(--surface-container-high)] focus:border-[var(--primary)] focus:outline-none bg-[var(--surface-container-low)] uppercase"
+          />
+          <button
+            onClick={joinByCode}
+            disabled={joining || !code.trim()}
+            className="px-6 py-3 bg-[var(--primary)] text-white rounded-xl hover:opacity-90 disabled:opacity-50 font-bold"
+          >
+            {joining ? '...' : cp('joinBtn')}
+          </button>
+        </div>
+        <p className="text-xs text-[var(--on-surface-variant)] mt-2">{cp('joinHint')}</p>
       </div>
 
       {courses.length === 0 ? (

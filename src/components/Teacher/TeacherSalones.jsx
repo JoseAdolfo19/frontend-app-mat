@@ -227,6 +227,11 @@ const TeacherSalones = () => {
                 <h3 className="font-bold text-lg text-[var(--on-surface)] group-hover:text-[var(--primary)]">
                   {course.name}
                 </h3>
+                {course.code && (
+                  <p className="text-xs text-[var(--on-surface-variant)] mt-1">
+                    {t('coordinatorSalones.courseCode')}: <span className="font-mono font-bold text-[var(--primary)]">{course.code}</span>
+                  </p>
+                )}
                 {course.description && (
                   <p className="text-sm text-[var(--on-surface-variant)] mt-1">{course.description}</p>
                 )}

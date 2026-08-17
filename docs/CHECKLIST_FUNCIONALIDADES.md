@@ -130,6 +130,10 @@ Proyecto de titulación: Jose Adolfo Iberico Suña.
 | I3 | Roles "director" y "coordinador" | ✅ | `Role::DIRECTOR/COORDINATOR` + jerarquía director>coordinador>docente; `TeacherProfile`; scoping de reportes |
 | I4 | Exportar CSV por reporte individual + imprimir | ✅ | `exportGradesCSV`/`exportStudentReportCSV` + botones CSV/imprimir en `Reports`; cabeceras i18n |
 | I5 | Backup automático programado | ✅ | `kawsaymath:backup [--prune]` + schedule diario 03:00 en `routes/console.php` |
+| I6 | Pertenen a salón + auto-matrícula | ✅ | `users.salon_id`; al registrar un alumno en un salón se auto-matricula en todos sus cursos; al crear un curso se auto-matricula a todos los alumnos del salón |
+| I7 | Alta de alumnos por salón con buscador | ✅ | `GET/POST /salones/{id}/students` + búsqueda por nombre/email/DNI en UI de coordinador |
+| I8 | Auto-matrícula del alumno por código de curso | ✅ | `courses.code` (código corto auto-generado) + `POST /courses/enroll-by-code`; solo alumnos del mismo salón |
+| I9 | Import masivo de alumnos por salón (CSV/Excel) | ✅ | `POST /salones/{id}/students/import` (`maatwebsite/excel`); columnas `dni, full_name, email, password`; auto-matrícula en cursos del salón; reporte de errores por fila |
 
 ---
 
