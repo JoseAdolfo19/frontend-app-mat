@@ -6,6 +6,7 @@ const AdminDashboard = lazy(() => import('../Admin/AdminDashboard'));
 const TeacherDashboard = lazy(() => import('../Teacher/TeacherDashboard'));
 const ParentDashboard = lazy(() => import('../Parent/ParentDashboard'));
 const StudentDashboard = lazy(() => import('../Student/StudentDashboard'));
+const CoordinatorSalones = lazy(() => import('../Coordinator/CoordinatorSalones'));
 
 // Despacha el dashboard según el rol del usuario autenticado.
 const RoleDashboard = () => {
@@ -14,7 +15,8 @@ const RoleDashboard = () => {
 
   let Dashboard = StudentDashboard;
   if (role === 'admin') Dashboard = AdminDashboard;
-  else if (role === 'teacher' || role === 'coordinador' || role === 'director') Dashboard = TeacherDashboard;
+  else if (role === 'teacher') Dashboard = TeacherDashboard;
+  else if (role === 'coordinador' || role === 'director') Dashboard = CoordinatorSalones;
   else if (role === 'parent') Dashboard = ParentDashboard;
 
   return (

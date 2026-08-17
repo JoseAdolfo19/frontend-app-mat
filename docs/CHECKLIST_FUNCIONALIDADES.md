@@ -135,7 +135,7 @@ Proyecto de titulación: Jose Adolfo Iberico Suña.
 
 ## B. FUNCIONALIDADES QUE FUNCIONAN (verificadas)
 
-Verificadas por **tests E2E reales** (Playwright) contra backend local + suite de tests (frontend 47, backend 92).
+Verificadas por **tests E2E reales** (Playwright) contra backend local + suite de tests (frontend 47, backend 111).
 
 | # | Funcionalidad | Verificación |
 |---|---------------|--------------|
@@ -158,6 +158,7 @@ Verificadas por **tests E2E reales** (Playwright) contra backend local + suite d
 | ✅ | Editor de exámenes | Test unitario ExamEditor (7) |
 | ✅ | Endpoints gamificación/calendario/traducciones/push | Test backend NewFeaturesApiTest (12) |
 | ✅ | Foro + mensajería (docente/estudiante + anti-IDOR) | Test backend ForumMessagingApiTest (8): creación, reply, 403 ajenos |
+| ✅ | Salones, cursos, lecciones y matrículas (coordinador/docente/estudiante) | Test backend SalonApiTest (19): CRUD salón/curso, lecciones por curso, matrícula, anti-IDOR, catálogos |
 | ✅ | Roles director/coordinador | Verificado en vivo: director/coordinador 200, estudiante 403 |
 | ✅ | CSV por reporte + imprimir | Verificado en vivo: cabeceras traducidas + filas |
 | ✅ | Backup programado | `schedule:list` muestra `mathflow:backup` diario 03:00 |
