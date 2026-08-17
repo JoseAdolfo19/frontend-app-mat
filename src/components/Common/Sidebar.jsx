@@ -5,7 +5,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { 
   FaHome, FaBook, FaClipboardList, FaChartBar, 
   FaUsers, FaCog, FaQuestionCircle, FaPlus, FaChild,
-  FaTrophy, FaChalkboardTeacher, FaLanguage, FaFlask, FaComments, FaUserFriends, FaDoorOpen
+  FaTrophy, FaChalkboardTeacher, FaLanguage, FaFlask, FaComments, FaUserFriends, FaDoorOpen, FaGamepad
 } from 'react-icons/fa';
 
 const Sidebar = () => {
@@ -45,6 +45,7 @@ const Sidebar = () => {
 
   if (isTeacher()) {
     navItems.push({ path: '/teacher/salones', label: t('nav.salones'), icon: FaDoorOpen });
+    navItems.push({ path: '/teacher/games', label: t('nav.games'), icon: FaGamepad });
   }
 
   if (isCoordinator() || isDirector()) {
@@ -61,6 +62,7 @@ const Sidebar = () => {
     navItems.push({ path: '/gamification', label: t('nav.gamification'), icon: FaTrophy });
     navItems.push({ path: '/simulations', label: t('nav.simulations'), icon: FaFlask });
     navItems.push({ path: '/my-courses', label: t('nav.myCourses'), icon: FaDoorOpen });
+    navItems.push({ path: '/games', label: t('nav.games'), icon: FaGamepad });
   }
 
   if (isTeacher() || isStudent()) {
