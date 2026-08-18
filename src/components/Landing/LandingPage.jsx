@@ -528,9 +528,9 @@ const LandingPage = () => {
               <span className="text-base font-bold">mathLogi <span className="text-cyan-400">SIM</span></span>
             </div>
             <div className="flex flex-wrap gap-6 text-sm text-slate-400">
-              <a href="#" className="hover:text-cyan-400 transition-colors">Política de Privacidad</a>
-              <a href="#" className="hover:text-cyan-400 transition-colors">Términos de Uso</a>
-              <a href="#" className="hover:text-cyan-400 transition-colors">Política de Datos</a>
+              <Link to="/privacy" className="hover:text-cyan-400 transition-colors">Política de Privacidad</Link>
+              <Link to="/terms" className="hover:text-cyan-400 transition-colors">Términos de Uso</Link>
+              <Link to="/data-policy" className="hover:text-cyan-400 transition-colors">Política de Datos</Link>
               <a href="#" className="hover:text-cyan-400 transition-colors">Contacto</a>
             </div>
           </div>

@@ -117,8 +117,9 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />
-                  <Route path="/terms" element={<LegalPage kind="terms" />} />
-                  <Route path="/privacy" element={<LegalPage kind="privacy" />} />
+<Route path="/terms" element={<LegalPage kind="terms" />} />
+<Route path="/privacy" element={<LegalPage kind="privacy" />} />
+<Route path="/data-policy" element={<LegalPage kind="data" />} />
                   
                   {/* Protected Routes */}
                   <Route element={<ProtectedRoute />}>
