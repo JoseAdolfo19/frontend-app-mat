@@ -71,7 +71,8 @@ const Forum = () => {
       setForm({ title: '', body: '' });
       toast.success(cp('createSuccess'));
       await fetchThreads();
-      if (res.data?.id) openThread(res.data);
+      const created = res.data?.data || res.data;
+      if (created?.id) openThread(created);
     } catch (e) {
       toast.error(cp('createError'));
     } finally {

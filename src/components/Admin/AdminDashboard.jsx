@@ -26,7 +26,7 @@ const AdminDashboard = () => {
 
     const results = await Promise.allSettled([
       adminApi.getDashboard(),
-      adminApi.getUsers({ limit: 5 }),
+      adminApi.getUsers({ per_page: 10 }),
       adminApi.getLastBackup().catch(() => null)
     ]);
 

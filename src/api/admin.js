@@ -2,7 +2,7 @@ import api from './axios';
 
 export const adminApi = {
   // ===== DASHBOARD =====
-  getDashboard: () => api.get('/admin/dashboard'),
+  getDashboard: () => api.get('/dashboard/admin'),
   
   // ===== USUARIOS =====
   getUsers: (params = {}) => api.get('/admin/users', { params }),

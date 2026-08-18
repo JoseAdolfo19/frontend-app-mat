@@ -38,7 +38,7 @@ const UserManagement = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await axios.get('/admin/users');
+      const response = await axios.get('/admin/users', { params: { per_page: 1000 } });
       setUsers(toArray(response.data?.data));
     } catch (error) {
       toast.error(up('errorLoad'));

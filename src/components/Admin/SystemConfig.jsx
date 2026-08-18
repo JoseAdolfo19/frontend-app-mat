@@ -123,8 +123,10 @@ const SystemConfig = () => {
   const toggleHistory = async () => {
     if (!showHistory) {
       try {
-        const result = await adminApi.getBackups();
-        setBackupHistory(toArray(result.data?.data));
+        const result = await adminApi.getLastBackup();
+        const last = result.data?.backup;
+        setBackupHistory(last ? [last] : []);
+        if (!last) toast(cp('noHistory'));
       } catch {
         toast.error(cp('errorLoad'));
         setBackupHistory([]);
@@ -297,9 +299,11 @@ const SystemConfig = () => {
                 {backupHistory.map((backup, i) => (
                   <div key={i} className="flex justify-between items-center p-3 bg-[var(--surface)] rounded-lg">
                     <span className="text-sm text-[var(--on-surface)]">
-                      {new Date(backup.created_at).toLocaleString()}
+                      {backup.filename || new Date(backup.created_at).toLocaleString()}
                     </span>
-                    <span className="text-xs text-[var(--on-surface-variant)]">{backup.size || ''}</span>
+                    <span className="text-xs text-[var(--on-surface-variant)]">
+                      {backup.size ? `${(backup.size / 1024).toFixed(0)} KB` : ''}
+                    </span>
                   </div>
                 ))}
               </div>
