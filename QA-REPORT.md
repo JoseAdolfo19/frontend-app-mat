@@ -117,6 +117,9 @@
 - **Transacciones:** añadidas en `addQuestion`/`updateQuestion`/`deleteQuestion` (+ `updateEvaluationTotals`) y en `updateLessonProgress` (con lock para evitar filas duplicadas).
 - **Índices (FASE 7):** migración `2026_08_19_000001` añade unique `(user_id, lesson_id)` en `lesson_progress`, índice `(lesson_id, status)`, `(status, created_at)` en `evaluation_results`, `(exam_id, order)` en `exam_questions`, y `exam_id`/`(student_id, work_type)` en `submitted_works`. Aplicada y verificada.
 - **FASE 9 frontend (debounce + cleanup + logging):** `TeacherWorkBoard`, `AdminWorkBoard` y `LessonList` ahora usan debounce de 350ms + `AbortController` (cancela request en vuelo) y `console.error` en catches; `MathSimulations` y `ExamPlayer` limpian sus timers (`setInterval`/`setTimeout`) en unmount; `lessonsApi.getLessons` acepta config para el signal. Typecheck y build OK.
+- **BUG-011 (`/config` público filtra metadata admin):** **corregido** — la ruta pública `/config` ahora apunta a `publicConfig()` que devuelve **solo branding** (`institution_name`, colores, `logo`); `email_notifications`, `backup_frequency` y `last_backup` solo viajan en `/admin/config`. Verificado en vivo (público sin metadata; admin con metadata).
+- **BUG-012 (captcha machine-solvable):** **corregido** — el captcha se renderiza ahora como **PNG raster** con GD (antes SVG con el código como `<text>` seleccionable/extraíble sin OCR). Añadido rate-limit **por DNI** además del de IP. Verificado en vivo (firma PNG `89504E47`, ya no `data:image/svg+xml`).
+- **BUG-013 (`role_id`/`is_active` en `$fillable`):** **no aplicado por diseño** — quitar ambos de `$fillable` rompe 130 tests (14 archivos usan asignación masiva, incl. seeders). El riesgo real ya está mitigado por validación de requests (registro restringe rol a student/parent; update de usuarios es admin-only). Se mantiene el enfoque por validación en lugar del cambio masivo.
 
 ---
 
