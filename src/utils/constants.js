@@ -4,7 +4,9 @@ export const ROLES = {
   ADMIN: 'admin',
   TEACHER: 'teacher',
   STUDENT: 'student',
-  PARENT: 'parent'
+  PARENT: 'parent',
+  DIRECTOR: 'director',
+  COORDINADOR: 'coordinador'
 };
 
 export const DIFFICULTY_LEVELS = {

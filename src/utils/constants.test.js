@@ -7,7 +7,9 @@ describe('ROLES', () => {
   });
 
   it('cubre todos los roles que usa la app', () => {
-    expect(Object.values(ROLES).sort()).toEqual(['admin', 'parent', 'student', 'teacher']);
+    expect(Object.values(ROLES).sort()).toEqual([
+      'admin', 'coordinador', 'director', 'parent', 'student', 'teacher'
+    ]);
   });
 });
 

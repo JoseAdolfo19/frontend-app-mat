@@ -15,6 +15,7 @@ Plataforma educativa de matemáticas — **frontend en React + Vite**. Interfaz 
 | Axios | Cliente HTTP con interceptores (refresh de token) |
 | React Hook Form + Yup | Formularios y validación |
 | Vitest + React Testing Library | Tests unitarios y de componentes |
+| Playwright | Tests E2E (end-to-end) de flujos críticos y responsive |
 | vite-plugin-pwa | PWA / Service Worker / offline |
 | @dnd-kit | Preguntas de arrastrar y soltar (drag & drop) |
 | React Hot Toast | Notificaciones toast |
@@ -73,6 +74,7 @@ npm run build         # Build de producción (incluye PWA + service worker)
 npm run preview       # Previsualizar build
 npm test              # Ejecuta los tests (Vitest) una vez
 npm run test:watch    # Tests en modo watch
+npm run test:e2e      # Tests E2E (Playwright) - requiere backend + frontend activos
 npm run typecheck     # Type check incremental (tsc, permite .js)
 ```
 
@@ -353,7 +355,7 @@ frontend-app-mat/
 - **Reportes** con gráficos (Recharts) y exportación PDF/Excel.
 - **Páginas legales** de Términos y Condiciones y Política de Privacidad (rutas `/terms` y `/privacy`), trilingües y enlazadas desde el login y el registro.
 - **PWA instalable**: manifest + Service Worker generados por `vite-plugin-pwa` con `autoUpdate`, estrategia *NetworkFirst* para el API y caché de imágenes → **soporte offline**. El envío de exámenes tolera caídas de red persistiendo las respuestas en `localStorage` y reintentando al reconectar.
-- **Tests automatizados** con Vitest + React Testing Library: calificación con true/false legacy, roles, constantes, paridad i18n es/en/qu, anti-trampa (`useAntiCheat`), guards de rutas (`ProtectedRoute`) y validación Yup del editor de exámenes (`examSchema`). **CI** en GitHub Actions.
+- **Tests automatizados** con Vitest + React Testing Library: calificación con true/false legacy, roles, constantes, paridad i18n es/en/qu, anti-trampa (`useAntiCheat`), guards de rutas (`ProtectedRoute`) y validación Yup del editor de exámenes (`examSchema`). **Tests E2E** con Playwright (`e2e/`, `npm run test:e2e`) que cubren autenticación y flujos críticos multirol. **CI** en GitHub Actions.
 - **Validación de entorno fail-fast** (`src/config/env.js`): errores claros al arranque si faltan variables.
 - **TypeScript incremental**: configuración de `tsc` con `allowJs` para migrar módulo por módulo.
 - **Seguridad de credenciales**: API keys secretas excluidas del frontend; `.env` en `.gitignore` con `.env.example` como plantilla documentada.
