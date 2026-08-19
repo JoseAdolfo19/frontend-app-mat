@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { FaClipboardList, FaFilter, FaFilePdf, FaFileExcel } from 'react-icons/fa';
 import { formatDate } from '../../utils/helpers';
@@ -15,18 +15,33 @@ const AdminWorkBoard = () => {
     student: '', teacher: '', course: '', status: '', date_from: '', date_to: '',
   });
 
+  const debounceRef = useRef(null);
+  const abortRef = useRef(null);
+
   useEffect(() => {
-    fetchWorks();
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      fetchWorks();
+    }, 350);
+
+    return () => {
+      clearTimeout(debounceRef.current);
+      abortRef.current?.abort();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
 
   const fetchWorks = async () => {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
     setLoading(true);
     try {
       const params = {};
       Object.entries(filters).forEach(([k, v]) => { if (v) params[k] = v; });
       const [worksRes, statsRes] = await Promise.allSettled([
-        api.get('/admin/works', { params }),
-        api.get('/admin/works/stats'),
+        api.get('/admin/works', { params, signal: controller.signal }),
+        api.get('/admin/works/stats', { signal: controller.signal }),
       ]);
       if (worksRes.status === 'fulfilled') {
         setWorks(Array.isArray(worksRes.value.data?.data) ? worksRes.value.data.data : []);
@@ -34,7 +49,9 @@ const AdminWorkBoard = () => {
       if (statsRes.status === 'fulfilled') {
         setStats(statsRes.value.data?.data || null);
       }
-    } catch {
+    } catch (err) {
+      if (err.name === 'CanceledError' || err.code === 'ERR_CANCELED') return;
+      console.error('[AdminWorkBoard] error al listar trabajos', err);
       setWorks([]);
     }
     setLoading(false);

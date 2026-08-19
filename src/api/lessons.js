@@ -2,7 +2,7 @@ import api from './axios';
 
 export const lessonsApi = {
   // ===== LECCIONES =====
-  getLessons: (params = {}) => api.get('/lessons', { params }),
+  getLessons: (params = {}, config = {}) => api.get('/lessons', { params, ...config }),
   getLesson: (id) => api.get(`/lessons/${id}`),
   createLesson: (data) => api.post('/lessons', data),
   updateLesson: (id, data) => api.put(`/lessons/${id}`, data),

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { FaClipboardCheck, FaCheck, FaUndo, FaFilter, FaStar } from 'react-icons/fa';
 import { formatDate } from '../../utils/helpers';
@@ -16,11 +16,26 @@ const TeacherWorkBoard = () => {
   const [feedback, setFeedback] = useState('');
   const [selectedWorks, setSelectedWorks] = useState([]);
 
+  const debounceRef = useRef(null);
+  const abortRef = useRef(null);
+
   useEffect(() => {
-    fetchWorks();
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      fetchWorks();
+    }, 350);
+
+    return () => {
+      clearTimeout(debounceRef.current);
+      abortRef.current?.abort();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
 
   const fetchWorks = async () => {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
     setLoading(true);
     try {
       const params = {};
@@ -28,9 +43,11 @@ const TeacherWorkBoard = () => {
       if (filters.course) params.course = filters.course;
       if (filters.status) params.status = filters.status;
       if (filters.work_type) params.work_type = filters.work_type;
-      const res = await api.get('/teacher/works', { params });
+      const res = await api.get('/teacher/works', { params, signal: controller.signal });
       setWorks(Array.isArray(res.data?.data) ? res.data.data : []);
-    } catch {
+    } catch (err) {
+      if (err.name === 'CanceledError' || err.code === 'ERR_CANCELED') return;
+      console.error('[TeacherWorkBoard] error al listar trabajos', err);
       setWorks([]);
     }
     setLoading(false);

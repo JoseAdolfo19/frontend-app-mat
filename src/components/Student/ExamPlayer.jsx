@@ -41,6 +41,7 @@ const ExamPlayer = () => {
   const [showConfirmSubmit, setShowConfirmSubmit] = useState(false);
   const [result, setResult] = useState(null);
   const timerRef = useRef(null);
+  const warningTimerRef = useRef(null);
   const isSubmittingRef = useRef(false);
   const endAtRef = useRef(null);
   const answersRef = useRef({});
@@ -80,9 +81,15 @@ const ExamPlayer = () => {
     if (tabSwitchCount > 0) {
       setWarningMessage(t('exam.cheatingWarning'));
       setShowWarning(true);
-      setTimeout(() => setShowWarning(false), 10000);
+      clearTimeout(warningTimerRef.current);
+      warningTimerRef.current = setTimeout(() => setShowWarning(false), 10000);
     }
   }, [tabSwitchCount, t]);
+
+  // Limpia el temporizador del warning al desmontar
+  useEffect(() => {
+    return () => clearTimeout(warningTimerRef.current);
+  }, []);
 
   const submitExam = useCallback(async () => {
     if (isSubmittingRef.current) return;

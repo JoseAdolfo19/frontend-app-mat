@@ -105,6 +105,19 @@
 ### RESUELTO EN SESIÓN PREVIA
 - **BUG-002** (loading infinito al navegar a `/admin/users`): **corregido** — `ProtectedRoute` muestra pantalla "No tienes acceso". Confirmado en vivo.
 
+### RESUELTO EN SESIÓN ACTUAL (rendimiento, concurrencia e integridad)
+- **BUG-005** (N+1 `EvaluationController::index`): **corregido** — quitado `with('results')` (overfetch) y reemplazado el bucle de `user_result` por una sola query `whereIn` + `keyBy`. Verificado en vivo (200, 5 evaluaciones).
+- **BUG-006** (N+1 `RankingController` + `ReportController`): **corregido** — ambos rankings precargan usuarios con `whereIn` (antes `User::find` por fila); `courseDetailReport` reescrito con 2 agregaciones SQL agrupadas (antes 5 queries/estudiante). Verificado en vivo.
+- **BUG-009** (concurrencia `addXp`, lost update): **corregido** — `StudentProfile::addXp` ahora bloquea la fila con `lockForUpdate()` dentro de transacción.
+- **BUG-010** (race `ExamController::startAttempt`): **corregido** — creación de intento serializada con `lockForUpdate()` sobre el examen y flag `resumed` explícito (evita duplicar intentos / saltarse `max_attempts`).
+- **N+1 `LessonController::index`/`recommended`:** **corregido** — quitado `with('progress')` (overfetch) y progreso del estudiante con una sola query `whereIn`.
+- **N+1 `LessonProgress::autoGenerateFromCompleted` (`SubmittedWorkController`):** **corregido** — eliminado el `exists()` por fila (O(N²)) y los `find` por fila; ahora precarga claves existentes y títulos, y hace bulk insert atómico. Idempotente (2º run = 0). Verificado en vivo.
+- **`performanceReport`:** **corregido** — 4 agregados escalares (total/avg/estudiantes/porcentaje) en una sola query `selectRaw` (antes 4+ queries). Verificado en vivo (admin, 90 evaluaciones).
+- **`courseDetailReport` (bug latente):** **corregido** — usaba `DB::table()->whereHas()` (método inexistente en query builder) → 500 siempre; ahora `EvaluationResult::query()`. Verificado en vivo (200, sin 500).
+- **Transacciones:** añadidas en `addQuestion`/`updateQuestion`/`deleteQuestion` (+ `updateEvaluationTotals`) y en `updateLessonProgress` (con lock para evitar filas duplicadas).
+- **Índices (FASE 7):** migración `2026_08_19_000001` añade unique `(user_id, lesson_id)` en `lesson_progress`, índice `(lesson_id, status)`, `(status, created_at)` en `evaluation_results`, `(exam_id, order)` en `exam_questions`, y `exam_id`/`(student_id, work_type)` en `submitted_works`. Aplicada y verificada.
+- **FASE 9 frontend (debounce + cleanup + logging):** `TeacherWorkBoard`, `AdminWorkBoard` y `LessonList` ahora usan debounce de 350ms + `AbortController` (cancela request en vuelo) y `console.error` en catches; `MathSimulations` y `ExamPlayer` limpian sus timers (`setInterval`/`setTimeout`) en unmount; `lessonsApi.getLessons` acepta config para el signal. Typecheck y build OK.
+
 ---
 
 ## 3. VERIFICADO Y CORRECTO
@@ -126,9 +139,9 @@
 
 ## 4. PROBLEMAS DE API
 
-- **`GET /exams` doble query:** `$query->get()` (L53) + `paginate()` (L66) → descarga todo y luego pagina. (BUG-007 lo agrava).
+- **`GET /exams` doble query:** ~~`$query->get()` + `paginate()`~~ **corregido** en la sesión actual (el eager `with('questions')` se quitó en la corrección de BUG-007; `user_attempt` ahora es una sola query).
 - **`getDifficultyAreas`:** `whereIn(id, pluck('id'))` recarga ids.
-- **Múltiples `clone $query`** en `performanceReport` (6+ agregaciones).
+- **Múltiples `clone $query`** en `performanceReport` ~~(6+ agregaciones)~~ **reducido a 2** tras unificar los 4 agregados escalares en un `selectRaw`.
 - **Llamadas raw en frontend:** muchos componentes usan `api.get('/...')` en vez de módulos `api/*` existentes (UserManagement, WorkBoards, Rankings, ChildProgress).
 - **Refetch sin debounce:** `TeacherWorkBoard`/`AdminWorkBoard`/`LessonList` hacen request por tecla en filtros de texto.
 - **Polling notificaciones:** intervalo 30s con cleanup correcto (aceptable).

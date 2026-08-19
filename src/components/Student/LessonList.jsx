@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { lessonsApi } from '../../api/lessons';
@@ -14,16 +14,35 @@ const LessonList = () => {
   const [filters, setFilters] = useState({ search: '', difficulty: '', unit: '' });
   const [units, setUnits] = useState([]);
 
-  useEffect(() => { fetchLessons(); }, [filters]);
+  const debounceRef = useRef(null);
+  const abortRef = useRef(null);
+
+  useEffect(() => {
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      fetchLessons();
+    }, 350);
+
+    return () => {
+      clearTimeout(debounceRef.current);
+      abortRef.current?.abort();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters]);
 
   const fetchLessons = async () => {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
     try {
       setLoading(true);
-      const response = await lessonsApi.getLessons(filters);
+      const response = await lessonsApi.getLessons(filters, { signal: controller.signal });
       const lessonsArray = toArray(response.data?.data);
       setLessons(lessonsArray);
       setUnits([...new Set(lessonsArray.map(l => l.unit).filter(Boolean))]);
     } catch (error) {
+      if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') return;
+      console.error('[LessonList] error al listar lecciones', error);
       toast.error(t('lessons.loadError'));
       setLessons([]);
     } finally {

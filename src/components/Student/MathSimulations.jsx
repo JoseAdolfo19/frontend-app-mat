@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { FaPlay, FaStop } from 'react-icons/fa';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -21,6 +21,13 @@ const MathSimulations = () => {
   const [selected, setSelected] = useState('quadratic');
   const [range, setRange] = useState({ min: -10, max: 10, points: 200 });
   const [animating, setAnimating] = useState(false);
+
+  // Limpia la animación si el componente se desmonta mientras está en curso
+  useEffect(() => {
+    return () => {
+      if (window.__animInterval) clearInterval(window.__animInterval);
+    };
+  }, []);
 
   const preset = PRESETS.find((p) => p.id === selected);
 
