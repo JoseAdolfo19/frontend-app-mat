@@ -920,7 +920,6 @@ const translations = {
     },
     landing: {
       heroTitle: 'KawsayMath',
-      heroSubtitle: 'Plataforma web para el aprendizaje de matemáticas',
       schoolName: 'Institución Educativa Didaskalio Nuestra Señora del Rosario',
       schoolLocation: 'Yucay - Valle Sagrado - Cusco, Perú',
       login: 'Iniciar Sesión',
@@ -2180,7 +2179,6 @@ const translations = {
     },
     landing: {
       heroTitle: 'KawsayMath',
-      heroSubtitle: 'Web platform for learning mathematics',
       schoolName: 'Institución Educativa Didaskalio Nuestra Señora del Rosario',
       schoolLocation: 'Yucay - Sacred Valley - Cusco, Peru',
       login: 'Sign In',
@@ -2503,7 +2501,6 @@ const translations = {
       importInvalidFormat: 'Invalid format. Use CSV or Excel (.csv, .xlsx, .xls)',
       importedCount: 'student(s) imported',
       importError: 'Error importing students',
-      studentCreateError: 'Error registering student',
       searchStudents: 'Search student (name, email or DNI)',
       noStudents: 'No students in this classroom yet',
       studentAdded: 'Student added',
@@ -3441,7 +3438,6 @@ chat: {
     },
     landing: {
       heroTitle: 'KawsayMath',
-      heroSubtitle: 'Matemática yachaypaq web plataforma',
       schoolName: 'Institución Educativa Didaskalio Nuestra Señora del Rosario',
       schoolLocation: 'Yucay - Valle Sagrado - Cusco, Perú',
       login: 'Yupaychay',
