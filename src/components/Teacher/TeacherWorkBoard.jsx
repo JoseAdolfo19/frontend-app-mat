@@ -5,6 +5,7 @@ import { formatDate } from '../../utils/helpers';
 import Loading from '../Common/Loading';
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
+import { logger } from '../../utils/logger';
 
 const TeacherWorkBoard = () => {
   const { t } = useLanguage();
@@ -47,7 +48,7 @@ const TeacherWorkBoard = () => {
       setWorks(Array.isArray(res.data?.data) ? res.data.data : []);
     } catch (err) {
       if (err.name === 'CanceledError' || err.code === 'ERR_CANCELED') return;
-      console.error('[TeacherWorkBoard] error al listar trabajos', err);
+      logger.error('[TeacherWorkBoard] error al listar trabajos', err);
       setWorks([]);
     }
     setLoading(false);

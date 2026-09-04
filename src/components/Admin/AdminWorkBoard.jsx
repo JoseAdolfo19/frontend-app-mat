@@ -5,6 +5,7 @@ import { formatDate } from '../../utils/helpers';
 import Loading from '../Common/Loading';
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
+import { logger } from '../../utils/logger';
 
 const AdminWorkBoard = () => {
   const { t } = useLanguage();
@@ -51,7 +52,7 @@ const AdminWorkBoard = () => {
       }
     } catch (err) {
       if (err.name === 'CanceledError' || err.code === 'ERR_CANCELED') return;
-      console.error('[AdminWorkBoard] error al listar trabajos', err);
+      logger.error('[AdminWorkBoard] error al listar trabajos', err);
       setWorks([]);
     }
     setLoading(false);

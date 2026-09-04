@@ -6,6 +6,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { FaSearch, FaFilter, FaBook, FaClock, FaChevronRight } from 'react-icons/fa';
 import { getDifficultyColor, getDifficultyLabel, formatDate, calculateProgress, toArray } from '../../utils/helpers';
 import Loading from '../Common/Loading';
+import { logger } from '../../utils/logger';
 
 const LessonList = () => {
   const { lang, t } = useLanguage();
@@ -42,7 +43,7 @@ const LessonList = () => {
       setUnits([...new Set(lessonsArray.map(l => l.unit).filter(Boolean))]);
     } catch (error) {
       if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') return;
-      console.error('[LessonList] error al listar lecciones', error);
+      logger.error('[LessonList] error al listar lecciones', error);
       toast.error(t('lessons.loadError'));
       setLessons([]);
     } finally {
