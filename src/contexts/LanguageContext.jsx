@@ -740,6 +740,12 @@ const translations = {
         sentMessage: 'Revisa tu bandeja de entrada y sigue las instrucciones para restablecer tu contraseña.',
         sendError: 'Error al enviar el enlace',
       },
+      load: {
+        rateLimited: 'Demasiadas solicitudes. Espera un momento e intentaremos conectarte de nuevo.',
+        unavailable: 'No pudimos verificar tu sesión. Revisa tu conexión a internet.',
+        title: 'No pudimos conectar con el servidor',
+        retry: 'Reintentar',
+      },
     },
     chat: {
       professorName: 'Profesor Euler',
@@ -1998,6 +2004,12 @@ const translations = {
         sentTitle: 'Email sent',
         sentMessage: 'Check your inbox and follow the instructions to reset your password.',
         sendError: 'Error sending the link',
+      },
+      load: {
+        rateLimited: 'Too many requests. Please wait a moment while we reconnect you.',
+        unavailable: 'We could not verify your session. Please check your internet connection.',
+        title: 'We could not reach the server',
+        retry: 'Try again',
       },
     },
     chat: {
@@ -3258,8 +3270,14 @@ const translations = {
         sentMessage: 'Mail tukuyta rikuchiy.',
         sendError: 'Error tarqashpa',
       },
+      load: {
+        rateLimited: 'Unay mikhuy rikuchiychasqa. Uray chayta suyuchispa, musuqmanta rikuchiyqamuy.',
+        unavailable: 'Sessiyayki mana tikuchqanchita. Internetyki tiyayninata qhaway.',
+        title: 'Serverman mana tinkisqanchimanta',
+        retry: 'Musuqmanta ruray',
+      },
     },
-chat: {
+  chat: {
       professorName: 'Yachachiq Euler',
       tutorSubtitle: 'Matematica yanapaq',
       clearChat: 'Chatta limpiay',
