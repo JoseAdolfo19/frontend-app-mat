@@ -106,7 +106,7 @@ const LandingPage = () => {
               </svg>
             </span>
             <span className="text-lg font-bold tracking-tight">
-              mathLogi <span className="text-cyan-400">SIM</span>
+              Aulamate
             </span>
           </a>
 
@@ -302,7 +302,7 @@ const LandingPage = () => {
         <div className="relative max-w-4xl mx-auto text-center">
           <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.25em] text-cyan-400 border border-cyan-500/30 rounded-full px-4 py-1.5 mb-6">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" /></svg>
-            mathLogi SIM
+            Aulamate
           </span>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-white">{t('landing.rescueTitle')}</h2>
           <p className="mt-5 text-slate-300/90 leading-relaxed max-w-2xl mx-auto">{t('landing.rescueDesc')}</p>
@@ -565,7 +565,7 @@ const LandingPage = () => {
               <span className="w-9 h-9 rounded-lg bg-gradient-to-br from-cyan-400 to-violet-500 flex items-center justify-center">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-white"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" fill="currentColor" /></svg>
               </span>
-              <span className="text-base font-bold">mathLogi <span className="text-cyan-400">SIM</span></span>
+              <span className="text-base font-bold">Aulamate</span>
             </div>
             <div className="flex flex-wrap gap-6 text-sm text-slate-400">
               <Link to="/privacy" className="hover:text-cyan-400 transition-colors">Política de Privacidad</Link>
