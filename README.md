@@ -2,7 +2,7 @@
 
 Aplicación web de Aulamate para el aprendizaje de matemáticas. Ofrece experiencias diferenciadas para estudiantes, docentes, familias, coordinación y administración, conectándose con la API Laravel del proyecto.
 
-- Frontend publicado: <https://aulamte.vercel.app/>
+- Frontend publicado: <https://aulamate.vercel.app/>
 - API de producción: <https://aulamate.edu/api/v1>
 
 ## Stack
