@@ -1,3 +1,4 @@
+// Lists notifications and supports marking them read or deleting them.
 import React, { useState, useEffect } from 'react';
 import { notificationsApi } from '../../api/notifications';
 import toast from 'react-hot-toast';

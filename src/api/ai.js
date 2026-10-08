@@ -1,3 +1,4 @@
+// Sends chat messages to the AI endpoint and maintains streamed conversation history.
 import { env } from '../config/env';
 
 const API_URL = env.VITE_API_URL;

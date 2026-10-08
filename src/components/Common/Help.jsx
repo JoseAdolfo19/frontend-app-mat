@@ -1,3 +1,4 @@
+// Displays help resources and expandable frequently asked questions.
 import React, { useState } from 'react';
 import { FaQuestionCircle, FaChevronDown, FaEnvelope, FaBook } from 'react-icons/fa';
 import { useLanguage } from '../../contexts/LanguageContext';

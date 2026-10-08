@@ -1,3 +1,4 @@
+// Inicializa el service worker, el monitoreo de errores y el punto de montaje de React.
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import * as Sentry from '@sentry/react';

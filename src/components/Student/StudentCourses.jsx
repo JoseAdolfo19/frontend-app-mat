@@ -1,3 +1,4 @@
+// Student course directory for joining classes and viewing lesson lists inside a selected classroom.
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { FaBook, FaArrowLeft, FaDoorOpen, FaList, FaKey } from 'react-icons/fa';

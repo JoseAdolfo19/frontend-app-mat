@@ -1,3 +1,4 @@
+// Provides API calls for conversations and forum threads.
 import api from './axios';
 
 export const messagingApi = {

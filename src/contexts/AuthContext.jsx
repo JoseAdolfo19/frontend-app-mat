@@ -1,3 +1,4 @@
+// Provides authentication state, session recovery, sign-in, and role checks.
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import axios from '../api/axios';
 import { getTranslation, getSavedLanguage } from '../utils/i18n';

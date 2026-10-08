@@ -1,3 +1,4 @@
+// Exports reusable animated placeholder layouts for loading content.
 import React from 'react';
 
 const SkeletonLine = ({ className = '' }) => (

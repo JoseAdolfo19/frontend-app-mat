@@ -1,3 +1,4 @@
+// Visualizes competency progress over time across subjects.
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 

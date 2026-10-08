@@ -1,3 +1,4 @@
+// Teacher academic calendar for creating and viewing scheduled class activities, exams, and holidays.
 import React, { useState, useEffect, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import { FaPlus, FaTrash, FaEdit, FaTimes } from 'react-icons/fa';

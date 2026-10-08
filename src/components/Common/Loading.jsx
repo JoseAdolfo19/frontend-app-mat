@@ -1,3 +1,4 @@
+// Renders the application's localized full-screen loading state.
 import React from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 

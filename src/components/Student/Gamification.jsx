@@ -1,3 +1,4 @@
+// Gamification summary for XP, achievements, badges, and level progress.
 import React, { useState, useEffect } from 'react';
 import { gamificationApi } from '../../api/gamification';
 import { useLanguage } from '../../contexts/LanguageContext';

@@ -1,3 +1,4 @@
+// Lets parents look up students and review their courses and achievements.
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { FaSearch, FaUserGraduate, FaTrophy, FaBook, FaChartLine } from 'react-icons/fa';

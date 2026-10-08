@@ -1,3 +1,4 @@
+// Normalizes answers, checks correctness, and calculates exam scores.
 import { TRUE_FALSE_OPTIONS } from './constants';
 
 export const normalizeTrueFalse = (answer) => {

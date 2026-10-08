@@ -1,3 +1,4 @@
+// Exam authoring form for building and editing questions, answers, and grading settings.
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../api/axios';

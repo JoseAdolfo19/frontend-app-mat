@@ -1,3 +1,4 @@
+// Monitors exam-tab activity and reports potential cheating events.
 import { useEffect, useRef, useCallback, useState } from 'react';
 import api from '../api/axios';
 import { logger } from '../utils/logger';

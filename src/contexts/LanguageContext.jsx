@@ -1,3 +1,4 @@
+// Provides the selected language, translations, and server-side translation overrides.
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import merge from 'lodash/merge';
 import { translationsApi } from '../api/translations';

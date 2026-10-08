@@ -1,3 +1,4 @@
+// Provides API calls for classrooms, courses, enrollment, students, and catalogs.
 import api from './axios';
 
 export const salonesApi = {

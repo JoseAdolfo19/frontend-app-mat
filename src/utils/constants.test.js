@@ -1,3 +1,4 @@
+// Tests the shared role, true/false option, and question-type constants.
 import { describe, it, expect } from 'vitest';
 import { ROLES, TRUE_FALSE_OPTIONS, QUESTION_TYPES } from './constants';
 

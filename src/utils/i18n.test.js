@@ -1,3 +1,4 @@
+// Tests that Spanish, English, and Quechua translations have matching keys.
 import { describe, it, expect } from 'vitest';
 import translations from '../contexts/LanguageContext';
 

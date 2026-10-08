@@ -1,3 +1,4 @@
+// Displays a dismissible alert about suspected cheating during an activity.
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { FaExclamationTriangle, FaTimes } from 'react-icons/fa';

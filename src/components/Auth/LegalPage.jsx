@@ -1,3 +1,4 @@
+// Displays the selected privacy, terms, or data-policy information.
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { FaArrowLeft, FaUsers } from 'react-icons/fa';
@@ -36,7 +37,7 @@ const LegalPage = ({ kind }) => {
           </Link>
 
           <h1 className="text-xl font-black text-gray-900 tracking-tight">
-            Mentem<span className="text-purple-600">ática</span>
+            Aula<span className="text-purple-600">mate</span>
           </h1>
 
           <div className="relative">

@@ -1,3 +1,4 @@
+// Evaluation builder for creating and editing class assessments tied to lessons and scoring rules.
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { evaluationsApi } from '../../api/evaluations';

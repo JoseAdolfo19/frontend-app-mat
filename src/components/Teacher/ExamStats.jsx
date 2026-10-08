@@ -1,3 +1,4 @@
+// Exam analytics view with attempt totals, score distribution, and cheating incident reporting.
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../api/axios';

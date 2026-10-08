@@ -1,3 +1,4 @@
+// Restricts nested routes to authenticated users with the required roles.
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';

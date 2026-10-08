@@ -1,3 +1,4 @@
+// Submits password-reset requests and confirms when an email has been sent.
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { authApi } from '../../api/auth';

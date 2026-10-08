@@ -1,3 +1,4 @@
+// Tests that onboarding steps and their translations are configured for every role.
 import { describe, it, expect } from 'vitest';
 import translations from '../../contexts/LanguageContext';
 import { ONBOARDING_STEPS, getOnboardingSteps } from '../../data/onboardingConfig';

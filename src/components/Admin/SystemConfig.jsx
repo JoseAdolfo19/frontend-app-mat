@@ -1,3 +1,4 @@
+// Lets administrators configure institution settings, periods, and backups.
 import React, { useState, useEffect } from 'react';
 import { adminApi } from '../../api/admin';
 import toast from 'react-hot-toast';

@@ -1,3 +1,4 @@
+// Provides the sign-in form, including Google authentication and language selection.
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
@@ -38,6 +39,7 @@ const Login = () => {
   };
 
   const handleGoogleSuccess = async (credentialResponse) => {
+    // El proveedor de autenticación intercambia la credencial de Google por la sesión de la app.
     const result = await loginWithGoogle(credentialResponse.credential);
     if (result.success) {
       toast.success(t('auth.login.welcomeGoogle'));
@@ -61,7 +63,7 @@ const Login = () => {
       <div className="w-full lg:w-1/2 flex flex-col px-6 sm:px-12 py-8">
         <div className="flex items-center justify-between mb-10">
           <h1 className="text-2xl font-black text-gray-900 tracking-tight">
-            Mentem<span className="text-purple-600">ática</span>
+            Aula<span className="text-purple-600">mate</span>
           </h1>
           <div className="relative">
             <FaGlobe className="absolute left-3 top-2.5 text-gray-400 text-xs" />

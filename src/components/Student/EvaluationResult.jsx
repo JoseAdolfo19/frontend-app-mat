@@ -1,3 +1,4 @@
+// Detailed evaluation result page showing scores, completion details, and PDF export.
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { evaluationsApi } from '../../api/evaluations';

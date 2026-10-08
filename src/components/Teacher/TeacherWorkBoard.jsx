@@ -1,3 +1,4 @@
+// Teacher assignment board for filtering submitted work and grading student tasks in bulk or individually.
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { FaClipboardCheck, FaCheck, FaUndo, FaFilter, FaStar } from 'react-icons/fa';

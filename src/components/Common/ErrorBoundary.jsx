@@ -1,3 +1,4 @@
+// Catches rendering errors and presents a localized fallback interface.
 import React from 'react';
 import { FaExclamationTriangle } from 'react-icons/fa';
 import { useLanguage } from '../../contexts/LanguageContext';

@@ -1,3 +1,4 @@
+// Implements a sortable drag-and-drop question input.
 import React from 'react';
 import {
   DndContext,

@@ -1,3 +1,4 @@
+// Lets administrators search and edit translated interface text by locale.
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { FaSave, FaPlus, FaTrash, FaSearch } from 'react-icons/fa';

@@ -1,3 +1,4 @@
+// Teacher overview dashboard with key counts, quick actions, and recent classroom activity.
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { usersApi } from '../../api/users';

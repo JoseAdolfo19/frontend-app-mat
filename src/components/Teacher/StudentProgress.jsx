@@ -1,3 +1,4 @@
+// Student progress detail screen showing lesson completion, evaluation averages, and individual achievement trends.
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';

@@ -1,3 +1,4 @@
+// Provides API calls for administrative dashboards, users, settings, periods, and backups.
 import api from './axios';
 
 export const adminApi = {

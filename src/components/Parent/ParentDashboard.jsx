@@ -1,3 +1,4 @@
+// Summarizes a parent's linked children and their learning activity.
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';

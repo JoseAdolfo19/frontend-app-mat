@@ -1,3 +1,4 @@
+// Lets users view and update their profile details and password.
 import React, { useState, useEffect } from 'react';
 import { authApi } from '../../api/auth';
 import { useAuth } from '../../contexts/AuthContext';

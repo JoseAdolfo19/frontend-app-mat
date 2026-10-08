@@ -1,3 +1,4 @@
+// Renders the public landing page and its localized product information.
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext';

@@ -1,3 +1,4 @@
+// Exam-taking workflow with anti-cheat safeguards, timing, and auto-save for student attempts.
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../api/axios';

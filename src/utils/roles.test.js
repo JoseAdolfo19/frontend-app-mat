@@ -1,3 +1,4 @@
+// Tests role-access decisions and teacher-like role classification.
 import { describe, it, expect } from 'vitest';
 import { canAccess, isTeacherLike } from './roles';
 

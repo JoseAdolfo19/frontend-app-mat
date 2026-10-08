@@ -1,3 +1,4 @@
+// Lets coordinators manage classrooms, teachers, and student assignments.
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import {

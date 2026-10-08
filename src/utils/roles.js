@@ -1,3 +1,4 @@
+// Defines role-access and hierarchy helpers for authorization checks.
 export const canAccess = (userRole, allowedRoles = []) => {
   if (!userRole) return false;
   if (allowedRoles.includes(userRole)) return true;

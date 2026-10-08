@@ -1,3 +1,4 @@
+// Reads and stores the selected language and resolves translation keys.
 import translations from '../contexts/LanguageContext';
 
 const STORAGE_KEY = 'sim_language';

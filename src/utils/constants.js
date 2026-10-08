@@ -1,3 +1,4 @@
+// Defines shared application roles, assessment values, and environment constants.
 import { env } from '../config/env';
 
 export const ROLES = {

@@ -1,3 +1,4 @@
+// Composes the shared application shell around the active route.
 import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from '../Common/Sidebar';

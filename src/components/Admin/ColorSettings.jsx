@@ -1,3 +1,4 @@
+// Provides administrator controls for selecting the application's color theme.
 import React, { useState } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useLanguage } from '../../contexts/LanguageContext';

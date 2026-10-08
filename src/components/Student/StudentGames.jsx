@@ -1,3 +1,4 @@
+// Student game submissions page for joining external games, uploading evidence, and tracking approval.
 import React, { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 import {

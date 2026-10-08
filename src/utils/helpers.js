@@ -1,3 +1,4 @@
+// Provides shared formatting, labeling, progress, badge, and collection helpers.
 const LOCALE_MAP = {
   es: 'es-ES',
   en: 'en-US',

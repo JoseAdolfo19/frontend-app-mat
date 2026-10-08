@@ -1,3 +1,4 @@
+// Lets administrators create, update, import, and manage user accounts.
 import React, { useState, useEffect, useRef } from 'react';
 import axios from '../../api/axios';
 import { adminApi } from '../../api/admin';

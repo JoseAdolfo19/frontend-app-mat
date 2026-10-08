@@ -1,3 +1,4 @@
+// Provides API calls for listing and managing user notifications.
 import api from './axios';
 
 export const notificationsApi = {

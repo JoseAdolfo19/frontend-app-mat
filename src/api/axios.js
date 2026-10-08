@@ -1,3 +1,4 @@
+// Configures the shared Axios client and its authentication-token refresh flow.
 import axios from 'axios';
 import { env } from '../config/env';
 

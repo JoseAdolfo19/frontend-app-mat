@@ -1,3 +1,4 @@
+// Validates and exports the frontend's environment configuration.
 import * as yup from 'yup';
 
 const PLACEHOLDER = /__REEMPLAZA_CON_[A-Z_]*__/;

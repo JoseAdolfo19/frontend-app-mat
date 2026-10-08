@@ -1,3 +1,4 @@
+// Define las rutas de la aplicación y compone sus proveedores globales.
 import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';

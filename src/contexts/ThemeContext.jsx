@@ -1,3 +1,4 @@
+// Provides the current theme and actions for changing the application theme.
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import axios from '../api/axios';
 import toast from 'react-hot-toast';

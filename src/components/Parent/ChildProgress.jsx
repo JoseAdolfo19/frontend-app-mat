@@ -1,3 +1,4 @@
+// Shows a parent's selected child's lesson, evaluation, and badge progress.
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';

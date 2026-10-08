@@ -1,3 +1,4 @@
+// Full lesson viewer with content, progress tracking, and navigation between related lessons.
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { lessonsApi } from '../../api/lessons';

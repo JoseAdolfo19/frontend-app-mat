@@ -1,3 +1,4 @@
+// Provides notification state and actions for fetching, reading, and deleting notifications.
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { usersApi } from '../api/users';
 import toast from 'react-hot-toast';

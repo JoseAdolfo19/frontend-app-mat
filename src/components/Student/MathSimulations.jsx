@@ -1,3 +1,4 @@
+// Interactive function playground for exploring mathematical curves and animation presets in the student portal.
 import React, { useState, useMemo, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { FaPlay, FaStop } from 'react-icons/fa';

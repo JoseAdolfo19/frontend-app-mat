@@ -1,3 +1,4 @@
+// Student work dashboard summarizing assigned tasks, submission progress, and graded averages.
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useLanguage } from '../../contexts/LanguageContext';

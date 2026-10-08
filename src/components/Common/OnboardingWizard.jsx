@@ -1,3 +1,4 @@
+// Guides newly signed-in users through onboarding steps for their role.
 import React, { useEffect, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { FaChevronLeft, FaChevronRight, FaTimes, FaFastForward, FaHandPeace } from 'react-icons/fa';

@@ -1,3 +1,4 @@
+// Manages browser push-notification support, subscriptions, and unsubscriptions.
 import { pushApi } from '../api/push';
 
 export function urlBase64ToUint8Array(base64String) {

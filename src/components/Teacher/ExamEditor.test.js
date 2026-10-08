@@ -1,3 +1,4 @@
+// Verifica las reglas de validación de los exámenes creados por docentes.
 import { describe, it, expect } from 'vitest';
 import { examSchema } from './ExamEditor';
 

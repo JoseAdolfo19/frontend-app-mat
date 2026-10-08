@@ -1,3 +1,4 @@
+// Provides API calls for push-notification configuration and subscriptions.
 import api from './axios';
 
 export const pushApi = {

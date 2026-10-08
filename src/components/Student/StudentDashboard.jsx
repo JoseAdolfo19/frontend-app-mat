@@ -1,3 +1,4 @@
+// Student dashboard overview with lesson, evaluation, and achievement KPIs for an enrolled learner.
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { usersApi } from '../../api/users';

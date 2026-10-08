@@ -1,3 +1,4 @@
+// Presents a parent's detailed report of a child's performance and competencies.
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';

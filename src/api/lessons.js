@@ -1,3 +1,4 @@
+// Provides API calls for lessons, resources, generated content, and learner progress.
 import api from './axios';
 
 export const lessonsApi = {

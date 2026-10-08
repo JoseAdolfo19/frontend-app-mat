@@ -1,3 +1,4 @@
+// Provides the discussion forum for browsing and creating posts.
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { FaComments, FaPlus, FaComment, FaLock, FaTimes } from 'react-icons/fa';

@@ -1,3 +1,4 @@
+// Provides a messaging inbox and conversation view for users.
 import React, { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { FaPaperPlane, FaComments, FaUser } from 'react-icons/fa';

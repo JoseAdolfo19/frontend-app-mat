@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({      registerType: 'autoUpdate',
+      // Usa el service worker personalizado en public/sw.js para controlar el cacheo.
       strategies: 'injectManifest',
       srcDir: 'public',
       filename: 'sw.js',

@@ -1,3 +1,4 @@
+// Tests answer normalization, correctness checks, and exam score calculation.
 import { describe, it, expect } from 'vitest';
 import { isAnswerCorrect, gradeExam, normalizeTrueFalse } from './grading';
 

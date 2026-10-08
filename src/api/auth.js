@@ -1,3 +1,4 @@
+// Provides API calls for authentication, profile management, and active sessions.
 import api from './axios';
 
 export const authApi = {

@@ -1,3 +1,4 @@
+// Lesson browser with search, difficulty filters, and progress indicators for available student lessons.
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';

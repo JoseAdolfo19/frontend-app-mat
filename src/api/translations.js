@@ -1,3 +1,4 @@
+// Provides API calls for retrieving and managing translation overrides.
 import api from './axios';
 
 export const translationsApi = {

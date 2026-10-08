@@ -1,3 +1,4 @@
+// Teacher ranking leaderboard for comparing student performance across courses and exporting reports.
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { FaTrophy, FaDownload, FaFilePdf, FaFileExcel, FaArrowUp, FaArrowDown, FaMinus } from 'react-icons/fa';

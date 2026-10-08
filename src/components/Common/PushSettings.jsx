@@ -1,3 +1,4 @@
+// Lets users manage browser push-notification subscriptions and settings.
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { FaBell, FaBellSlash, FaPaperPlane } from 'react-icons/fa';

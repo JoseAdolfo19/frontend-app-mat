@@ -1,3 +1,4 @@
+// Teacher game portal for managing classroom games, platform links, and student submission review.
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import {

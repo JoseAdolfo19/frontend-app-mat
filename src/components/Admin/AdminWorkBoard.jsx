@@ -1,3 +1,4 @@
+// Lets administrators filter and export student work and submission records.
 import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { FaClipboardList, FaFilter, FaFilePdf, FaFileExcel } from 'react-icons/fa';

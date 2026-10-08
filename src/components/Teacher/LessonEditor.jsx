@@ -1,3 +1,4 @@
+// Lesson authoring tool for creating and updating educational content, tags, and media resources.
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { lessonsApi } from '../../api/lessons';

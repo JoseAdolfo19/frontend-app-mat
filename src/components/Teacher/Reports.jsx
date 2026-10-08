@@ -1,3 +1,4 @@
+// Teacher reports dashboard with performance summaries, filters, and exportable grade analytics.
 import React, { useState, useEffect } from 'react';
 import { reportsApi } from '../../api/reports';
 import toast from 'react-hot-toast';

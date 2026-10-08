@@ -1,3 +1,4 @@
+// Provides an interactive chat widget for asking the AI assistant questions.
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaTimes, FaPaperPlane, FaUser, FaTrash, FaGraduationCap } from 'react-icons/fa';

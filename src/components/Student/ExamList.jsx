@@ -1,3 +1,4 @@
+// Active exam catalog for students to view available tests and start eligible attempts.
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';

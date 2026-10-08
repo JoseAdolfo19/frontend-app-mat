@@ -1,3 +1,4 @@
+// Provides API calls for learner gamification summaries, checks, and synchronization.
 import api from './axios';
 
 export const gamificationApi = {

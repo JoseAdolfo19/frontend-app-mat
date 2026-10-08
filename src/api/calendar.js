@@ -1,3 +1,4 @@
+// Provides API calls for creating, listing, updating, and deleting calendar events.
 import api from './axios';
 
 export const calendarApi = {

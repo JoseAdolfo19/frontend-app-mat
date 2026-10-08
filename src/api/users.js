@@ -1,3 +1,4 @@
+// Provides API calls for user profiles, progress, and notification management.
 import api from './axios';
 
 export const usersApi = {

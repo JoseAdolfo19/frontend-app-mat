@@ -1,3 +1,4 @@
+// Shows administrators system status, recent activity, and usage statistics.
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { adminApi } from '../../api/admin';

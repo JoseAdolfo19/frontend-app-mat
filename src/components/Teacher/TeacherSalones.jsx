@@ -1,3 +1,4 @@
+// Teacher classroom manager for viewing salons, courses, and adding lessons to each course.
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import {

@@ -1,3 +1,4 @@
+// Loads the dashboard component matching the signed-in user's role.
 import { lazy, Suspense } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import Loading from './Loading';

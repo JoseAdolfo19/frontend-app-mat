@@ -1,3 +1,4 @@
+// Exposes authentication context and guards against use outside its provider.
 import { useAuth as useAuthContext } from '../contexts/AuthContext';
 
 export const useAuth = () => {

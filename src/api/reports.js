@@ -1,3 +1,4 @@
+// Provides API calls for performance and grade reports and their exports.
 import api from './axios';
 
 export const reportsApi = {

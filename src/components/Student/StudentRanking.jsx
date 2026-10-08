@@ -1,3 +1,4 @@
+// Student ranking board comparing learner scores across selected courses and highlighting the current user.
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useLanguage } from '../../contexts/LanguageContext';

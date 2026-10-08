@@ -1,3 +1,4 @@
+// Routes application errors and warnings to the console or Sentry by environment.
 import * as Sentry from '@sentry/react';
 
 const isDev = import.meta.env.DEV;

@@ -1,3 +1,4 @@
+// Exposes notification context and guards against use outside its provider.
 import { useNotifications as useNotificationsContext } from '../contexts/NotificationContext';
 
 export const useNotifications = () => {

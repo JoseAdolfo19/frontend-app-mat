@@ -1,3 +1,4 @@
+// Exposes theme context and guards against use outside its provider.
 import { useTheme as useThemeContext } from '../contexts/ThemeContext';
 
 export const useTheme = () => {

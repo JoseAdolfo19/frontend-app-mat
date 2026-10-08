@@ -1,3 +1,4 @@
+// Provides API calls for game management, submissions, and grading.
 import api from './axios';
 
 export const gamesApi = {

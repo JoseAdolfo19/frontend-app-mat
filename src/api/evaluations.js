@@ -1,3 +1,4 @@
+// Provides API calls for evaluations, their questions, and submitted results.
 import api from './axios';
 
 export const evaluationsApi = {
