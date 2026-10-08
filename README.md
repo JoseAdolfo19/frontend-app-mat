@@ -1,6 +1,9 @@
-# KawsayMath Frontend
+# Aulamate Frontend
 
-Aplicación web de KawsayMath para el aprendizaje de matemáticas. Ofrece experiencias diferenciadas para estudiantes, docentes, familias, coordinación y administración, conectándose con la API Laravel del proyecto.
+Aplicación web de Aulamate para el aprendizaje de matemáticas. Ofrece experiencias diferenciadas para estudiantes, docentes, familias, coordinación y administración, conectándose con la API Laravel del proyecto.
+
+- Frontend publicado: <https://aulamte.vercel.app/>
+- API de producción: <https://aulamate.edu/api/v1>
 
 ## Stack
 
@@ -49,7 +52,7 @@ El acceso se controla mediante rutas protegidas y permisos por rol. La aplicaci�
 
 - Node.js 18+ recomendado.
 - npm.
-- Backend de KawsayMath disponible, normalmente en `http://localhost:8000`.
+- Backend disponible localmente en `http://localhost:8000` o en producción en `https://aulamate.edu`.
 - Navegador moderno con soporte para APIs web usadas por la aplicación.
 
 ## Instalación
@@ -68,7 +71,7 @@ Copy-Item .env.example .env
 Configura en `.env` la URL pública del backend:
 
 ```env
-VITE_API_URL=http://localhost:8000/api/v1
+VITE_API_URL=https://aulamate.edu/api/v1
 VITE_GOOGLE_CLIENT_ID=tu-client-id-publico.apps.googleusercontent.com
 VITE_SENTRY_DSN=
 ```
@@ -119,7 +122,7 @@ Playwright inicia Vite automáticamente según `playwright.config.js`. Para prue
 
 El archivo `.env.example` documenta las variables del frontend:
 
-- `VITE_API_URL`: URL base de la API versionada.
+- `VITE_API_URL`: URL base de la API versionada (producción: `https://aulamate.edu/api/v1`).
 - `VITE_GOOGLE_CLIENT_ID`: identificador público del cliente Google OAuth.
 - `VITE_SENTRY_DSN`: DSN opcional para monitoreo de errores.
 

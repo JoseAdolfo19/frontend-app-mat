@@ -133,7 +133,7 @@ const Sidebar = () => {
           <span className="text-2xl font-bold">∑</span>
         </div>
         <div>
-          <h1 className="text-xl font-bold text-[var(--primary)]">KawsayMath</h1>
+          <h1 className="text-xl font-bold text-[var(--primary)]">Aulamate</h1>
           <p className="text-[10px] uppercase tracking-widest text-[var(--on-surface-variant)]">
             {user?.role?.name ? t(`topbar.role.${user.role.name}`) : t('nav.dashboard')}
           </p>

@@ -42,4 +42,4 @@ export const NOTIFICATION_TYPES = {
 };
 
 export const API_URL = env.VITE_API_URL;
-export const APP_NAME = 'KawsayMath';
+export const APP_NAME = 'Aulamate';

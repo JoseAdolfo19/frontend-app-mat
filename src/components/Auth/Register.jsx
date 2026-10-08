@@ -68,7 +68,7 @@ const Register = () => {
       <div className="w-full lg:w-1/2 flex flex-col px-6 sm:px-12 py-8">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-black text-gray-900 tracking-tight">
-            Math<span className="text-purple-600">Flow</span>
+            Mentem<span className="text-purple-600">ática</span>
           </h1>
           <div className="relative">
             <FaGlobe className="absolute left-3 top-2.5 text-gray-400 text-xs" />
@@ -230,7 +230,7 @@ const Register = () => {
         <div className="relative z-10 flex items-center justify-between px-10 py-8">
           <div className="flex items-center gap-2 text-white font-semibold">
             <FaUsers className="text-purple-300" />
-            <span>KawsayMath Community</span>
+            <span>Aulamate</span>
           </div>
           <div className="flex items-center gap-3">
             <Link to="/login" className="text-white/80 hover:text-white font-medium transition">
@@ -247,8 +247,8 @@ const Register = () => {
 
         <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-10 pb-12">
           <img
-            src="/kawsaymath_register.jpg"
-            alt="KawsayMath Community"
+            src="/aulamate_register.jpg"
+            alt="Aulamate"
             className="w-full max-w-md mx-auto object-contain mix-blend-screen"
           />
           <h3 className="text-white text-2xl font-bold mt-6">¡Aprende matemáticas jugando!</h3>
@@ -260,7 +260,7 @@ const Register = () => {
         <div className="absolute bottom-8 left-10 z-10 text-white/40 text-xs font-mono">
           <span className="inline-flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-            KawsayMath v1.0
+            Aulamate v1.0
           </span>
         </div>
       </div>

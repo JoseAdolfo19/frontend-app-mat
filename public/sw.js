@@ -33,7 +33,7 @@ registerRoute(
 
 // --- WEB PUSH ---
 self.addEventListener('push', (event) => {
-  let data = { title: 'KawsayMath', body: '', url: '/notifications' };
+  let data = { title: 'Aulamate', body: '', url: '/notifications' };
   try {
     const parsed = event.data ? event.data.json() : {};
     data = { ...data, ...parsed };

@@ -14,8 +14,8 @@ export default defineConfig({
       },
       includeAssets: ['favicon.svg', 'favicon.ico', 'robots.txt'],
       manifest: {
-        name: 'KawsayMath - Plataforma de aprendizaje de matemáticas',
-        short_name: 'KawsayMath',
+        name: 'Aulamate - Plataforma de aprendizaje de matemáticas',
+        short_name: 'Aulamate',
         description: 'Plataforma web para el aprendizaje de matemáticas',
         start_url: '/',
         display: 'standalone',

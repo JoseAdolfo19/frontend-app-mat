@@ -575,7 +575,7 @@ const LandingPage = () => {
           </div>
           <div className="mt-8 pt-6 border-t border-cyan-500/10 flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-xs text-slate-500 max-w-2xl text-center md:text-left">{t('landing.footerPrivacy')}</p>
-            <p className="text-xs text-slate-500">KawsayMath &copy; {new Date().getFullYear()} · {t('landing.footerRights')}</p>
+            <p className="text-xs text-slate-500">Aulamate &copy; {new Date().getFullYear()} · {t('landing.footerRights')}</p>
           </div>
         </div>
       </footer>

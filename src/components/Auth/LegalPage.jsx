@@ -36,7 +36,7 @@ const LegalPage = ({ kind }) => {
           </Link>
 
           <h1 className="text-xl font-black text-gray-900 tracking-tight">
-            Math<span className="text-purple-600">Flow</span>
+            Mentem<span className="text-purple-600">ática</span>
           </h1>
 
           <div className="relative">
@@ -56,7 +56,7 @@ const LegalPage = ({ kind }) => {
       <main className="max-w-3xl mx-auto px-6 py-10">
         <div className="flex items-center gap-3 mb-2">
           <FaUsers className="text-purple-600 text-xl" />
-          <span className="text-purple-600 font-bold">KawsayMath Community</span>
+          <span className="text-purple-600 font-bold">Aulamate</span>
         </div>
 
         <h2 className="text-3xl font-black text-gray-900 leading-tight mb-1">{title}</h2>
