@@ -1,6 +1,7 @@
 // Tests authentication-session loading, retry, and logout behavior.
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { useState } from 'react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { AuthProvider, useAuth } from './AuthContext';
 
 vi.mock('../api/axios', () => ({
@@ -8,7 +9,10 @@ vi.mock('../api/axios', () => ({
 }));
 
 vi.mock('../utils/i18n', () => ({
-  getTranslation: (_lang, key) => key,
+  getTranslation: (_lang, key) =>
+    key === 'auth.login.error'
+      ? 'No se pudo iniciar sesión. Verifica tu correo y contraseña e inténtalo de nuevo.'
+      : key,
   getSavedLanguage: () => 'es',
 }));
 
@@ -24,6 +28,19 @@ const Probe = () => {
   if (authError) return <div data-testid="estado">error:{authError}</div>;
   if (!user) return <div data-testid="estado">sin-sesion</div>;
   return <div data-testid="estado">usuario:{user.email}</div>;
+};
+
+const LoginProbe = () => {
+  const { login } = useAuth();
+  const [error, setError] = useState('');
+  return (
+    <>
+      <button onClick={async () => setError((await login('user@example.com', 'bad-password')).error)}>
+        Probar inicio de sesión
+      </button>
+      <p role="alert">{error}</p>
+    </>
+  );
 };
 
 const montar = () =>
@@ -113,5 +130,31 @@ describe('AuthContext - manejo de sesión', () => {
     montar();
     expect(await screen.findByText('sin-sesion')).toBeInTheDocument();
     expect(axios.get).not.toHaveBeenCalled();
+  });
+
+  it('muestra un mensaje traducido si falla el inicio de sesión sin detalle del servidor', async () => {
+    localStorage.removeItem('access_token');
+    axios.post.mockRejectedValue({ response: { status: 401 } });
+    render(<AuthProvider><LoginProbe /></AuthProvider>);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Probar inicio de sesión' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'No se pudo iniciar sesión. Verifica tu correo y contraseña e inténtalo de nuevo.'
+    );
+  });
+
+  it('no muestra una clave de traducción enviada por el servidor', async () => {
+    localStorage.removeItem('access_token');
+    axios.post.mockRejectedValue({
+      response: { status: 401, data: { message: 'auth.login.error' } },
+    });
+    render(<AuthProvider><LoginProbe /></AuthProvider>);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Probar inicio de sesión' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'No se pudo iniciar sesión. Verifica tu correo y contraseña e inténtalo de nuevo.'
+    );
   });
 });

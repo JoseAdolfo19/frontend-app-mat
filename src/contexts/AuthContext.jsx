@@ -10,6 +10,14 @@ export const useAuth = () => useContext(AuthContext);
 
 const translate = (key) => getTranslation(getSavedLanguage(), key);
 
+const getAuthErrorMessage = (error, fallbackKey) => {
+  const message = error?.response?.data?.message;
+  if (typeof message === 'string' && message.trim() && !/^auth\.[\w.-]+$/.test(message.trim())) {
+    return message;
+  }
+  return translate(fallbackKey);
+};
+
 /** Errores que no invalidan la sesión y conviene reintentar. */
 const isTransient = (error) => {
   const status = error?.response?.status;
@@ -127,7 +135,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       return {
         success: false,
-        error: error.response?.data?.message || translate('auth.login.error')
+        error: getAuthErrorMessage(error, 'auth.login.error')
       };
     }
   };
@@ -147,7 +155,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       return {
         success: false,
-        error: error.response?.data?.message || translate('auth.login.googleError')
+        error: getAuthErrorMessage(error, 'auth.login.googleError')
       };
     }
   };
@@ -165,7 +173,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       return {
         success: false,
-        error: error.response?.data?.message || translate('auth.register.error')
+        error: getAuthErrorMessage(error, 'auth.register.error')
       };
     }
   };

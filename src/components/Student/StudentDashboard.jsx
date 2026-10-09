@@ -199,7 +199,9 @@ const StudentDashboard = () => {
                     </span>
                   )}
             <Link
-              to={`/evaluations/${eval_.id}/result`}
+              to={eval_.user_result?.status === 'completed'
+                ? `/evaluations/${eval_.id}/result`
+                : `/evaluations/${eval_.id}/take`}
               className="text-[var(--primary)] hover:underline text-sm font-medium"
               aria-label={`${t('common.next')} - ${eval_.title}`}
             >

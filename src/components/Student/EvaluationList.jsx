@@ -178,12 +178,19 @@ const EvaluationList = () => {
                 <div className="w-full py-3 rounded-xl font-bold text-center bg-[var(--surface-container)] text-[var(--on-surface-variant)]">
                   {t('evaluations.list.teacherPreview')}
                 </div>
+              ) : evaluation.user_result?.status !== 'completed' &&
+                evaluation.due_date && new Date(evaluation.due_date) < new Date() ? (
+                <div className="w-full py-3 rounded-xl font-bold text-center bg-red-100 text-red-700">
+                  {t('evaluations.list.expired')}
+                </div>
               ) : (
                 <Link
-                  to={`/evaluations/${evaluation.id}/result`}
-                  aria-label={evaluation.user_result?.status === 'completed'
-                    ? `${t('evaluations.list.viewResults')} - ${evaluation.title}`
-                    : `${t('evaluations.list.startEvaluation')} - ${evaluation.title}`}
+                  to={evaluation.user_result?.status === 'completed'
+                    ? `/evaluations/${evaluation.id}/result`
+                    : `/evaluations/${evaluation.id}/take`}
+                  aria-label={`${t(evaluation.user_result?.status === 'completed'
+                    ? 'evaluations.list.viewResults'
+                    : 'evaluations.list.startEvaluation')} - ${evaluation.title}`}
                   className={`w-full py-3 rounded-xl font-bold text-center transition-all block ${
                     evaluation.user_result?.status === 'completed'
                       ? 'bg-[var(--surface-container)] text-[var(--on-surface)] hover:bg-[var(--surface-container-high)]'
@@ -192,8 +199,6 @@ const EvaluationList = () => {
                 >
                   {evaluation.user_result?.status === 'completed'
                     ? t('evaluations.list.viewResults')
-                    : evaluation.due_date && new Date(evaluation.due_date) < new Date()
-                    ? t('evaluations.list.expired')
                     : t('evaluations.list.startEvaluation')}
                 </Link>
               )}

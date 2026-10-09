@@ -38,6 +38,7 @@ const RoleDashboard = React.lazy(() => import('./components/Common/RoleDashboard
 const LessonList = React.lazy(() => import('./components/Student/LessonList'));
 const LessonDetail = React.lazy(() => import('./components/Student/LessonDetail'));
 const EvaluationList = React.lazy(() => import('./components/Student/EvaluationList'));
+const EvaluationPlayer = React.lazy(() => import('./components/Student/EvaluationPlayer'));
 const EvaluationResult = React.lazy(() => import('./components/Student/EvaluationResult'));
 const ExamList = React.lazy(() => import('./components/Student/ExamList'));
 const ExamPlayer = React.lazy(() => import('./components/Student/ExamPlayer'));
@@ -132,6 +133,7 @@ function App() {
                       <Route path="/lessons" element={<LessonList />} />
                       <Route path="/lessons/:id" element={<LessonDetail />} />
                       <Route path="/evaluations" element={<EvaluationList />} />
+                      <Route path="/evaluations/:id/take" element={<EvaluationPlayer />} />
                       <Route path="/evaluations/:id/result" element={<EvaluationResult />} />
                       <Route path="/exams" element={<ExamList />} />
                       <Route path="/exams/:id/take" element={<ExamPlayer />} />
